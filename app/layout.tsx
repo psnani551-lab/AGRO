@@ -25,6 +25,13 @@ export const metadata: Metadata = {
     template: '%s | AGRO',
   },
   description: 'AI-powered agricultural guidance platform for modern farmers. Get real-time insights, disease detection, irrigation optimization, and more.',
+  manifest: '/manifest.json',
+  themeColor: '#059669',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'AGRO',
+  },
   keywords: ['smart farming', 'agriculture', 'AI assistant', 'crop management', 'precision farming', 'sustainable agriculture'],
   authors: [{ name: 'Smart Farming Team' }],
   openGraph: {

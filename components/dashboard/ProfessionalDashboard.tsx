@@ -9,14 +9,36 @@ import { storage } from '@/lib/storage';
 export default function ProfessionalDashboard() {
   const { t, locale } = useI18n();
   const [loading, setLoading] = useState(true);
+  const [isOffline, setIsOffline] = useState(false);
   const [weatherData, setWeatherData] = useState<any>(null);
   const [analysis, setAnalysis] = useState<any>(null);
   const [marketData, setMarketData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Load cached data immediately on mount
+  useEffect(() => {
+    const cachedWeather = storage.get('weatherData');
+    const cachedAnalysis = {
+      irrigationPlan: storage.get('irrigationPlanPro'),
+      yieldForecast: storage.get('yieldForecastPro'),
+      diseaseRisk: storage.get('diseaseRiskPro'),
+      ecoScore: storage.get('sustainabilityMetrics')?.ecoScore
+    };
+    const cachedMarket = storage.get('marketData');
+
+    if (cachedWeather) setWeatherData({ forecast: cachedWeather });
+    if (cachedAnalysis.irrigationPlan) setAnalysis(cachedAnalysis);
+    if (cachedMarket) setMarketData(cachedMarket);
+    
+    // If we have some data, we can stop the initial full-page loader
+    if (cachedAnalysis.irrigationPlan) {
+      setLoading(false);
+    }
+  }, []);
+
   const fetchProfessionalData = useCallback(async () => {
-    setLoading(true);
     setError(null);
+    setIsOffline(false);
 
     try {
       const farmProfile = storage.getFarmProfile();
@@ -32,71 +54,92 @@ export default function ProfessionalDashboard() {
         ? farmProfile.location 
         : farmProfile.location?.address || 'Mumbai, India';
       
-      const weatherResponse = await fetch('/api/weather', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ location: locationString }),
-      });
+      let weather;
+      try {
+        const weatherResponse = await fetch('/api/weather', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ location: locationString }),
+        });
 
-      if (!weatherResponse.ok) {
-        throw new Error('Failed to fetch weather data');
+        if (!weatherResponse.ok) throw new Error('Weather API error');
+        weather = await weatherResponse.json();
+        setWeatherData(weather);
+        storage.save('weatherData', weather.forecast);
+      } catch (e) {
+        console.warn('Weather fetch failed, using cache');
+        setIsOffline(true);
+        weather = { forecast: storage.get('weatherData') };
+        if (!weather.forecast) throw new Error('No weather data available');
       }
-
-      const weather = await weatherResponse.json();
-      setWeatherData(weather);
-      storage.save('weatherData', weather.forecast);
 
       // Generate PROFESSIONAL analysis
-      const analysisResponse = await fetch('/api/analysis-pro', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          farmProfile, 
-          weatherData: weather,
-          plantingDate: farmProfile.plantingDate || new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          locale: locale
-        }),
-      });
+      try {
+        const analysisResponse = await fetch('/api/analysis-pro', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            farmProfile, 
+            weatherData: weather,
+            plantingDate: farmProfile.plantingDate || new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            locale: locale
+          }),
+        });
 
-      if (!analysisResponse.ok) {
-        throw new Error('Failed to generate professional analysis');
+        if (!analysisResponse.ok) throw new Error('Analysis API error');
+        const analysisData = await analysisResponse.json();
+        setAnalysis(analysisData);
+        
+        // Store professional data
+        storage.save('irrigationPlanPro', analysisData.irrigationPlan);
+        storage.save('yieldForecastPro', analysisData.yieldForecast);
+        storage.save('diseaseRiskPro', analysisData.diseaseRisk);
+        storage.save('sustainabilityMetrics', { ecoScore: analysisData.ecoScore });
+      } catch (e) {
+        console.warn('Analysis fetch failed, using cache');
+        setIsOffline(true);
+        const cachedAnalysis = {
+          irrigationPlan: storage.get('irrigationPlanPro'),
+          yieldForecast: storage.get('yieldForecastPro'),
+          diseaseRisk: storage.get('diseaseRiskPro'),
+          ecoScore: storage.get('sustainabilityMetrics')?.ecoScore
+        };
+        if (cachedAnalysis.irrigationPlan) setAnalysis(cachedAnalysis);
       }
-
-      const analysisData = await analysisResponse.json();
-      setAnalysis(analysisData);
 
       // Fetch market prices
-      const cropId = farmProfile.currentCrops?.[0]?.toLowerCase() || 'rice';
-      const marketResponse = await fetch('/api/market-prices', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          action: 'single',
-          cropId: cropId,
-          yieldKg: analysisData.yieldForecast?.estimatedYield || 0,
-          landHectares: farmProfile.landSize || 1
-        }),
-      });
+      try {
+        const cropId = farmProfile.currentCrops?.[0]?.toLowerCase() || 'rice';
+        const marketResponse = await fetch('/api/market-prices', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            action: 'single',
+            cropId: cropId,
+            yieldKg: analysis?.yieldForecast?.estimatedYield || 0,
+            landHectares: farmProfile.landSize || 1
+          }),
+        });
 
-      if (marketResponse.ok) {
-        const market = await marketResponse.json();
-        setMarketData(market);
-        storage.save('marketData', market);
+        if (marketResponse.ok) {
+          const market = await marketResponse.json();
+          setMarketData(market);
+          storage.save('marketData', market);
+        }
+      } catch (e) {
+        console.warn('Market fetch failed');
       }
-
-      // Store professional data
-      storage.save('irrigationPlanPro', analysisData.irrigationPlan);
-      storage.save('yieldForecastPro', analysisData.yieldForecast);
-      storage.save('diseaseRiskPro', analysisData.diseaseRisk);
-      storage.save('sustainabilityMetrics', { ecoScore: analysisData.ecoScore });
 
     } catch (err: any) {
       console.error('Professional Dashboard Error:', err);
-      setError(err.message || 'Failed to load professional analysis');
+      // Only show full error if we have NO data at all
+      if (!analysis) {
+        setError(err.message || 'Failed to load professional analysis');
+      }
     } finally {
       setLoading(false);
     }
-  }, [locale]);
+  }, [locale, analysis]);
 
   useEffect(() => {
     fetchProfessionalData();
@@ -148,17 +191,25 @@ export default function ProfessionalDashboard() {
         <div className="flex items-center gap-3">
           <FiCheckCircle className="h-5 w-5 text-green-600" />
           <div className="flex-1">
-            <p className="text-sm font-semibold text-green-900 dark:text-green-200">
-              ⭐ {t('dashboard.irrigationPlan')}
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-semibold text-green-900 dark:text-green-200">
+                ⭐ {t('dashboard.irrigationPlan')}
+              </p>
+              {isOffline && (
+                <span className="bg-orange-100 text-orange-800 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider dark:bg-orange-900/40 dark:text-orange-300 border border-orange-200 dark:border-orange-800">
+                  Offline Mode
+                </span>
+              )}
+            </div>
             <p className="text-xs text-green-700 dark:text-green-300 mt-1">
-              {weatherData?.location} • {analysis?.irrigationPlan?.cropName} • {analysis?.irrigationPlan?.calculation} • {analysis?.irrigationPlan?.reliability}% {t('dashboard.reliability')}
+              {weatherData?.location || 'Cached Location'} • {analysis?.irrigationPlan?.cropName} • {analysis?.irrigationPlan?.calculation} • {analysis?.irrigationPlan?.reliability}% {t('dashboard.reliability')}
             </p>
           </div>
           <button
             onClick={fetchProfessionalData}
-            className="text-green-600 hover:text-green-700 dark:text-green-400"
+            className={`text-green-600 hover:text-green-700 dark:text-green-400 ${loading ? 'animate-spin' : ''}`}
             title="Refresh analysis"
+            disabled={loading}
           >
             <FiRefreshCw className="h-4 w-4" />
           </button>
