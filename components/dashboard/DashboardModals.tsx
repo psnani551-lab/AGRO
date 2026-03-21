@@ -83,26 +83,16 @@ export const IrrigationModal = ({ isOpen, onClose, analysis, farmProfile, t }: a
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="p-3 border rounded-lg flex flex-col justify-between relative overflow-hidden group">
-                        <div className="absolute top-2 right-2 p-1.5 bg-blue-500/10 rounded-full text-blue-500">
-                            <FiDroplet className="w-4 h-4" />
-                        </div>
-                        <span className="text-xs text-gray-500 block mb-1">{t('dashboard.amount') || 'Amount Per Session'}</span>
-                        <span className="font-bold text-lg relative z-10">
-                            {amountMm.toFixed(1)} mm
-                        </span>
-                    </div>
-                    <div className="p-3 border rounded-lg flex flex-col justify-between relative overflow-hidden group">
-                        <div className="absolute top-2 right-2 p-1.5 bg-purple-500/10 rounded-full text-purple-500">
-                            <FiCheckCircle className="w-4 h-4" />
-                        </div>
-                        <span className="text-xs text-gray-500 block mb-1">{t('dashboard.weekly') || 'Weekly Total'}</span>
-                        <span className="font-bold text-lg relative z-10">
-                            {typeof analysis?.irrigationPlan?.weeklyTotal === 'number'
-                                ? `${analysis.irrigationPlan.weeklyTotal.toFixed(1)} mm`
-                                : analysis?.irrigationPlan?.weeklyTotal}
-                        </span>
+                <div className="grid grid-cols-1 gap-4">
+                    <div className="p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-xl flex items-center justify-between">
+                         <div>
+                            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider block mb-1">Watering Depth</span>
+                            <span className="text-xl font-bold text-zinc-900 dark:text-white">{amountMm.toFixed(1)} mm</span>
+                         </div>
+                         <div className="text-right">
+                            <span className="text-[10px] text-zinc-500 uppercase font-black block mb-1 italic">Scientific Metric</span>
+                            <span className="text-xs text-zinc-400">FAO-56 Standard</span>
+                         </div>
                     </div>
                 </div>
 
@@ -113,27 +103,43 @@ export const IrrigationModal = ({ isOpen, onClose, analysis, farmProfile, t }: a
                             <FiDroplet className="text-zinc-500" /> {t('dashboard.smartForecast') || '7-Day Smart Forecast'}
                         </h5>
                         <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide snap-x">
-                            {analysis.irrigationPlan.smartSchedule.map((day: any, i: number) => (
-                                <div key={i} className={`snap-start flex-shrink-0 w-28 p-3 rounded-xl border text-center relative transition-all ${day.action === 'Irrigate'
-                                    ? 'bg-zinc-900 border-zinc-800 shadow-md transform scale-105'
-                                    : day.action === 'Skip'
-                                        ? 'bg-zinc-50 border-zinc-200 opacity-60'
-                                        : 'bg-white border-zinc-200'
-                                    }`}>
-                                    <span className={`text-xs font-bold block mb-2 uppercase ${day.action === 'Irrigate' ? 'text-zinc-400' : 'text-zinc-500'}`}>{day.day}</span>
-                                    <div className={`w-10 h-10 mx-auto rounded-full flex items-center justify-center mb-2 ${day.action === 'Irrigate' ? 'bg-white text-black' :
-                                        day.action === 'Skip' ? 'bg-zinc-200 text-zinc-400' :
-                                            'bg-zinc-100 text-zinc-500'
+                            {analysis.irrigationPlan.smartSchedule.map((day: any, i: number) => {
+                                // Calculate individual day duration if amount is present
+                                let dayDuration = '';
+                                if (day.amount !== '-' && day.amount.includes('mm')) {
+                                    const dayMm = parseFloat(day.amount) || 0;
+                                    const dayLiters = (dayMm * areaM2) / efficiency;
+                                    const dayHours = dayLiters / pumpLph;
+                                    const dH = Math.floor(dayHours);
+                                    const dM = Math.round((dayHours - dH) * 60);
+                                    dayDuration = dH > 0 ? `${dH}h${dM}m` : `${dM}m`;
+                                }
+
+                                return (
+                                    <div key={i} className={`snap-start flex-shrink-0 w-28 p-3 rounded-xl border text-center relative transition-all ${day.action === 'Irrigate'
+                                        ? 'bg-zinc-900 border-zinc-800 shadow-md transform scale-105'
+                                        : day.action === 'Skip'
+                                            ? 'bg-zinc-50 border-zinc-200 opacity-60'
+                                            : 'bg-white border-zinc-200'
                                         }`}>
-                                        {day.icon === 'droplet' && <FiDroplet className="w-5 h-5" />}
-                                        {day.icon === 'rain' && <FiCheckCircle className="w-5 h-5" />}
-                                        {day.icon === 'cloud' && <div className="w-2 h-2 rounded-full bg-zinc-400" />}
+                                        <span className={`text-xs font-bold block mb-2 uppercase ${day.action === 'Irrigate' ? 'text-zinc-400' : 'text-zinc-500'}`}>{day.day}</span>
+                                        <div className={`w-10 h-10 mx-auto rounded-full flex items-center justify-center mb-2 ${day.action === 'Irrigate' ? 'bg-white text-black' :
+                                            day.action === 'Skip' ? 'bg-zinc-200 text-zinc-400' :
+                                                'bg-zinc-100 text-zinc-500'
+                                            }`}>
+                                            {day.icon === 'droplet' && <FiDroplet className="w-5 h-5" />}
+                                            {day.icon === 'rain' && <FiCheckCircle className="w-5 h-5" />}
+                                            {day.icon === 'cloud' && <div className="w-2 h-2 rounded-full bg-zinc-400" />}
+                                        </div>
+                                        <span className={`text-xs font-black block uppercase ${day.action === 'Irrigate' ? 'text-white' : 'text-zinc-400'
+                                            }`}>{day.action}</span>
+                                        {day.action === 'Irrigate' && dayDuration && (
+                                            <span className="text-[10px] text-emerald-400 font-mono mt-1 block font-bold">{dayDuration}</span>
+                                        )}
+                                        {day.action === 'Skip' && <span className="text-[10px] text-zinc-400 font-mono mt-1 block italic">{day.reason || 'Rain'}</span>}
                                     </div>
-                                    <span className={`text-xs font-black block uppercase ${day.action === 'Irrigate' ? 'text-white' : 'text-zinc-400'
-                                        }`}>{day.action}</span>
-                                    {day.amount !== '-' && <span className="text-[10px] text-zinc-300 font-mono mt-1 block">{day.amount}</span>}
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
                 )}
