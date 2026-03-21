@@ -15,8 +15,17 @@ import { IrrigationWidget, DiseaseWidget, YieldWidget, RecommendationsWidget } f
 
 // --- Sub-Components ---
 
+const SatelliteBadge = memo(() => (
+    <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-full backdrop-blur-md">
+        <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest flex items-center gap-1">
+            🛰️ Space Data
+        </span>
+    </div>
+));
+
 const ValuationHero = memo(({ valuation, marketData, analysis, t }: any) => (
     <motion.div variants={{ hidden: { y: 20, opacity: 0 }, show: { y: 0, opacity: 1 } }} className="relative overflow-hidden rounded-3xl bg-zinc-950 text-white shadow-2xl p-8 h-full flex flex-col justify-between border border-zinc-800 hover:border-zinc-600 transition-all duration-300">
+        <SatelliteBadge />
         {/* Background Decorative Elements */}
         <div className="absolute -right-12 -top-12 opacity-5 rotate-12">
             <FiDollarSign className="w-64 h-64 text-white" />
@@ -80,6 +89,7 @@ const WeatherCard = memo(({ weatherData, t }: any) => {
 
     return (
         <motion.div variants={{ hidden: { y: 20, opacity: 0 }, show: { y: 0, opacity: 1 } }} className="lg:col-span-2 rounded-3xl bg-zinc-900 text-white shadow-2xl p-8 relative overflow-hidden group border border-zinc-800 h-full flex flex-col hover:border-zinc-600 transition-all duration-300">
+            <SatelliteBadge />
             {/* Background Ambience */}
             <div className="absolute -right-20 -top-20 text-white/5 transition-transform duration-[20s] ease-in-out group-hover:rotate-45">
                 <FiSun className="w-[500px] h-[500px]" />
@@ -591,10 +601,15 @@ export default function UltimateDashboard({ farmProfile }: { farmProfile?: any }
                 </div>
 
                 {/* Row 2: Live Widgets (The 'Exactly Like This' Requirement) */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <IrrigationWidget analysis={analysis} t={t} onOpen={() => setActiveModal('irrigation')} />
-                    <DiseaseWidget analysis={analysis} t={t} onOpen={() => setActiveModal('disease')} />
-                    <YieldWidget analysis={analysis} t={t} onOpen={() => setActiveModal('yield')} />
+                <div className="relative">
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 px-3 py-1 bg-blue-500 text-white rounded-full shadow-lg text-[10px] font-bold uppercase tracking-widest border border-blue-400">
+                        🛰️ Space-Derived Analysis
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <IrrigationWidget analysis={analysis} t={t} onOpen={() => setActiveModal('irrigation')} />
+                        <DiseaseWidget analysis={analysis} t={t} onOpen={() => setActiveModal('disease')} />
+                        <YieldWidget analysis={analysis} t={t} onOpen={() => setActiveModal('yield')} />
+                    </div>
                 </div>
 
                 {/* Row 3: Rotation & Recommendations */}
