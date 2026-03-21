@@ -73,7 +73,7 @@ export default function DashboardPage() {
           className="space-y-8"
         >
           {/* THE NEW HARDENED PROFESSIONAL DASHBOARD */}
-          <ProfessionalDashboard />
+          <ProfessionalDashboard farmProfile={farmProfile} />
 
         </motion.div>
       </main>

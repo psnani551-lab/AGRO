@@ -10,7 +10,7 @@ import { storage } from '@/lib/storage';
 import ConnectSensor from './ConnectSensor';
 import { ExportPortal } from './ExportPortal';
 
-export default function ProfessionalDashboard() {
+export default function ProfessionalDashboard({ farmProfile: farmProfileProp }: { farmProfile?: any }) {
   const { t, locale } = useI18n();
   const [loading, setLoading] = useState(true);
   const [isOffline, setIsOffline] = useState(false);
@@ -33,7 +33,7 @@ export default function ProfessionalDashboard() {
 
   // Load cached data immediately on mount
   useEffect(() => {
-    const profile = storage.getFarmProfile();
+    const profile = farmProfileProp || storage.getFarmProfile();
     if (profile?.id) setFarmId(profile.id);
     const cachedWeather = storage.get('weatherData');
     const cachedAnalysis = {
@@ -52,26 +52,36 @@ export default function ProfessionalDashboard() {
     if (cachedAnalysis.irrigationPlan) {
       setLoading(false);
     }
-  }, []);
+  }, [farmProfileProp]);
 
   const fetchProfessionalData = useCallback(async () => {
     setError(null);
     setIsOffline(false);
 
     try {
-      const farmProfile = storage.getFarmProfile();
+      // ✅ USE PROP FIRST (from Supabase), fall back to localStorage
+      const farmProfile = farmProfileProp || storage.getFarmProfile();
       
-      if (!farmProfile || !farmProfile.location) {
+      if (!farmProfile) {
         setError('Please complete your farm profile first');
         setLoading(false);
         return;
       }
 
-      // Fetch weather data
-      const locationString = typeof farmProfile.location === 'string' 
-        ? farmProfile.location 
-        : farmProfile.location?.address || 'Mumbai, India';
-      
+      // Extract location string from any format
+      const locationString = typeof farmProfile.location === 'string'
+        ? farmProfile.location
+        : farmProfile.location?.address
+        || farmProfile.city
+        || farmProfile.district
+        || 'Hyderabad, India';
+
+      if (!locationString) {
+        setError('Please add a location to your farm profile');
+        setLoading(false);
+        return;
+      }
+
       let weather;
       try {
         const weatherResponse = await fetch('/api/weather', {
