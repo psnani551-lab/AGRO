@@ -135,7 +135,7 @@ export default function ProfessionalDashboard() {
             action: 'single',
             cropId: cropId,
             yieldKg: analysis?.yieldForecast?.estimatedYield || 0,
-            landHectares: farmProfile.landSize || 1
+            landHectares: farmProfile?.landSize || 1
           }),
         });
 
@@ -345,10 +345,10 @@ export default function ProfessionalDashboard() {
               </div>
               <div>
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">
-                  {analysis.irrigationPlan.cropName} Field
+                  {analysis?.irrigationPlan?.cropName || 'Farm'} Field
                 </h2>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                   पंजाब, India • {analysis.irrigationPlan.growthStage} Stage
+                   पंजाब, India • {analysis?.irrigationPlan?.growthStage || 'Initial'} Stage
                 </p>
               </div>
             </div>
@@ -416,17 +416,17 @@ export default function ProfessionalDashboard() {
               <div className="mt-2 flex flex-wrap items-center gap-4">
                 <div className="flex items-center gap-1.5 px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-[10px] font-bold dark:bg-blue-900/40 dark:text-blue-300 uppercase">
                   <FiDroplet className="h-3 w-3" />
-                  Live Moisture: {analysis.irrigationPlan.liveSensor.moisture}%
+                  Live Moisture: {analysis?.irrigationPlan?.liveSensor?.moisture}%
                 </div>
                 
-                {analysis.irrigationPlan.liveSensor.battery !== undefined && (
+                {analysis?.irrigationPlan?.liveSensor?.battery !== undefined && (
                   <div className={`flex items-center gap-1 text-[10px] font-bold ${analysis.irrigationPlan.liveSensor.battery < 3.4 ? 'text-red-500 animate-pulse' : 'text-gray-500'}`}>
                     <FiZap className="h-3 w-3" />
                     {analysis.irrigationPlan.liveSensor.battery.toFixed(1)}V
                   </div>
                 )}
 
-                {analysis.irrigationPlan.liveSensor.signal !== undefined && (
+                {analysis?.irrigationPlan?.liveSensor?.signal !== undefined && (
                   <div className="flex items-center gap-1 text-[10px] font-bold text-gray-500">
                     <FiWifi className="h-3 w-3" />
                     {analysis.irrigationPlan.liveSensor.signal} dBm
@@ -434,15 +434,15 @@ export default function ProfessionalDashboard() {
                 )}
 
                 <div className="text-[10px] text-gray-400 font-medium">
-                  {analysis.irrigationPlan.liveSensor.type.toUpperCase()}
+                  {analysis?.irrigationPlan?.liveSensor?.type?.toUpperCase()}
                 </div>
 
                 <div className="text-[10px] text-gray-500 italic">
-                  Last seen: {new Date(analysis.irrigationPlan.liveSensor.lastSeen).toLocaleTimeString()}
+                  Last seen: {analysis?.irrigationPlan?.liveSensor?.lastSeen ? new Date(analysis.irrigationPlan.liveSensor.lastSeen).toLocaleTimeString() : 'N/A'}
                 </div>
 
                 {/* Maintenance Alert */}
-                {(analysis.irrigationPlan.liveSensor.battery < 3.4 || analysis.irrigationPlan.liveSensor.moisture > 98) && (
+                {analysis?.irrigationPlan?.liveSensor && (analysis.irrigationPlan.liveSensor.battery < 3.4 || analysis.irrigationPlan.liveSensor.moisture > 98) && (
                   <div className="w-full mt-2 p-2 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 rounded flex items-center gap-2">
                     <FiAlertCircle className="h-3 w-3 text-red-500" />
                     <span className="text-[10px] font-bold text-red-700 dark:text-red-400 uppercase tracking-tight">
@@ -478,12 +478,12 @@ export default function ProfessionalDashboard() {
               💧 Watering Plan
             </h3>
             <span className="text-xs bg-blue-200 dark:bg-blue-800 text-blue-900 dark:text-blue-100 px-2 py-1 rounded-full">
-              {analysis.irrigationPlan.reliability}% Accurate
+              {analysis?.irrigationPlan?.reliability || 0}% Accurate
             </span>
           </div>
 
           {/* NEW: ACTIONABLE PUMP METRIC */}
-          {analysis.irrigationPlan.actionable && (
+          {analysis?.irrigationPlan?.actionable && (
             <div className="mb-6 p-5 bg-gradient-to-br from-blue-600 to-primary-700 rounded-xl text-white shadow-lg shadow-blue-200 dark:shadow-none">
               <div className="flex items-center gap-3 mb-4">
                 <div className="p-2 bg-white/20 rounded-lg">
@@ -491,7 +491,7 @@ export default function ProfessionalDashboard() {
                 </div>
                 <div>
                   <h4 className="font-bold text-lg">Smart Pump Action</h4>
-                  <p className="text-blue-100 text-xs">Based on your {analysis.irrigationPlan.actionable.flowRateUsed} LPM Pump</p>
+                  <p className="text-blue-100 text-xs">Based on your {analysis?.irrigationPlan?.actionable?.flowRateUsed || 0} LPM Pump</p>
                 </div>
               </div>
               
@@ -499,19 +499,19 @@ export default function ProfessionalDashboard() {
                 <div>
                   <p className="text-blue-100 text-[10px] uppercase font-bold tracking-wider mb-1">Recommended Duration</p>
                   <p className="text-4xl font-extrabold flex items-baseline gap-1">
-                    {analysis.irrigationPlan.actionable.pumpRunTime}
+                    {analysis?.irrigationPlan?.actionable?.pumpRunTime || 0}
                     <span className="text-lg font-medium opacity-80 decoration-none">min.</span>
                   </p>
                 </div>
                 <div className="text-right">
                   <p className="text-blue-100 text-[10px] uppercase font-bold tracking-wider mb-1">Total Water</p>
-                  <p className="text-xl font-bold">{analysis.irrigationPlan.actionable.totalLiters.toLocaleString()} L</p>
+                  <p className="text-xl font-bold">{(analysis?.irrigationPlan?.actionable?.totalLiters || 0).toLocaleString()} L</p>
                 </div>
               </div>
 
               <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between text-[11px]">
                 <span className="flex items-center gap-1 opacity-80">
-                  <FiCheckCircle className="h-3 w-3" /> System Efficiency: {Math.round(analysis.irrigationPlan.actionable.efficiencyUsed * 100)}%
+                  <FiCheckCircle className="h-3 w-3" /> System Efficiency: {Math.round((analysis?.irrigationPlan?.actionable?.efficiencyUsed || 0) * 100)}%
                 </span>
                 <button 
                   onClick={handleStartPump}
@@ -575,7 +575,7 @@ export default function ProfessionalDashboard() {
 
                     <div className="p-4">
                       <div className="flex items-center gap-2 mb-3">
-                        {visionAnalysis.matchesDigitalData ? (
+                        {visionAnalysis?.matchesDigitalData ? (
                           <div className="flex items-center gap-1.5 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-[10px] font-bold dark:bg-green-900/40 dark:text-green-300">
                             <FiCheckCircle className="h-3 w-3" />
                             Confirmed Match
@@ -587,18 +587,18 @@ export default function ProfessionalDashboard() {
                           </div>
                         )}
                         <span className="text-[10px] font-bold text-gray-400 uppercase">
-                          {visionAnalysis.confidence}% Confidence
+                          {visionAnalysis?.confidence || 0}% Confidence
                         </span>
                       </div>
 
                       <div className="prose prose-sm dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 mb-4 text-sm leading-relaxed">
                         <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                          {visionAnalysis.reasoning}
+                          {visionAnalysis?.reasoning || 'No reasoning available'}
                         </ReactMarkdown>
                       </div>
 
                       <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-100 dark:border-gray-700">
-                        {visionAnalysis.observations.map((obs: string, idx: number) => (
+                        {visionAnalysis?.observations?.map((obs: string, idx: number) => (
                           <span key={idx} className="text-[9px] px-2 py-1 bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400 rounded-md border border-gray-100 dark:border-gray-800 font-medium lowercase">
                             # {obs}
                           </span>
@@ -626,7 +626,7 @@ export default function ProfessionalDashboard() {
             <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border-l-4 border-blue-500">
               <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">WHEN</p>
               <p className="text-xl font-bold text-blue-900 dark:text-blue-100">
-                {analysis.irrigationPlan.wateringSchedule}
+                {analysis?.irrigationPlan?.wateringSchedule || 'N/A'}
               </p>
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                 Best time: Early morning (6-8 AM)
@@ -637,10 +637,10 @@ export default function ProfessionalDashboard() {
             <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border-l-4 border-blue-500">
               <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">HOW MUCH</p>
               <p className="text-xl font-bold text-blue-900 dark:text-blue-100">
-                {analysis.irrigationPlan.amountPerIrrigation} per session
+                {analysis?.irrigationPlan?.amountPerIrrigation || 'N/A'} per session
               </p>
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                Weekly total: {analysis.irrigationPlan.weeklyTotal}
+                Weekly total: {analysis?.irrigationPlan?.weeklyTotal || 'N/A'}
               </p>
             </div>
 
@@ -648,7 +648,7 @@ export default function ProfessionalDashboard() {
             <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border-l-4 border-cyan-500">
               <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">DAILY WATER NEED</p>
               <p className="text-xl font-bold text-cyan-900 dark:text-cyan-100">
-                {analysis.irrigationPlan.irrigationNeed}
+                {analysis?.irrigationPlan?.irrigationNeed || 'N/A'}
               </p>
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                 Based on crop type and weather
@@ -659,7 +659,7 @@ export default function ProfessionalDashboard() {
             <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border-l-4 border-teal-500">
               <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">CROP WATER USE</p>
               <p className="text-xl font-bold text-teal-900 dark:text-teal-100">
-                {analysis.irrigationPlan.etc}
+                {analysis?.irrigationPlan?.etc || 'N/A'}
               </p>
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                 Evapotranspiration rate for your crop
@@ -669,7 +669,7 @@ export default function ProfessionalDashboard() {
             {/* Growth Stage */}
             <div className="bg-blue-100 dark:bg-blue-900/40 rounded-lg p-3">
               <p className="text-sm text-blue-800 dark:text-blue-200">
-                🌱 Your crop is in <strong>{analysis.irrigationPlan.growthStage}</strong> stage ({analysis.irrigationPlan.daysAfterPlanting} days old)
+                🌱 Your crop is in <strong>{analysis?.irrigationPlan?.growthStage || 'N/A'}</strong> stage ({analysis?.irrigationPlan?.daysAfterPlanting || 0} days old)
               </p>
             </div>
           </div>
@@ -706,7 +706,7 @@ export default function ProfessionalDashboard() {
               analysis.diseaseRisk.level === 'Medium' ? 'bg-yellow-200 dark:bg-yellow-800 text-yellow-900 dark:text-yellow-100' :
               'bg-green-200 dark:bg-green-800 text-green-900 dark:text-green-100'
             }`}>
-              {analysis.diseaseRisk.reliability}% Accurate
+              {analysis?.diseaseRisk?.reliability || 0}% Accurate
             </span>
           </div>
 
@@ -733,7 +733,7 @@ export default function ProfessionalDashboard() {
           </div>
 
           {/* Top Threat (if any) */}
-          {analysis.diseaseRisk.diseases?.[0] && analysis.diseaseRisk.level !== 'Low' && (
+          {analysis?.diseaseRisk?.diseases?.[0] && analysis.diseaseRisk.level !== 'Low' && (
             <div className={`p-4 rounded-lg ${
               analysis.diseaseRisk.level === 'High' ? 'bg-red-100 dark:bg-red-900/40' :
               'bg-yellow-100 dark:bg-yellow-900/40'
@@ -742,20 +742,20 @@ export default function ProfessionalDashboard() {
                 analysis.diseaseRisk.level === 'High' ? 'text-red-900 dark:text-red-100' :
                 'text-yellow-900 dark:text-yellow-100'
               }`}>
-                Watch Out: {analysis.diseaseRisk.diseases[0].name}
+                Watch Out: {analysis.diseaseRisk.diseases[0]?.name}
               </h4>
               <div className="space-y-2 text-sm">
                 <p className={`${
                   analysis.diseaseRisk.level === 'High' ? 'text-red-800 dark:text-red-200' :
                   'text-yellow-800 dark:text-yellow-200'
                 }`}>
-                  <strong>What to do:</strong> {analysis.diseaseRisk.diseases[0].prevention?.[0] || 'Monitor regularly'}
+                  <strong>What to do:</strong> {analysis.diseaseRisk.diseases[0]?.prevention?.[0] || 'Monitor regularly'}
                 </p>
                 <p className={`${
                   analysis.diseaseRisk.level === 'High' ? 'text-red-700 dark:text-red-300' :
                   'text-yellow-700 dark:text-yellow-300'
                 }`}>
-                  <strong>Natural solution:</strong> {analysis.diseaseRisk.diseases[0].organicControl?.[0] || 'Use organic methods'}
+                  <strong>Natural solution:</strong> {analysis.diseaseRisk.diseases[0]?.organicControl?.[0] || 'Use organic methods'}
                 </p>
               </div>
             </div>
@@ -777,16 +777,16 @@ export default function ProfessionalDashboard() {
               {t('yield.yieldForecast')}
             </h3>
             <span className="text-xs bg-purple-200 dark:bg-purple-800 text-purple-900 dark:text-purple-100 px-2 py-1 rounded-full">
-              {analysis.yieldForecast.crops[0]?.confidence}% {t('dashboard.confidence')}
+              {analysis?.yieldForecast?.crops?.[0]?.confidence || 0}% {t('dashboard.confidence')}
             </span>
           </div>
 
           {analysis.yieldForecast.crops.map((crop: any, index: number) => (
             <div key={index} className="bg-purple-100 dark:bg-purple-900/40 rounded-lg p-4 mb-3">
               <div className="flex items-center justify-between mb-3">
-                <h4 className="font-semibold text-purple-900 dark:text-purple-100">{crop.crop}</h4>
+                <h4 className="font-semibold text-purple-900 dark:text-purple-100">{crop?.crop || 'Crop'}</h4>
                 <span className="text-sm text-purple-700 dark:text-purple-300">
-                  {t('dashboard.yieldGap')}: {crop.yieldGap}
+                  {t('dashboard.yieldGap')}: {crop?.yieldGap || 'N/A'}
                 </span>
               </div>
               
@@ -794,7 +794,7 @@ export default function ProfessionalDashboard() {
                 <div>
                   <p className="text-xs text-purple-700 dark:text-purple-300">{t('dashboard.estimatedYield')}</p>
                   <p className="text-lg font-bold text-purple-900 dark:text-purple-100">
-                    {crop.estimatedYield.toLocaleString()} kg
+                    {(crop?.estimatedYield || 0).toLocaleString()} kg
                   </p>
                 </div>
                 <div>
