@@ -19,8 +19,9 @@ export default function FarmProfilePage() {
         location_address: '',
         farm_size_acres: '',
         soil_type: 'loamy',
-        irrigation_type: 'drip',
-        current_crops: ''
+        irrigation_type: 'Drip',
+        current_crops: '',
+        pump_capacity_lph: '5000'
     });
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -63,9 +64,13 @@ export default function FarmProfilePage() {
                 .upsert([
                     {
                         user_id: effectiveUserId,
-                        ...formData,
+                        farm_name: formData.farm_name,
+                        location: formData.location_address,
+                        total_area: parseFloat(formData.farm_size_acres) || 0,
+                        soil_type: formData.soil_type,
+                        irrigation_method: formData.irrigation_type,
+                        pump_capacity_lph: parseFloat(formData.pump_capacity_lph) || 5000,
                         current_crops: formData.current_crops.split(',').map(c => c.trim()),
-                        farm_size_acres: parseFloat(formData.farm_size_acres) || 0
                     }
                 ], { onConflict: 'user_id' });
 
@@ -245,6 +250,41 @@ export default function FarmProfilePage() {
                                         <option value="loamy">{t('form.loamy')}</option>
                                         <option value="silty">{t('form.silty')}</option>
                                         <option value="peaty">{t('form.peaty')}</option>
+                                    </select>
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 dark:text-zinc-500 group-hover:text-primary-500">▼</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="grid md:grid-cols-2 gap-6">
+                            {/* Pump Capacity */}
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 dark:text-zinc-500 mb-2 uppercase tracking-widest pl-1">{t('form.pumpCapacity') || 'Pump Capacity (LPH)'}</label>
+                                <div className="relative group">
+                                    <input
+                                        type="number"
+                                        required
+                                        className="w-full pl-11 pr-4 py-4 rounded-2xl border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-black/40 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-600 focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all hover:border-gray-300 dark:hover:border-zinc-700 hover:bg-gray-100 dark:hover:bg-black/60 outline-none"
+                                        placeholder={t('form.pumpCapacityPlaceholder') || 'e.g. 5000'}
+                                        value={formData.pump_capacity_lph}
+                                        onChange={e => setFormData({ ...formData, pump_capacity_lph: e.target.value })}
+                                    />
+                                    <FiCpu className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 group-hover:text-primary-500 transition-colors" />
+                                </div>
+                            </div>
+
+                            {/* Irrigation Method */}
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 dark:text-zinc-500 mb-2 uppercase tracking-widest pl-1">{t('form.irrigationType') || 'Irrigation Method'}</label>
+                                <div className="relative group">
+                                    <select
+                                        className="w-full pl-4 pr-10 py-4 rounded-2xl border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-black/40 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all hover:border-gray-300 dark:hover:border-zinc-700 hover:bg-gray-100 dark:hover:bg-black/60 outline-none appearance-none cursor-pointer"
+                                        value={formData.irrigation_type}
+                                        onChange={e => setFormData({ ...formData, irrigation_type: e.target.value })}
+                                    >
+                                        <option value="Drip">{t('form.drip') || 'Drip'}</option>
+                                        <option value="Sprinkler">{t('form.sprinkler') || 'Sprinkler'}</option>
+                                        <option value="Surface">{t('form.flood') || 'Surface/Flood'}</option>
                                     </select>
                                     <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 dark:text-zinc-500 group-hover:text-primary-500">▼</div>
                                 </div>

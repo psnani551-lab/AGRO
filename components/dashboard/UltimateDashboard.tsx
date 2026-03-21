@@ -634,7 +634,7 @@ export default function UltimateDashboard({ farmProfile }: { farmProfile?: any }
 
             {/* Modals */}
             <AnimatePresence>
-                {activeModal === 'irrigation' && <IrrigationModal isOpen={true} onClose={() => setActiveModal(null)} analysis={analysis} t={t} />}
+                {activeModal === 'irrigation' && <IrrigationModal isOpen={true} onClose={() => setActiveModal(null)} analysis={analysis} farmProfile={farmProfile} t={t} />}
                 {activeModal === 'disease' && <DiseaseModal isOpen={true} onClose={() => setActiveModal(null)} analysis={analysis} t={t} />}
                 {activeModal === 'yield' && <YieldModal isOpen={true} onClose={() => setActiveModal(null)} analysis={analysis} t={t} />}
             </AnimatePresence>

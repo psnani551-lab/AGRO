@@ -1,6 +1,16 @@
 import { FiDroplet, FiActivity, FiBarChart2, FiArrowRight } from 'react-icons/fi';
 
-export const IrrigationWidget = ({ analysis, t, onOpen }: any) => {
+const formatWater = (mm: number | any, totalArea: number = 1) => {
+    if (typeof mm !== 'number') return mm || '---';
+    // 1mm of water over 1 Acre is ~4047 Litres
+    const totalLitres = mm * 4047 * totalArea;
+    
+    if (totalLitres >= 1000000) return `${(totalLitres / 1000000).toFixed(1)}M Litres`;
+    if (totalLitres >= 1000) return `${(totalLitres / 1000).toFixed(1)}k Litres`;
+    return `${Math.round(totalLitres)} Litres`;
+};
+
+export const IrrigationWidget = ({ analysis, t, onOpen, totalArea = 1 }: any) => {
     const plan = analysis?.irrigationPlan || {};
     return (
         <div className="bg-zinc-900 rounded-2xl p-5 border border-zinc-800 flex flex-col justify-between h-full group hover:border-zinc-700 transition-all">
@@ -21,18 +31,13 @@ export const IrrigationWidget = ({ analysis, t, onOpen }: any) => {
                     <div className="flex justify-between items-center text-sm border-b border-zinc-800 pb-2">
                         <span className="text-zinc-500">{t('dashboard.amount') || 'Amount'}</span>
                         <span className="font-mono text-zinc-300">
-                            {/* Ensure number formatting to 1 decimal place + single unit */}
-                            {typeof plan.amountPerIrrigation === 'number'
-                                ? `${plan.amountPerIrrigation.toFixed(1)} mm`
-                                : plan.amountPerIrrigation || '---'}
+                            {formatWater(plan.amountPerIrrigation, totalArea)}
                         </span>
                     </div>
                     <div className="flex justify-between items-center text-sm border-b border-zinc-800 pb-2">
                         <span className="text-zinc-500">{t('dashboard.weekly') || 'Weekly'}</span>
                         <span className="font-mono text-zinc-300">
-                            {typeof plan.weeklyTotal === 'number'
-                                ? `${plan.weeklyTotal.toFixed(1)} mm`
-                                : plan.weeklyTotal || '---'}
+                            {formatWater(plan.weeklyTotal, totalArea)}
                         </span>
                     </div>
                 </div>
