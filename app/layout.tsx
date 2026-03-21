@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter, Poppins } from 'next/font/google';
 import { I18nProvider } from '@/lib/i18n';
 import Navigation from '@/components/Navigation';
@@ -18,6 +18,10 @@ const poppins = Poppins({
   variable: '--font-poppins',
 });
 
+export const viewport: Viewport = {
+  themeColor: '#059669',
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL('https://smartfarming.example.com'),
   title: {
@@ -26,7 +30,6 @@ export const metadata: Metadata = {
   },
   description: 'AI-powered agricultural guidance platform for modern farmers. Get real-time insights, disease detection, irrigation optimization, and more.',
   manifest: '/manifest.json',
-  themeColor: '#059669',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
