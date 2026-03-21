@@ -348,7 +348,7 @@ export default function ProfessionalDashboard() {
                   {analysis?.irrigationPlan?.cropName || 'Farm'} Field
                 </h2>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                   पंजाब, India • {analysis?.irrigationPlan?.growthStage || 'Initial'} Stage
+                   {weatherData?.location || storage.getFarmProfile()?.location?.address || storage.getFarmProfile()?.location || 'Your Farm'} • {analysis?.irrigationPlan?.growthStage || 'Initial'} Stage
                 </p>
               </div>
             </div>
@@ -463,6 +463,49 @@ export default function ProfessionalDashboard() {
           </button>
         </div>
       </motion.div>
+
+      {/* Weather Forecast Widget */}
+      {weatherData?.forecast && weatherData.forecast.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-xl bg-gradient-to-br from-sky-50 to-blue-50 p-6 border border-sky-200 dark:from-sky-900/20 dark:to-blue-900/20 dark:border-sky-800"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-sky-900 dark:text-sky-100 flex items-center gap-2">
+              🌤️ Weather Forecast
+            </h3>
+            <span className="text-xs text-sky-600 dark:text-sky-400 font-bold">
+              {weatherData.location || 'Your Location'}
+            </span>
+          </div>
+          <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
+            {weatherData.forecast.slice(0, 5).map((day: any, index: number) => (
+              <div key={index} className="bg-white dark:bg-gray-800 rounded-lg p-3 text-center border border-sky-100 dark:border-sky-900">
+                <p className="text-[10px] font-bold text-sky-600 dark:text-sky-400 uppercase mb-1">
+                  {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
+                </p>
+                <p className="text-2xl mb-1">
+                  {day.condition?.includes('rain') || day.condition?.includes('Rain') ? '🌧️' :
+                   day.condition?.includes('cloud') || day.condition?.includes('Cloud') ? '☁️' :
+                   day.condition?.includes('thunder') ? '⛈️' : '☀️'}
+                </p>
+                <p className="text-sm font-bold text-gray-900 dark:text-white">
+                  {day.maxTemp ?? day.temperature ?? '--'}°C
+                </p>
+                <p className="text-[10px] text-gray-500 dark:text-gray-400">
+                  {day.minTemp ? `${day.minTemp}° low` : day.condition ?? ''}
+                </p>
+                {day.rainfall > 0 && (
+                  <p className="text-[10px] text-blue-600 dark:text-blue-400 font-bold mt-1">
+                    💧 {day.rainfall}mm
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
 
       {/* Simplified Irrigation Plan */}
       {analysis?.irrigationPlan && (

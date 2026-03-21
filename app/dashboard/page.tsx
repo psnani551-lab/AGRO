@@ -30,6 +30,7 @@ export default function DashboardPage() {
 
       if (data) {
         setFarmProfile(data);
+        localStorage.setItem('farmProfile', JSON.stringify(data));
       }
       setIsLoading(false);
     };
