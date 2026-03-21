@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { useI18n } from '@/lib/i18n';
 import { FarmProfile } from '@/lib/farmTypes';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import UltimateDashboard from '@/components/dashboard/UltimateDashboard';
+import ProfessionalDashboard from '@/components/dashboard/ProfessionalDashboard';
 
 import { supabase } from '@/lib/supabaseClient';
 import Link from 'next/link';
@@ -71,8 +71,8 @@ export default function DashboardPage() {
           transition={{ duration: 0.5 }}
           className="space-y-8"
         >
-          {/* THE ULTIMATE ONE-STOP DASHBOARD */}
-          <UltimateDashboard farmProfile={farmProfile} />
+          {/* THE NEW HARDENED PROFESSIONAL DASHBOARD */}
+          <ProfessionalDashboard />
 
         </motion.div>
       </main>
