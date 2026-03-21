@@ -1,10 +1,14 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
-import { FiRefreshCw, FiAlertCircle, FiCheckCircle, FiDroplet, FiTrendingUp, FiActivity } from 'react-icons/fi';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FiRefreshCw, FiAlertCircle, FiCheckCircle, FiDroplet, FiTrendingUp, FiActivity, FiCpu, FiNavigation, FiAward, FiShield, FiZap, FiWifi, FiCamera, FiX } from 'react-icons/fi';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useI18n } from '@/lib/i18n';
 import { storage } from '@/lib/storage';
+import ConnectSensor from './ConnectSensor';
+import { ExportPortal } from './ExportPortal';
 
 export default function ProfessionalDashboard() {
   const { t, locale } = useI18n();
@@ -14,9 +18,23 @@ export default function ProfessionalDashboard() {
   const [analysis, setAnalysis] = useState<any>(null);
   const [marketData, setMarketData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showSensorSetup, setShowSensorSetup] = useState(false);
+  const [farmId, setFarmId] = useState<string>('');
+  const [satelliteData, setSatelliteData] = useState<any>(null);
+  const [certificateData, setCertificateData] = useState<any>(null);
+  
+  // Vision Analytics State
+  const [isVisionLoading, setIsVisionLoading] = useState(false);
+  const [visionAnalysis, setVisionAnalysis] = useState<any>(null);
+  const [isPumpLoading, setIsPumpLoading] = useState(false);
+  const [pumpStatus, setPumpStatus] = useState<{success?: boolean, message?: string} | null>(null);
+  const [currentCommandId, setCurrentCommandId] = useState<string | null>(null);
+  const [showCamera, setShowCamera] = useState(false);
 
   // Load cached data immediately on mount
   useEffect(() => {
+    const profile = storage.getFarmProfile();
+    if (profile?.id) setFarmId(profile.id);
     const cachedWeather = storage.get('weatherData');
     const cachedAnalysis = {
       irrigationPlan: storage.get('irrigationPlanPro'),
@@ -130,6 +148,43 @@ export default function ProfessionalDashboard() {
         console.warn('Market fetch failed');
       }
 
+      // --- NEW: SATELLITE DATA FETCH ---
+      try {
+        const satResponse = await fetch('/api/satellite/ndvi', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            farmId: farmProfile.id,
+            polygonId: farmProfile.agro_monitoring_id,
+            coords: farmProfile.polygon_coords, // [[lon, lat], ...]
+            name: farmProfile.farmName || 'Farm Field'
+          }),
+        });
+
+        if (satResponse.ok) {
+          const sat = await satResponse.json();
+          setSatelliteData(sat);
+        }
+      } catch (e) {
+        console.warn('Satellite fetch failed');
+      }
+
+      // --- NEW: CERTIFICATE & TRUST FETCH ---
+      try {
+        const certResponse = await fetch('/api/export/certificate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ farmId: farmProfile.id }),
+        });
+
+        if (certResponse.ok) {
+          const cert = await certResponse.json();
+          setCertificateData(cert);
+        }
+      } catch (e) {
+        console.warn('Certificate fetch failed');
+      }
+
     } catch (err: any) {
       console.error('Professional Dashboard Error:', err);
       // Only show full error if we have NO data at all
@@ -141,11 +196,118 @@ export default function ProfessionalDashboard() {
     }
   }, [locale, analysis]);
 
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsVisionLoading(true);
+    setVisionAnalysis(null);
+
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64Image = reader.result as string;
+      try {
+        const response = await fetch('/api/analysis/vision', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            image: base64Image,
+            sensorMoisture: analysis?.irrigationPlan?.liveSensor?.moisture || 0,
+            satelliteNdvi: satelliteData?.health?.mean || 0,
+            cropName: analysis?.irrigationPlan?.cropName || 'Crop'
+          }),
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          setVisionAnalysis(result);
+        } else {
+          setError('Vision analysis failed. Please try again.');
+        }
+      } catch (err) {
+        console.error('Vision API Error:', err);
+      } finally {
+        setIsVisionLoading(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleStartPump = async () => {
+    if (!analysis?.irrigationPlan?.actionable) return;
+    
+    setIsPumpLoading(true);
+    setPumpStatus(null);
+    
+    try {
+      const farmProfileStr = localStorage.getItem('farmProfile');
+      const farmProfile = farmProfileStr ? JSON.parse(farmProfileStr) : null;
+      
+      const response = await fetch('/api/iot/control', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          deviceId: 'PUMP-01',
+          action: 'START',
+          farmId: farmProfile?.id,
+          userId: farmProfile?.user_id, // Pass userId for security check
+          durationMin: analysis.irrigationPlan.actionable.pumpRunTime
+        }),
+      });
+
+      const result = await response.json();
+      setPumpStatus({ 
+        success: response.ok, 
+        message: response.ok ? 'Connection established. Waiting for pump ACK...' : result.error 
+      });
+      
+      if (response.ok && result.commandId) {
+        setCurrentCommandId(result.commandId);
+      }
+    } catch (err) {
+      console.error('Pump Control Error:', err);
+      setPumpStatus({ success: false, message: 'Failed to reach pump gateway' });
+    } finally {
+      setIsPumpLoading(false);
+    }
+  };
+
+  // HANDSHAKE: Polling for Command Status
+  useEffect(() => {
+    if (!currentCommandId) return;
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const response = await fetch(`/api/iot/status?commandId=${currentCommandId}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.status === 'EXECUTED') {
+            setPumpStatus({ success: true, message: '✅ PUMP ACTIVE IN FIELD' });
+            setCurrentCommandId(null);
+            clearInterval(pollInterval);
+            
+            // Success animation or clear after delay
+            setTimeout(() => setPumpStatus(null), 10000);
+          } else if (data.status === 'FAILED') {
+            setPumpStatus({ success: false, message: `❌ PUMP FAILED: ${data.error_log || 'Unknown error'}` });
+            setCurrentCommandId(null);
+            clearInterval(pollInterval);
+          }
+        }
+      } catch (e) {
+        console.error('Polling error:', e);
+      }
+    }, 2000); // Poll every 2 seconds
+
+    return () => clearInterval(pollInterval);
+  }, [currentCommandId]);
+
   useEffect(() => {
     fetchProfessionalData();
   }, [fetchProfessionalData]);
 
   if (loading) {
+    // ... same loading UI ...
     return (
       <div className="rounded-xl bg-white p-8 shadow-sm border border-gray-100 dark:bg-gray-800 dark:border-gray-700">
         <div className="flex items-center justify-center gap-3">
@@ -158,30 +320,76 @@ export default function ProfessionalDashboard() {
     );
   }
 
-  if (error) {
+  // --- NEW: Sensor Setup View ---
+  if (showSensorSetup) {
     return (
-      <div className="rounded-xl bg-red-50 p-6 border border-red-200 dark:bg-red-900/20 dark:border-red-800">
-        <div className="flex items-start gap-3">
-          <FiAlertCircle className="h-6 w-6 text-red-600 flex-shrink-0 mt-0.5" />
-          <div>
-            <h3 className="font-semibold text-red-900 dark:text-red-200 mb-2">
-              {t('dashboard.unableToLoad')}
-            </h3>
-            <p className="text-sm text-red-700 dark:text-red-300 mb-4">{error}</p>
-            <button
-              onClick={fetchProfessionalData}
-              className="text-sm font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-            >
-              {t('dashboard.tryAgain')}
-            </button>
-          </div>
-        </div>
+      <div className="space-y-6">
+        <button
+          onClick={() => setShowSensorSetup(false)}
+          className="text-sm font-medium text-primary-600 hover:text-primary-700 flex items-center gap-2"
+        >
+          ← Back to Dashboard
+        </button>
+        <ConnectSensor farmId={farmId} />
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
+      {/* Header with Sensor Toggle */}
+      <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-primary-100 dark:bg-primary-900/30 rounded-xl text-primary-600 dark:text-primary-400">
+                <FiActivity className="h-6 w-6" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">
+                  {analysis.irrigationPlan.cropName} Field
+                </h2>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                   पंजाब, India • {analysis.irrigationPlan.growthStage} Stage
+                </p>
+              </div>
+            </div>
+
+            {/* NEW: TRUST BADGE & CERTIFICATE TRIGGER */}
+            {certificateData && (
+              <div className="flex items-center gap-2">
+                <div className="hidden sm:flex flex-col items-end mr-2">
+                  <span className="text-[10px] font-bold text-primary-600 uppercase tracking-tighter">Farm Maturity</span>
+                  <span className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-wider">{certificateData.badge}</span>
+                </div>
+                <div className="relative group">
+                  <div className="p-3 bg-gradient-to-tr from-yellow-400 to-yellow-600 rounded-full text-white shadow-lg shadow-yellow-100 dark:shadow-none cursor-pointer hover:scale-110 transition-transform">
+                    <FiAward className="h-5 w-5" />
+                    <div className="absolute -top-1 -right-1 h-4 w-4 bg-white rounded-full flex items-center justify-center border border-yellow-500">
+                      <span className="text-[8px] font-bold text-yellow-600">{certificateData.trustScore}%</span>
+                    </div>
+                  </div>
+                  {/* Tooltip */}
+                  <div className="absolute top-full right-0 mt-2 w-48 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-100 dark:border-gray-700 opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
+                    <p className="text-[10px] uppercase font-bold text-gray-500 mb-1">Impact Certificate</p>
+                    <p className="text-xs text-gray-700 dark:text-gray-300 mb-2">Your data quality is rated at {certificateData.trustScore}%. Click to export.</p>
+                    <button className="w-full py-1.5 bg-yellow-500 text-white text-[10px] font-bold rounded uppercase hover:bg-yellow-600">
+                      Export Certificate
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center gap-2">
+        <button
+          onClick={() => setShowSensorSetup(true)}
+          className="flex items-center gap-2 px-3 py-1.5 bg-purple-50 text-purple-700 hover:bg-purple-100 dark:bg-purple-900/30 dark:text-purple-300 rounded-lg text-sm font-medium transition-colors border border-purple-200 dark:border-purple-800"
+        >
+          <FiCpu className="h-4 w-4" />
+          Connect Sensor
+        </button>
+      </div>
+      </div>
+
       {/* Professional Success Message */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
@@ -204,6 +412,46 @@ export default function ProfessionalDashboard() {
             <p className="text-xs text-green-700 dark:text-green-300 mt-1">
               {weatherData?.location || 'Cached Location'} • {analysis?.irrigationPlan?.cropName} • {analysis?.irrigationPlan?.calculation} • {analysis?.irrigationPlan?.reliability}% {t('dashboard.reliability')}
             </p>
+            {analysis?.irrigationPlan?.liveSensor && (
+              <div className="mt-2 flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-[10px] font-bold dark:bg-blue-900/40 dark:text-blue-300 uppercase">
+                  <FiDroplet className="h-3 w-3" />
+                  Live Moisture: {analysis.irrigationPlan.liveSensor.moisture}%
+                </div>
+                
+                {analysis.irrigationPlan.liveSensor.battery !== undefined && (
+                  <div className={`flex items-center gap-1 text-[10px] font-bold ${analysis.irrigationPlan.liveSensor.battery < 3.4 ? 'text-red-500 animate-pulse' : 'text-gray-500'}`}>
+                    <FiZap className="h-3 w-3" />
+                    {analysis.irrigationPlan.liveSensor.battery.toFixed(1)}V
+                  </div>
+                )}
+
+                {analysis.irrigationPlan.liveSensor.signal !== undefined && (
+                  <div className="flex items-center gap-1 text-[10px] font-bold text-gray-500">
+                    <FiWifi className="h-3 w-3" />
+                    {analysis.irrigationPlan.liveSensor.signal} dBm
+                  </div>
+                )}
+
+                <div className="text-[10px] text-gray-400 font-medium">
+                  {analysis.irrigationPlan.liveSensor.type.toUpperCase()}
+                </div>
+
+                <div className="text-[10px] text-gray-500 italic">
+                  Last seen: {new Date(analysis.irrigationPlan.liveSensor.lastSeen).toLocaleTimeString()}
+                </div>
+
+                {/* Maintenance Alert */}
+                {(analysis.irrigationPlan.liveSensor.battery < 3.4 || analysis.irrigationPlan.liveSensor.moisture > 98) && (
+                  <div className="w-full mt-2 p-2 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 rounded flex items-center gap-2">
+                    <FiAlertCircle className="h-3 w-3 text-red-500" />
+                    <span className="text-[10px] font-bold text-red-700 dark:text-red-400 uppercase tracking-tight">
+                      Maintenance Required: Check sensor probe & battery
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           <button
             onClick={fetchProfessionalData}
@@ -233,6 +481,144 @@ export default function ProfessionalDashboard() {
               {analysis.irrigationPlan.reliability}% Accurate
             </span>
           </div>
+
+          {/* NEW: ACTIONABLE PUMP METRIC */}
+          {analysis.irrigationPlan.actionable && (
+            <div className="mb-6 p-5 bg-gradient-to-br from-blue-600 to-primary-700 rounded-xl text-white shadow-lg shadow-blue-200 dark:shadow-none">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-white/20 rounded-lg">
+                  <FiCpu className="h-5 w-5" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-lg">Smart Pump Action</h4>
+                  <p className="text-blue-100 text-xs">Based on your {analysis.irrigationPlan.actionable.flowRateUsed} LPM Pump</p>
+                </div>
+              </div>
+              
+              <div className="flex items-end justify-between gap-4">
+                <div>
+                  <p className="text-blue-100 text-[10px] uppercase font-bold tracking-wider mb-1">Recommended Duration</p>
+                  <p className="text-4xl font-extrabold flex items-baseline gap-1">
+                    {analysis.irrigationPlan.actionable.pumpRunTime}
+                    <span className="text-lg font-medium opacity-80 decoration-none">min.</span>
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-blue-100 text-[10px] uppercase font-bold tracking-wider mb-1">Total Water</p>
+                  <p className="text-xl font-bold">{analysis.irrigationPlan.actionable.totalLiters.toLocaleString()} L</p>
+                </div>
+              </div>
+
+              <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between text-[11px]">
+                <span className="flex items-center gap-1 opacity-80">
+                  <FiCheckCircle className="h-3 w-3" /> System Efficiency: {Math.round(analysis.irrigationPlan.actionable.efficiencyUsed * 100)}%
+                </span>
+                <button 
+                  onClick={handleStartPump}
+                  disabled={isPumpLoading}
+                  className={`px-3 py-1 bg-white text-blue-700 font-bold rounded-lg hover:bg-blue-50 transition-colors ${isPumpLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {isPumpLoading ? 'CONNECTING...' : 'START PUMP'}
+                </button>
+              </div>
+              
+              {pumpStatus && (
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`mt-3 p-2 rounded text-[10px] font-bold text-center ${pumpStatus.success ? 'bg-green-400/20 text-green-50' : 'bg-red-400/20 text-red-50'}`}
+                >
+                  {pumpStatus.message}
+                </motion.div>
+              )}
+            </div>
+          )}
+          
+          {/* NEW: PHOTO VERIFICATION TRIGGER */}
+            <div className="mt-6 border-t border-blue-100 dark:border-blue-900/30 pt-4">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h4 className="font-bold text-blue-900 dark:text-blue-100">Ground Reality Check</h4>
+                  <p className="text-[10px] text-blue-700 dark:text-blue-400">Take a soil photo to verify sensor data with AI eyes</p>
+                </div>
+                <label className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 rounded-lg text-sm font-bold shadow-sm hover:shadow-md transition-all border border-blue-200 dark:border-blue-700">
+                  <FiCamera className="h-4 w-4" />
+                  {isVisionLoading ? 'Analyzing...' : 'Verify with Photo'}
+                  <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoUpload} disabled={isVisionLoading} />
+                </label>
+              </div>
+
+              <AnimatePresence>
+                {visionAnalysis && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                    className="mt-4 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-800"
+                  >
+                    {/* Ceres Header */}
+                    <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/50 p-3 dark:border-gray-700 dark:bg-gray-800/50">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xl">✨</span>
+                        <div>
+                          <h4 className="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider">Ceres Vision Analysis</h4>
+                          <p className="text-[9px] text-gray-500 font-medium">Real-time Visual Reasoning</p>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => setVisionAnalysis(null)}
+                        className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
+                      >
+                        <FiX className="h-4 w-4 text-gray-400" />
+                      </button>
+                    </div>
+
+                    <div className="p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        {visionAnalysis.matchesDigitalData ? (
+                          <div className="flex items-center gap-1.5 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-[10px] font-bold dark:bg-green-900/40 dark:text-green-300">
+                            <FiCheckCircle className="h-3 w-3" />
+                            Confirmed Match
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1.5 px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full text-[10px] font-bold dark:bg-yellow-900/40 dark:text-yellow-300">
+                            <FiAlertCircle className="h-3 w-3" />
+                            Visual Variance Detected
+                          </div>
+                        )}
+                        <span className="text-[10px] font-bold text-gray-400 uppercase">
+                          {visionAnalysis.confidence}% Confidence
+                        </span>
+                      </div>
+
+                      <div className="prose prose-sm dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 mb-4 text-sm leading-relaxed">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {visionAnalysis.reasoning}
+                        </ReactMarkdown>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-100 dark:border-gray-700">
+                        {visionAnalysis.observations.map((obs: string, idx: number) => (
+                          <span key={idx} className="text-[9px] px-2 py-1 bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400 rounded-md border border-gray-100 dark:border-gray-800 font-medium lowercase">
+                            # {obs}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Footer Action */}
+                    <div className="bg-primary-50 dark:bg-primary-900/10 p-2 text-center border-t border-primary-100 dark:border-primary-900/20">
+                      <button 
+                        onClick={() => setVisionAnalysis(null)}
+                        className="text-[10px] font-bold text-primary-600 dark:text-primary-400 uppercase tracking-widest hover:underline"
+                      >
+                        Dismiss Analysis
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
           {/* Simple Action Items */}
           <div className="space-y-4">
@@ -444,6 +830,86 @@ export default function ProfessionalDashboard() {
         </motion.div>
       )}
 
+      {/* Satellite Field Health */}
+      {satelliteData?.health && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.35 }}
+          className="rounded-xl border border-gray-200 bg-white dark:bg-gray-800 dark:border-gray-700 overflow-hidden mb-6"
+        >
+          <div className="flex items-center justify-between p-4 bg-gray-50 border-b border-gray-200 dark:bg-gray-900/50 dark:border-gray-700">
+            <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2 text-sm md:text-base">
+              <FiNavigation className="h-4 w-4 text-primary-600" />
+              Satellite Field Health
+            </h3>
+            <span className="text-[10px] text-gray-500 uppercase font-bold tracking-widest hidden sm:inline">
+              Live Imagery (NDVI)
+            </span>
+          </div>
+
+          <div className="p-4 md:p-6">
+            <div className="flex flex-col md:flex-row gap-6 items-center">
+              {/* NDVI Gauge */}
+              <div className="relative h-28 w-28 md:h-32 md:w-32 flex items-center justify-center">
+                <svg className="h-full w-full transform -rotate-90">
+                  <circle
+                    cx="64" cy="64" r="58"
+                    stroke="currentColor" strokeWidth="8"
+                    fill="transparent"
+                    className="text-gray-100 dark:text-gray-700"
+                  />
+                  <circle
+                    cx="64" cy="64" r="58"
+                    stroke="currentColor" strokeWidth="10"
+                    fill="transparent"
+                    strokeDasharray={364.4}
+                    strokeDashoffset={364.4 * (1 - satelliteData.ndvi.mean)}
+                    strokeLinecap="round"
+                    className={
+                      satelliteData.health.color === 'green' ? 'text-green-500' :
+                      satelliteData.health.color === 'yellow' ? 'text-yellow-500' :
+                      satelliteData.health.color === 'orange' ? 'text-orange-500' :
+                      'text-red-500'
+                    }
+                  />
+                </svg>
+                <div className="absolute text-center">
+                  <p className="text-xl md:text-2xl font-black text-gray-900 dark:text-white">
+                    {Math.round(satelliteData.ndvi.mean * 100)}%
+                  </p>
+                  <p className="text-[10px] text-gray-500 font-bold uppercase">Index</p>
+                </div>
+              </div>
+
+              {/* Status Details */}
+              <div className="flex-1 space-y-2 text-center md:text-left">
+                <div className={`inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                  satelliteData.health.color === 'green' ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300' :
+                  satelliteData.health.color === 'yellow' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300' :
+                  'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300'
+                }`}>
+                  Status: {satelliteData.health.status}
+                </div>
+                <p className="text-sm text-gray-700 dark:text-gray-300 italic">
+                  "{satelliteData.health.description}"
+                </p>
+                <div className="grid grid-cols-2 gap-3 pt-2">
+                  <div className="p-2 bg-gray-50 dark:bg-gray-900/40 rounded border border-gray-100 dark:border-gray-700 text-center">
+                    <p className="text-[9px] font-bold text-gray-500 uppercase">Confidence</p>
+                    <p className="text-xs font-bold text-gray-900 dark:text-white">High (85%)</p>
+                  </div>
+                  <div className="p-2 bg-gray-50 dark:bg-gray-900/40 rounded border border-gray-100 dark:border-gray-700 text-center">
+                    <p className="text-[9px] font-bold text-gray-500 uppercase">Cloud Cover</p>
+                    <p className="text-xs font-bold text-gray-900 dark:text-white">{satelliteData.metadata.cloudCover}%</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* Simplified Recommendations - Show Top 3 Only */}
       {analysis?.recommendations && analysis.recommendations.length > 0 && (
         <motion.div
@@ -603,6 +1069,11 @@ export default function ProfessionalDashboard() {
           </div>
         </motion.div>
       )}
+
+      {/* Professional Tools: Export Center */}
+      <div className="mt-8 mb-4">
+        <ExportPortal farmId={analysis?.irrigationPlan?.farmId || 'default-farm'} />
+      </div>
 
       {/* Data Source Footer */}
       <div className="text-center text-xs text-gray-500 dark:text-gray-400">

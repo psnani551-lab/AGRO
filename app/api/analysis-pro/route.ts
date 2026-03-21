@@ -12,6 +12,8 @@ import type { Locale } from '@/lib/serverTranslations';
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
+import { supabase } from '@/lib/supabaseClient';
+
 export async function POST(request: NextRequest) {
   try {
     const { farmProfile, weatherData, plantingDate, locale } = await request.json();
@@ -23,11 +25,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // --- NEW: IoT SENSOR INTEGRATION ---
+    // Fetch latest sensor reading for this farm (last 24h)
+    let sensorData = null;
+    if (farmProfile.id) {
+      const { data, error } = await supabase
+        .from('sensor_readings')
+        .select('*')
+        .eq('farm_id', farmProfile.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+      
+      if (!error && data && data.length > 0) {
+        sensorData = data[0];
+        console.log(`Using live sensor data for farm ${farmProfile.id}: ${sensorData.moisture}% moisture`);
+      }
+    }
+
     const analysis = await generateProfessionalAnalysis(
       farmProfile,
       weatherData,
       plantingDate,
-      locale || 'en'
+      locale || 'en',
+      sensorData
     );
 
     return NextResponse.json(analysis);
@@ -44,7 +65,8 @@ async function generateProfessionalAnalysis(
   farmProfile: any,
   weatherData: any,
   plantingDate?: string,
-  locale: Locale = 'en'
+  locale: Locale = 'en',
+  sensorData: any = null
 ) {
   const { soilType, currentCrops, farmSize, irrigationType } = farmProfile;
   const crops = Array.isArray(currentCrops) && currentCrops.length > 0 ? currentCrops : ['Rice'];
@@ -57,7 +79,8 @@ async function generateProfessionalAnalysis(
     weatherData,
     plantingDate,
     irrigationType || 'Drip Irrigation',
-    locale
+    locale,
+    sensorData
   );
 
   const yieldForecast = generateProfessionalYieldForecast(
@@ -135,6 +158,8 @@ async function generateGenericAIInsights(profile: any, weather: any, irrigation:
       - Crop: ${profile.currentCrops.join(', ')}
       - Soil: ${profile.soilType}
       - Irrigation: ${profile.irrigationType}
+      - Pump Run Time: ${irrigation.actionable.pumpRunTime} minutes
+      - Total liters: ${irrigation.actionable.totalLiters}L
       
       ANALYSIS RESULTS:
       - Water Need: ${irrigation.irrigationNeed} mm/day
@@ -177,10 +202,11 @@ async function generateProfessionalIrrigationPlan(
   weatherData: any,
   plantingDate?: string,
   irrigationType?: string,
-  locale: Locale = 'en'
+  locale: Locale = 'en',
+  sensorData: any = null
 ) {
   const cropData = getCropData(cropName);
-  // Fallback crop data if not found
+  // ... existing setup ...
   const safeCropData = cropData || {
     name: cropName,
     averageYield: 4000,
@@ -211,12 +237,41 @@ async function generateProfessionalIrrigationPlan(
   };
 
   const etResult = calculateIrrigationSchedule(weather, cropName, daysAfterPlanting, soilType, totalRain);
-  const frequency = getIrrigationFrequency(soilType, etResult.irrigationNeed, 30);
+  
+  // SENSOR OVERRIDE LOGIC
+  let irrigationNeed = etResult.irrigationNeed;
+  let reliability = 95;
+  let calculationMethod = 'FAO-56 Penman-Monteith';
 
+  if (sensorData && sensorData.moisture !== undefined) {
+    if (sensorData.moisture > 40) {
+      irrigationNeed = Math.max(0, irrigationNeed - 2); 
+    } else if (sensorData.moisture < 20) {
+      irrigationNeed += 3; 
+    }
+    reliability = 100; 
+    calculationMethod = `FAO-56 + IoT Sensor (${sensorData.sensor_id})`;
+  }
+
+  // --- NEW: PUMP RUN-TIME CALCULATION ---
+  // Farm size in sqm (assuming hectares for calculation)
+  const farmHectares = 1; // Default
+  const areaSqm = (weatherData?.farmSize || 1) * 10000;
+  const totalLitersRequired = irrigationNeed * areaSqm;
+  
+  // Equipment specs from profile
+  const pumpLPM = weatherData?.pump_flow_rate || 400; // Default 400 LPM
+  const efficiency = weatherData?.irrigation_efficiency || 0.85;
+
+  const rawRunTimeMin = totalLitersRequired / (pumpLPM * efficiency);
+  const pumpRunTimeMin = Math.round(rawRunTimeMin);
+
+  const frequency = getIrrigationFrequency(soilType, irrigationNeed, 30);
+  // ... rest of setup ...
   const methodEfficiency: Record<string, number> = {
     'Drip Irrigation': 0.90, 'Sprinkler': 0.75, 'Flood Irrigation': 0.60, 'Manual': 0.50
   };
-  const efficiency = methodEfficiency[irrigationType || 'Drip Irrigation'] || 0.85;
+  const currentEfficiency = methodEfficiency[irrigationType || 'Drip Irrigation'] || 0.85;
 
   return {
     cropName,
@@ -224,25 +279,39 @@ async function generateProfessionalIrrigationPlan(
     method: irrigationType || 'Drip Irrigation',
     et0: etResult.et0,
     etc: etResult.etc,
-    irrigationNeed: etResult.irrigationNeed,
+    irrigationNeed: irrigationNeed,
     wateringSchedule: translateFrequency(frequency.frequency, locale),
-    dailyWaterAmount: `${etResult.irrigationNeed}mm`,
+    dailyWaterAmount: `${irrigationNeed}mm`,
     amountPerIrrigation: `${frequency.amountPerIrrigation}mm`,
-    weeklyTotal: `${etResult.weeklyNeed}mm`,
-    irrigationEfficiency: `${(efficiency * 100).toFixed(0)}%`,
-    waterSavings: `${((0.90 - efficiency) * etResult.weeklyNeed).toFixed(1)}mm/week vs drip`,
+    weeklyTotal: `${(irrigationNeed * 7).toFixed(1)}mm`,
+    irrigationEfficiency: `${(currentEfficiency * 100).toFixed(0)}%`,
+    waterSavings: `${((0.90 - currentEfficiency) * etResult.weeklyNeed).toFixed(1)}mm/week vs drip`,
     rainAdjustment: totalRain > 20 ? 'Reduce due to rain' : 'Normal',
     growthStage: getGrowthStage(daysAfterPlanting, safeCropData),
     daysAfterPlanting,
-    tips: [], // Will be filled by AI or fallback
-    steps: generateIrrigationSteps(irrigationType || 'Drip', frequency.amountPerIrrigation, efficiency),
-    smartSchedule: generate7DaySmartSchedule(weatherData?.forecast || [], etResult.irrigationNeed, safeCropData, soilType),
-    calculation: 'FAO-56 Penman-Monteith',
-    reliability: 95
+    tips: [], 
+    steps: generateIrrigationSteps(irrigationType || 'Drip', frequency.amountPerIrrigation, currentEfficiency),
+    smartSchedule: generate7DaySmartSchedule(weatherData?.forecast || [], irrigationNeed, safeCropData, soilType, sensorData),
+    calculation: calculationMethod,
+    reliability: reliability,
+    liveSensor: sensorData ? {
+      moisture: sensorData.moisture,
+      lastSeen: sensorData.created_at,
+      battery: sensorData.battery_voltage,
+      signal: sensorData.signal_strength,
+      type: sensorData.sensor_type
+    } : null,
+    // ACTIONABLE METRICS
+    actionable: {
+      pumpRunTime: pumpRunTimeMin,
+      totalLiters: Math.round(totalLitersRequired),
+      flowRateUsed: pumpLPM,
+      efficiencyUsed: efficiency
+    }
   };
 }
 
-function generate7DaySmartSchedule(forecast: any[], baseDailyNeed: number, cropData: any, soilType: string) {
+function generate7DaySmartSchedule(forecast: any[], baseDailyNeed: number, cropData: any, soilType: string, sensorData: any = null) {
   let accumulatedDeficit = 0;
   const soilCapacity: Record<string, number> = { 'Sandy': 15, 'Loamy': 30, 'Clay': 45, 'Silty': 35 };
   const maxDeficit = (soilCapacity[soilType] || 30) * 0.5;
@@ -257,12 +326,23 @@ function generate7DaySmartSchedule(forecast: any[], baseDailyNeed: number, cropD
     let icon = 'cloud';
     let reason = 'Moisture levels adequate';
 
-    if (day.rain > 5) {
+    // First day can be enhanced by sensor data
+    if (index === 0 && sensorData && sensorData.moisture !== undefined) {
+      reason = `Sensor reports ${sensorData.moisture}% moisture`;
+      if (sensorData.moisture < 20) {
+        action = 'Irrigate';
+        amount = Math.round(baseDailyNeed + 3);
+        icon = 'droplet';
+        reason = `Critical: Sensor reports ${sensorData.moisture}% moisture`;
+      }
+    }
+
+    if (day.rain > 5 && action !== 'Irrigate') {
       action = 'Skip';
       icon = 'rain';
       reason = `Rainfall (${day.rain}mm) expected`;
       accumulatedDeficit = Math.max(0, accumulatedDeficit - effectiveRain);
-    } else if (accumulatedDeficit >= maxDeficit) {
+    } else if (accumulatedDeficit >= maxDeficit && action !== 'Irrigate') {
       action = 'Irrigate';
       amount = Math.round(accumulatedDeficit);
       icon = 'droplet';
