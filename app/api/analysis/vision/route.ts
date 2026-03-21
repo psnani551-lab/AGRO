@@ -26,16 +26,21 @@ export async function POST(request: NextRequest) {
       TASK:
       1. Inspect soil texture, color, and signs of moisture (cracks, dampness, dust).
       2. Identify if the visual state MATCHES the digital data.
-      3. Provide a "Visual Reasoning" sentence to build trust with the farmer.
-      4. Rate the confidence of your visual assessment (1-100).
+      3. Provide a brief, farmer-friendly "Visual Reality Check" that explains what the photo shows in simple terms. Use local Indian context if appropriate (e.g., mention specific soil types like Black Cotton soil or Alluvial if detected).
+      4. Suggest 3 specific, actionable steps to IMPROVE CROP YIELD based on the visual and digital data.
+      5. Rate the confidence of your assessment (1-100).
 
       Return ONLY a JSON object:
       {
-        "visualStatus": "Dry" | "Moist" | "Wet" | "Critical",
+        "visualStatus": "Excellent" | "Good" | "Stable" | "Warning" | "Critical",
         "matchesDigitalData": true | false,
-        "reasoning": "string",
+        "farmerFriendlyInsights": "A clear, simple 2-sentence explanation of what you see in the photo compared to the data.",
+        "yieldSuggestions": [
+          { "title": "Succinct title", "action": "Specific instruction for the farmer", "impact": "High" | "Medium" | "Low" }
+        ],
         "confidence": number,
-        "observations": ["crack detection", "discoloration", "foliage health"]
+        "soilHealth": "Short description of soil state",
+        "cropHealth": "Short description of crop state"
       }
     `;
 
