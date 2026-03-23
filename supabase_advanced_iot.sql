@@ -24,6 +24,8 @@ CREATE TABLE IF NOT EXISTS public.remote_commands (
 
 ALTER TABLE public.remote_commands ENABLE ROW LEVEL SECURITY;
 
+-- 4. Idempotent Policy Creation
+DROP POLICY IF EXISTS "Users can view their own remote commands" ON public.remote_commands;
 CREATE POLICY "Users can view their own remote commands" 
 ON public.remote_commands FOR SELECT 
 USING (farm_id IN (SELECT id FROM public.farm_profiles WHERE user_id = auth.uid()));
