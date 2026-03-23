@@ -14,6 +14,11 @@ export default function DashboardPage() {
   const { t } = useI18n();
   const [farmProfile, setFarmProfile] = useState<FarmProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Shared State for Interlinking
+  const [isPumpLoading, setIsPumpLoading] = useState(false);
+  const [pumpStatus, setPumpStatus] = useState<{ success?: boolean; message?: string } | null>(null);
+  const [visionAnalysis, setVisionAnalysis] = useState<any>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -34,6 +39,33 @@ export default function DashboardPage() {
     };
     fetchProfile();
   }, []);
+
+  const handleStartPump = async (durationMin = 30) => {
+    setIsPumpLoading(true);
+    setPumpStatus(null);
+    try {
+      const response = await fetch('/api/iot/control', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          deviceId: 'PUMP-01',
+          action: 'START',
+          farmId: farmProfile?.id,
+          userId: farmProfile?.user_id,
+          durationMin,
+        }),
+      });
+      const result = await response.json();
+      setPumpStatus({
+        success: response.ok,
+        message: response.ok ? '✅ Pump command sent. Waiting for confirmation...' : result.error,
+      });
+    } catch {
+      setPumpStatus({ success: false, message: '❌ Failed to reach pump gateway' });
+    } finally {
+      setIsPumpLoading(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -63,10 +95,26 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-black pb-12">
       <DashboardHeader farmProfile={farmProfile} />
       {/* Original Rich Dashboard — weather, yield, market prices, etc. */}
-      <UltimateDashboard farmProfile={farmProfile} />
+      <UltimateDashboard 
+        farmProfile={farmProfile} 
+        onStartPump={handleStartPump}
+        isPumpLoading={isPumpLoading}
+        pumpStatus={pumpStatus}
+        visionAnalysis={visionAnalysis}
+        setVisionAnalysis={setVisionAnalysis}
+      />
       {/* New Smart Tools Panel — IoT Control, AI Vision, Export, Sensor */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-        <SmartToolsPanel farmProfile={farmProfile} />
+        <SmartToolsPanel 
+            farmProfile={farmProfile} 
+            isPumpLoading={isPumpLoading}
+            setIsPumpLoading={setIsPumpLoading}
+            pumpStatus={pumpStatus}
+            setPumpStatus={setPumpStatus}
+            visionAnalysis={visionAnalysis}
+            setVisionAnalysis={setVisionAnalysis}
+            onStartPump={handleStartPump}
+        />
       </div>
     </div>
   );

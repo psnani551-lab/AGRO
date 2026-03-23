@@ -381,7 +381,21 @@ const ActionButton = memo(({ icon: Icon, label, color, onClick, t }: any) => (
 
 // --- 10. Ultimate Dashboard (Main) ---
 
-export default function UltimateDashboard({ farmProfile }: { farmProfile?: any }) {
+export default function UltimateDashboard({ 
+    farmProfile, 
+    onStartPump, 
+    isPumpLoading, 
+    pumpStatus, 
+    visionAnalysis, 
+    setVisionAnalysis 
+}: { 
+    farmProfile?: any;
+    onStartPump?: (durationMin?: number) => void;
+    isPumpLoading?: boolean;
+    pumpStatus?: any;
+    visionAnalysis?: any;
+    setVisionAnalysis?: (analysis: any) => void;
+}) {
     const { t } = useI18n();
     const [weatherData, setWeatherData] = useState<any>(null);
     const [marketData, setMarketData] = useState<any>(null);
@@ -436,10 +450,7 @@ export default function UltimateDashboard({ farmProfile }: { farmProfile?: any }
                 }
             }
 
-            // 2. Parallel Fetching for speed
             // 2. Sequential Fetching (Analysis needs Weather)
-
-            // A. Fetch Weather (POST)
             const weatherRes = await fetch('/api/weather', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -448,14 +459,13 @@ export default function UltimateDashboard({ farmProfile }: { farmProfile?: any }
 
             setWeatherData(weatherRes);
 
-            // Parse Location for Market API (e.g. "Hyderabad, Telangana, IN" -> State: Telangana, District: Hyderabad)
-            // Simple heuristic to split by comma
+            // Parse Location for Market API
             let state = 'India';
             let district = 'General';
             if (locationQuery) {
                 const parts = locationQuery.split(',').map((s: string) => s.trim());
                 if (parts.length >= 2) {
-                    state = parts[1]; // Assuming "City, State, Country"
+                    state = parts[1];
                     district = parts[0];
                 } else {
                     district = parts[0];
@@ -463,9 +473,7 @@ export default function UltimateDashboard({ farmProfile }: { farmProfile?: any }
             }
 
             // B. Fetch Market & Analysis (Parallel)
-            // Note: Analysis needs weatherData from step A
             const [marketRes, analysisRes] = await Promise.all([
-                // Use POST to get Localized/Regional prices
                 fetch('/api/market-prices', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -482,8 +490,8 @@ export default function UltimateDashboard({ farmProfile }: { farmProfile?: any }
                     body: JSON.stringify({
                         farmProfile: {
                             location: locationQuery,
-                            currentCrops: [cropQuery], // API expects array
-                            soilType: 'Loamy', // Default if missing
+                            currentCrops: [cropQuery],
+                            soilType: 'Loamy',
                             farmSize: 5
                         },
                         weatherData: weatherRes
@@ -491,20 +499,10 @@ export default function UltimateDashboard({ farmProfile }: { farmProfile?: any }
                 }).then(r => r.json())
             ]);
 
-            // Fallback for Market Data if API returns empty
-            // The Server POST endpoint handles fallbacks too, but we keep this client-side safety net for "100% Reliability"
             let finalMarketData = marketRes || {};
-            // Adapt structure: The POST returns { data: [...] }, while GET might differ. 
-            // Our POST endpoint returns { data: [ { commodity... } ] } which maps to our Table. 
-            // BUT our Table expects `regional` array? 
-            // Let's check MarketAnalysisTable. It uses `marketData.regional` (Line 194).
-            // The POST response has `data` as the array. So we map `data` to `regional`.
-
             const regionalData = (marketRes.data && Array.isArray(marketRes.data)) ? marketRes.data : [];
 
             if (regionalData.length === 0) {
-                console.warn("Using Mock Market Data as API returned empty.");
-                // ... Mock data generation ...
                 finalMarketData = {
                     location: locationQuery || 'Local Mandi',
                     regional: [
@@ -547,48 +545,37 @@ export default function UltimateDashboard({ farmProfile }: { farmProfile?: any }
                 }
             });
 
-
         } catch (error) {
             console.error("Dashboard Data Error:", error);
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [user, farmProfile]);
 
     useEffect(() => {
         fetchDashboardData();
     }, [fetchDashboardData]);
 
-
     if (loading) {
         return <AnalysisLoader />;
     }
 
-    return (
-        <div className="min-h-screen bg-black text-white p-4 md:p-8 pt-24 font-sans selection:bg-emerald-500/30">
-            <div className="max-w-7xl mx-auto space-y-6">
+    // Sort Market Data to prioritize farm crops
+    const sortedMarketData = {
+        ...marketData,
+        regional: [...(marketData?.regional || [])].sort((a, b) => {
+            const farmCrops = (farmProfile?.current_crops || []).map((c: string) => c.toLowerCase());
+            const aIn = farmCrops.some((c: string) => a.commodity.toLowerCase().includes(c));
+            const bIn = farmCrops.some((c: string) => b.commodity.toLowerCase().includes(c));
+            if (aIn && !bIn) return -1;
+            if (!aIn && bIn) return 1;
+            return 0;
+        })
+    };
 
-                {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                    <div>
-                        <h1 className="text-3xl font-bold tracking-tight text-white mb-1">{t('dashboard.title')}</h1>
-                        <p className="text-zinc-400 text-sm">{t('dashboard.subtitle')}</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <button onClick={fetchDashboardData} className="p-3 bg-zinc-900 rounded-xl hover:bg-zinc-800 transition-colors border border-zinc-800 group">
-                            <FiRefreshCw className="group-hover:rotate-180 transition-transform duration-500 text-zinc-400" />
-                        </button>
-                        <button
-                            onClick={() => router.push('/tools/alerts')}
-                            className="p-3 bg-zinc-900 rounded-xl hover:bg-zinc-800 transition-colors border border-zinc-800 relative"
-                        >
-                            <FiAlertCircle className="text-zinc-400" />
-                            {newAlertsCount > 0 && (
-                                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse border-2 border-black" />
-                            )}
-                        </button>
-                    </div>
-                </div>
+    return (
+        <div className="min-h-screen bg-black text-white p-4 md:p-8 pt-6 font-sans selection:bg-emerald-500/30">
+            <div className="max-w-7xl mx-auto space-y-6">
 
                 {/* Row 1: Key Metrics & Weather */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -600,7 +587,7 @@ export default function UltimateDashboard({ farmProfile }: { farmProfile?: any }
                     </div>
                 </div>
 
-                {/* Row 2: Live Widgets (The 'Exactly Like This' Requirement) */}
+                {/* Row 2: Live Widgets */}
                 <div className="relative">
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 px-3 py-1 bg-blue-500 text-white rounded-full shadow-lg text-[10px] font-bold uppercase tracking-widest border border-blue-400">
                         🛰️ Space-Derived Analysis
@@ -614,12 +601,9 @@ export default function UltimateDashboard({ farmProfile }: { farmProfile?: any }
 
                 {/* Row 3: Rotation & Recommendations */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Left: Rotation */}
                     <div className="lg:col-span-1">
                         <SmartRotationCard farmProfile={farmProfile} weatherData={weatherData} t={t} />
                     </div>
-
-                    {/* Right: AI Recommendations */}
                     <div className="lg:col-span-2">
                         <RecommendationsWidget analysis={analysis} t={t} />
                     </div>
@@ -627,14 +611,25 @@ export default function UltimateDashboard({ farmProfile }: { farmProfile?: any }
 
                 {/* Row 4: Market Analysis Table */}
                 <div id="market-section" className="w-full">
-                    <MarketAnalysisTable marketData={marketData} t={t} />
+                    <MarketAnalysisTable marketData={sortedMarketData} t={t} />
                 </div>
 
             </div>
 
             {/* Modals */}
             <AnimatePresence>
-                {activeModal === 'irrigation' && <IrrigationModal isOpen={true} onClose={() => setActiveModal(null)} analysis={analysis} farmProfile={farmProfile} t={t} />}
+                {activeModal === 'irrigation' && (
+                    <IrrigationModal 
+                        isOpen={true} 
+                        onClose={() => setActiveModal(null)} 
+                        analysis={analysis} 
+                        farmProfile={farmProfile} 
+                        t={t} 
+                        onStartPump={onStartPump}
+                        isPumpLoading={isPumpLoading}
+                        pumpStatus={pumpStatus}
+                    />
+                )}
                 {activeModal === 'disease' && <DiseaseModal isOpen={true} onClose={() => setActiveModal(null)} analysis={analysis} t={t} />}
                 {activeModal === 'yield' && <YieldModal isOpen={true} onClose={() => setActiveModal(null)} analysis={analysis} t={t} />}
             </AnimatePresence>

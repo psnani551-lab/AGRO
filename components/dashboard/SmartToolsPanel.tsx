@@ -2,46 +2,33 @@
 
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiCpu, FiCamera, FiDownload, FiZap, FiCheckCircle, FiAlertCircle, FiX, FiTrendingUp } from 'react-icons/fi';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import { FiCpu, FiCamera, FiDownload, FiZap, FiCheckCircle, FiAlertCircle, FiX, FiTrendingUp, FiSettings, FiSmartphone, FiClock, FiMessageSquare, FiMic, FiCloud, FiCloudRain, FiDroplet, FiSun, FiMoon, FiBattery, FiWifi } from 'react-icons/fi';
 import ConnectSensor from './ConnectSensor';
 import { ExportPortal } from './ExportPortal';
 
-export default function SmartToolsPanel({ farmProfile }: { farmProfile?: any }) {
-  const [activeTab, setActiveTab] = useState<'overview' | 'sensor' | 'vision' | 'export'>('overview');
-  const [isPumpLoading, setIsPumpLoading] = useState(false);
-  const [pumpStatus, setPumpStatus] = useState<{ success?: boolean; message?: string } | null>(null);
+export default function SmartToolsPanel({ 
+  farmProfile,
+  isPumpLoading,
+  setIsPumpLoading,
+  pumpStatus,
+  setPumpStatus,
+  visionAnalysis,
+  setVisionAnalysis,
+  onStartPump
+}: { 
+  farmProfile?: any;
+  isPumpLoading: boolean;
+  setIsPumpLoading: (loading: boolean) => void;
+  pumpStatus: any;
+  setPumpStatus: (status: any) => void;
+  visionAnalysis: any;
+  setVisionAnalysis: (analysis: any) => void;
+  onStartPump: (durationMin?: number) => void;
+}) {
+  const [activeTab, setActiveTab] = useState<'overview' | 'sensor' | 'automation' | 'vision' | 'remote' | 'export'>('overview');
   const [isVisionLoading, setIsVisionLoading] = useState(false);
-  const [visionAnalysis, setVisionAnalysis] = useState<any>(null);
+  const [isAutoOn, setIsAutoOn] = useState(farmProfile?.is_auto_irrigation || false);
   const farmId = farmProfile?.id || 'default-farm';
-
-  const handleStartPump = async () => {
-    setIsPumpLoading(true);
-    setPumpStatus(null);
-    try {
-      const response = await fetch('/api/iot/control', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          deviceId: 'PUMP-01',
-          action: 'START',
-          farmId: farmProfile?.id,
-          userId: farmProfile?.user_id,
-          durationMin: 30,
-        }),
-      });
-      const result = await response.json();
-      setPumpStatus({
-        success: response.ok,
-        message: response.ok ? '✅ Pump command sent. Waiting for confirmation...' : result.error,
-      });
-    } catch {
-      setPumpStatus({ success: false, message: '❌ Failed to reach pump gateway' });
-    } finally {
-      setIsPumpLoading(false);
-    }
-  };
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -56,7 +43,10 @@ export default function SmartToolsPanel({ farmProfile }: { farmProfile?: any }) 
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ image: reader.result }),
         });
-        if (response.ok) setVisionAnalysis(await response.json());
+        if (response.ok) {
+            const data = await response.json();
+            setVisionAnalysis(data);
+        }
       } catch {}
       finally { setIsVisionLoading(false); }
     };
@@ -64,35 +54,54 @@ export default function SmartToolsPanel({ farmProfile }: { farmProfile?: any }) 
   };
 
   const tabs = [
-    { id: 'overview', label: '⚡ Overview', icon: FiZap },
+    { id: 'overview', label: '🏠 Home', icon: FiZap },
+    { id: 'automation', label: '🤖 Auto-Pilot', icon: FiSettings },
+    { id: 'remote', label: '📱 Phone Link', icon: FiSmartphone },
     { id: 'sensor', label: '📡 Sensor', icon: FiCpu },
-    { id: 'vision', label: '✨ AI Vision', icon: FiCamera },
-    { id: 'export', label: '📦 Export', icon: FiDownload },
+    { id: 'vision', label: '✨ AI Camera', icon: FiCamera },
+    { id: 'export', label: '📦 Get Data', icon: FiDownload },
   ] as const;
 
   return (
-    <div className="mt-6 rounded-3xl bg-zinc-950 border border-zinc-800 overflow-hidden">
-      {/* Header */}
-      <div className="px-6 pt-6 pb-4 border-b border-zinc-800">
-        <h2 className="text-white text-lg font-bold tracking-tight flex items-center gap-2">
-          <span className="p-1.5 bg-zinc-800 rounded-lg"><FiZap className="text-white w-4 h-4" /></span>
-          Smart Farm Tools
-        </h2>
-        <p className="text-zinc-500 text-xs mt-1">IoT Control · AI Vision · Data Export · Sensor Setup</p>
+    <div className="mt-6 rounded-3xl bg-zinc-950 border border-zinc-800 overflow-hidden shadow-2xl">
+      {/* Friendly Header */}
+      <div className="px-6 pt-6 pb-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/30">
+        <div>
+          <h2 className="text-white text-xl font-black tracking-tight flex items-center gap-3">
+            <span className="p-2 bg-emerald-500/20 rounded-xl text-emerald-400"><FiZap className="w-5 h-5 shadow-[0_0_15px_rgba(52,211,153,0.3)]" /></span>
+            Farmer Assistant
+          </h2>
+          <p className="text-zinc-500 text-[10px] mt-1 uppercase tracking-widest font-black opacity-70">Smart Control · Easy Mode</p>
+        </div>
+        
+        <button 
+            onClick={() => setIsAutoOn(!isAutoOn)}
+            className={`flex items-center gap-3 px-4 py-2 rounded-2xl border-2 transition-all active:scale-95 ${
+                isAutoOn 
+                ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.1)]' 
+                : 'border-zinc-800 bg-zinc-900 text-zinc-500'
+            }`}
+        >
+          <div className={`h-3 w-3 rounded-full ${isAutoOn ? 'bg-emerald-500 animate-pulse' : 'bg-zinc-700'}`} />
+          <span className="text-xs font-black uppercase tracking-tighter">
+            {isAutoOn ? 'Auto-Pilot ON' : 'Turn Auto ON'}
+          </span>
+        </button>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 px-4 pt-3 border-b border-zinc-800">
+      <div className="flex gap-1 px-4 pt-3 border-b border-zinc-800 overflow-x-auto scrollbar-hide bg-zinc-950">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 text-xs font-bold rounded-t-lg transition-all ${
+            className={`px-5 py-3 text-xs font-black rounded-t-xl transition-all flex-shrink-0 flex items-center gap-2 tracking-tight ${
               activeTab === tab.id
-                ? 'bg-zinc-800 text-white border-b-2 border-white'
+                ? 'bg-zinc-800 text-white border-b-4 border-emerald-500'
                 : 'text-zinc-500 hover:text-zinc-300'
             }`}
           >
+            <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-emerald-400' : ''}`} />
             {tab.label}
           </button>
         ))}
@@ -103,157 +112,190 @@ export default function SmartToolsPanel({ farmProfile }: { farmProfile?: any }) 
         <AnimatePresence mode="wait">
           {/* Overview Tab */}
           {activeTab === 'overview' && (
-            <motion.div key="overview" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+            <motion.div key="overview" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-6">
+              
+              {/* Assistant Bubble */}
+              <div className="relative bg-zinc-900 p-5 rounded-3xl border border-zinc-800 flex items-start gap-4">
+                 <div className="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0 shadow-lg">👨‍🌾</div>
+                 <div>
+                    <h4 className="text-emerald-400 text-[10px] font-black uppercase tracking-widest mb-1">Your Assistant Says:</h4>
+                    <p className="text-white font-bold text-sm leading-relaxed">
+                        {isAutoOn 
+                            ? "I am watching your field. I will start the pump automatically if the soil gets too dry. Relax!" 
+                            : "I'm waiting. You can start the pump using the blue button below, or turn on 'Auto-Pilot' to let me handle it."}
+                    </p>
+                 </div>
+              </div>
+
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {/* IoT Pump Control */}
-                <div className="bg-zinc-900 rounded-2xl p-5 border border-zinc-800 flex flex-col gap-3">
-                  <div className="p-2.5 bg-blue-500/10 rounded-xl w-fit">
-                    <FiCpu className="text-blue-400 w-5 h-5" />
+                <div className="bg-zinc-900 rounded-3xl p-6 border-b-4 border-zinc-800 border-zinc-800 flex flex-col items-center text-center gap-4 relative overflow-hidden group hover:border-blue-500 transition-all">
+                  <div className="p-4 bg-blue-500/10 rounded-2xl">
+                    <FiZap className="text-blue-400 w-8 h-8" />
                   </div>
                   <div>
-                    <h3 className="text-white font-bold text-sm">Pump Control</h3>
-                    <p className="text-zinc-500 text-xs mt-0.5">IoT irrigation trigger</p>
+                    <h3 className="text-white font-black text-sm uppercase tracking-tighter">Start Pump</h3>
+                    <p className="text-zinc-500 text-[10px] mt-1 font-bold">Manual Water</p>
                   </div>
                   <button
-                    onClick={handleStartPump}
-                    disabled={isPumpLoading}
-                    className="mt-auto w-full py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all disabled:opacity-50"
+                    onClick={() => onStartPump()}
+                    disabled={isPumpLoading || isAutoOn}
+                    className="w-full py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-black transition-all disabled:opacity-30 shadow-lg shadow-blue-900/20"
                   >
-                    {isPumpLoading ? 'Connecting...' : 'Start Pump'}
+                    {isPumpLoading ? 'Starting...' : 'PRESS TO START'}
                   </button>
-                  {pumpStatus && (
-                    <p className={`text-[10px] font-bold text-center ${pumpStatus.success ? 'text-green-400' : 'text-red-400'}`}>
-                      {pumpStatus.message}
-                    </p>
-                  )}
                 </div>
 
                 {/* AI Vision */}
-                <div className="bg-zinc-900 rounded-2xl p-5 border border-zinc-800 flex flex-col gap-3">
-                  <div className="p-2.5 bg-purple-500/10 rounded-xl w-fit">
-                    <FiCamera className="text-purple-400 w-5 h-5" />
+                <div className="bg-zinc-900 rounded-3xl p-6 border-b-4 border-zinc-800 border-zinc-800 flex flex-col items-center text-center gap-4 hover:border-purple-500 transition-all">
+                  <div className="p-4 bg-purple-500/10 rounded-2xl">
+                    <FiCamera className="text-purple-400 w-8 h-8" />
                   </div>
                   <div>
-                    <h3 className="text-white font-bold text-sm">Ceres Vision</h3>
-                    <p className="text-zinc-500 text-xs mt-0.5">AI soil & crop analysis</p>
+                    <h3 className="text-white font-black text-sm uppercase tracking-tighter">Check Field</h3>
+                    <p className="text-zinc-500 text-[10px] mt-1 font-bold">Show me a Photo</p>
                   </div>
-                  <label className="mt-auto w-full py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all text-center cursor-pointer">
-                    {isVisionLoading ? 'Analyzing...' : 'Upload Photo'}
+                  <label className="w-full py-3 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-black transition-all text-center cursor-pointer shadow-lg shadow-purple-900/20">
+                    {isVisionLoading ? 'Checking...' : 'SCAN NOW'}
                     <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoUpload} disabled={isVisionLoading} />
                   </label>
                 </div>
 
-                {/* Sensor Setup */}
-                <div className="bg-zinc-900 rounded-2xl p-5 border border-zinc-800 flex flex-col gap-3">
-                  <div className="p-2.5 bg-green-500/10 rounded-xl w-fit">
-                    <FiZap className="text-green-400 w-5 h-5" />
+                {/* Automation Status */}
+                <div className={`rounded-3xl p-6 border-b-4 flex flex-col items-center text-center gap-4 cursor-pointer transition-all ${isAutoOn ? 'bg-emerald-500/10 border-emerald-500' : 'bg-zinc-900 border-zinc-800'}`} onClick={() => setActiveTab('automation')}>
+                  <div className={`p-4 rounded-2xl ${isAutoOn ? 'bg-emerald-500/20' : 'bg-zinc-800'}`}>
+                    <FiSettings className={`${isAutoOn ? 'text-emerald-400' : 'text-zinc-500'} w-8 h-8`} />
                   </div>
                   <div>
-                    <h3 className="text-white font-bold text-sm">Connect Sensor</h3>
-                    <p className="text-zinc-500 text-xs mt-0.5">ESP32 calibration wizard</p>
+                    <h3 className="text-white font-black text-sm uppercase tracking-tighter">Auto-Pilot</h3>
+                    <p className="text-zinc-500 text-[10px] mt-1 font-bold">{isAutoOn ? 'Active & Safe' : 'Ready'}</p>
                   </div>
-                  <button
-                    onClick={() => setActiveTab('sensor')}
-                    className="mt-auto w-full py-2 rounded-xl bg-green-700 hover:bg-green-600 text-white text-xs font-bold transition-all"
-                  >
-                    Open Wizard
-                  </button>
+                  <div className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mt-auto">Settings ⚙️</div>
                 </div>
 
-                {/* Data Export */}
-                <div className="bg-zinc-900 rounded-2xl p-5 border border-zinc-800 flex flex-col gap-3">
-                  <div className="p-2.5 bg-amber-500/10 rounded-xl w-fit">
-                    <FiDownload className="text-amber-400 w-5 h-5" />
+                {/* Device Health - Visual */}
+                <div className="bg-zinc-900 rounded-3xl p-6 border-b-4 border-zinc-800 flex flex-col items-center text-center gap-4">
+                  <div className="p-4 bg-amber-500/10 rounded-2xl">
+                    <FiWifi className="text-amber-400 w-8 h-8" />
                   </div>
-                  <div>
-                    <h3 className="text-white font-bold text-sm">B2B Export</h3>
-                    <p className="text-zinc-500 text-xs mt-0.5">CSV / JSON data portal</p>
+                  <div className="w-full space-y-2">
+                    <div className="flex justify-between items-center text-[10px] font-black uppercase text-zinc-500">
+                        <span>Signal</span>
+                        <div className="flex gap-0.5 items-end h-3">
+                            <div className="w-1.5 h-1 bg-emerald-500 rounded-sm" />
+                            <div className="w-1.5 h-2 bg-emerald-500 rounded-sm" />
+                            <div className="w-1.5 h-3 bg-emerald-500 rounded-sm" />
+                            <div className="w-1.5 h-2 bg-zinc-700 rounded-sm" />
+                        </div>
+                    </div>
+                    <div className="flex justify-between items-center text-[10px] font-black uppercase text-zinc-500">
+                        <span>Battery</span>
+                        <div className="flex items-center gap-1">
+                            <FiBattery className="text-emerald-400 w-4 h-4" />
+                            <span className="text-emerald-400">84%</span>
+                        </div>
+                    </div>
                   </div>
-                  <button
-                    onClick={() => setActiveTab('export')}
-                    className="mt-auto w-full py-2 rounded-xl bg-amber-700 hover:bg-amber-600 text-white text-xs font-bold transition-all"
-                  >
-                    Open Portal
-                  </button>
                 </div>
               </div>
+            </motion.div>
+          )}
 
-              {/* Vision Result inline */}
-              <AnimatePresence>
-                {visionAnalysis && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                    className="mt-4 rounded-2xl border border-zinc-700 bg-zinc-900 overflow-hidden"
-                  >
-                    <div className="flex items-center justify-between p-4 border-b border-zinc-800 bg-zinc-900/50">
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">✨</span>
-                        <h4 className="text-xs font-bold text-white uppercase tracking-wider">Ceres AI Ground Reality</h4>
-                        <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                          visionAnalysis.visualStatus === 'Excellent' || visionAnalysis.visualStatus === 'Good' ? 'bg-green-500/20 text-green-400' :
-                          visionAnalysis.visualStatus === 'Stable' ? 'bg-blue-500/20 text-blue-400' :
-                          'bg-red-500/20 text-red-400'
-                        }`}>
-                          {visionAnalysis.visualStatus}
-                        </div>
-                      </div>
-                      <button onClick={() => setVisionAnalysis(null)} className="p-1 hover:bg-zinc-800 rounded-full">
-                        <FiX className="h-4 w-4 text-zinc-400" />
-                      </button>
+          {/* Automation Tab - Simplified */}
+          {activeTab === 'automation' && (
+            <motion.div key="automation" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-8">
+                 <div className="bg-zinc-900 p-8 rounded-3xl border border-zinc-800">
+                    <div className="text-center mb-8">
+                        <h3 className="text-white font-black text-xl mb-2">When should I Water?</h3>
+                        <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest">Select how wet you want your field</p>
                     </div>
-                    
-                    <div className="p-5 space-y-5">
-                      {/* Farmer Friendly Insights */}
-                      <div className="bg-zinc-800/50 p-4 rounded-xl border border-zinc-700/50">
-                        <h5 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                          <FiCheckCircle className="text-zinc-400" /> Visual Reality Check
-                        </h5>
-                        <p className="text-sm text-zinc-200 leading-relaxed font-medium capitalize-first">
-                          {visionAnalysis.farmerFriendlyInsights || visionAnalysis.reasoning}
-                        </p>
-                      </div>
 
-                      {/* Soil & Crop Health Pills */}
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="bg-zinc-800/30 p-3 rounded-lg border border-zinc-700/30">
-                          <p className="text-[9px] font-bold text-zinc-500 uppercase mb-1">Soil Health</p>
-                          <p className="text-xs font-bold text-zinc-300">{visionAnalysis.soilHealth || 'Stable'}</p>
-                        </div>
-                        <div className="bg-zinc-800/30 p-3 rounded-lg border border-zinc-700/30">
-                          <p className="text-[9px] font-bold text-zinc-500 uppercase mb-1">Crop Health</p>
-                          <p className="text-xs font-bold text-zinc-300">{visionAnalysis.cropHealth || 'Good'}</p>
-                        </div>
-                      </div>
+                    <div className="grid grid-cols-3 gap-6">
+                        {[
+                            { id: 'low', label: 'Dry Field', icon: FiCloud, color: 'text-amber-400', bg: 'bg-amber-400/10', threshold: 20 },
+                            { id: 'med', label: 'Normal', icon: FiDroplet, color: 'text-blue-400', bg: 'bg-blue-400/10', threshold: 40 },
+                            { id: 'high', label: 'Always Wet', icon: FiCloudRain, color: 'text-emerald-400', bg: 'bg-emerald-400/10', threshold: 60 }
+                        ].map((preset) => (
+                            <button 
+                                key={preset.id}
+                                className={`flex flex-col items-center gap-4 p-6 rounded-3xl border-2 transition-all active:scale-95 ${
+                                    (farmProfile?.moisture_threshold || 30) === preset.threshold 
+                                    ? `border-white ${preset.bg} shadow-xl` 
+                                    : 'border-zinc-800 hover:border-zinc-700 bg-zinc-950'
+                                }`}
+                            >
+                                <preset.icon className={`w-12 h-12 ${preset.color}`} />
+                                <span className="text-[10px] font-black uppercase tracking-tighter text-white">{preset.label}</span>
+                            </button>
+                        ))}
+                    </div>
 
-                      {/* Yield Suggestions */}
-                      {visionAnalysis.yieldSuggestions && (
-                        <div className="space-y-3">
-                          <h5 className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest flex items-center gap-1.5">
-                            <FiTrendingUp className="text-emerald-500" /> Suggestions to Improve Yield
-                          </h5>
-                          <div className="grid gap-2">
-                            {visionAnalysis.yieldSuggestions.map((sug: any, i: number) => (
-                              <div key={i} className="flex items-start gap-3 p-3 bg-emerald-500/5 border border-emerald-500/10 rounded-xl group hover:border-emerald-500/30 transition-all">
-                                <div className={`mt-1 h-2 w-2 rounded-full flex-shrink-0 ${
-                                  sug.impact === 'High' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' :
-                                  sug.impact === 'Medium' ? 'bg-amber-500' : 'bg-zinc-500'
-                                }`} />
-                                <div>
-                                  <p className="text-xs font-bold text-zinc-100 mb-0.5">{sug.title}</p>
-                                  <p className="text-[11px] text-zinc-400 leading-snug">{sug.action}</p>
+                    <div className="mt-12 pt-10 border-t border-zinc-800">
+                        <div className="text-center mb-6">
+                            <h3 className="text-white font-black text-lg mb-1 tracking-tight">Daily Water Gaps</h3>
+                            <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest">Best times for better yield</p>
+                        </div>
+                        <div className="flex justify-center gap-8">
+                            <div className="flex flex-col items-center gap-3">
+                                <div className="p-5 bg-amber-500/10 rounded-full border-2 border-amber-500/20 text-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.1)]">
+                                    <FiSun className="w-8 h-8" />
                                 </div>
-                                <span className="ml-auto text-[8px] font-bold text-zinc-500 uppercase tracking-tighter opacity-70">
-                                  {sug.impact} Impact
-                                </span>
-                              </div>
-                            ))}
-                          </div>
+                                <span className="text-[10px] font-black text-white uppercase">Morning Sunrise</span>
+                            </div>
+                            <div className="flex flex-col items-center gap-3">
+                                <div className="p-5 bg-blue-500/10 rounded-full border-2 border-blue-500/20 text-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.1)]">
+                                    <FiMoon className="w-8 h-8" />
+                                </div>
+                                <span className="text-[10px] font-black text-white uppercase">Night Sunset</span>
+                            </div>
                         </div>
-                      )}
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                 </div>
+            </motion.div>
+          )}
+
+          {/* Remote Tab */}
+          {activeTab === 'remote' && (
+            <motion.div key="remote" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* Bridge Interface */}
+                    <div className="space-y-6">
+                        <div className="bg-zinc-900 p-8 rounded-3xl border border-zinc-800">
+                             <h3 className="text-white font-black text-xl mb-2 tracking-tight">Your Farm's Phone Number</h3>
+                             <p className="text-zinc-500 text-xs mb-8 font-bold uppercase tracking-widest leading-relaxed">Send an SMS to control the pump from any cell phone</p>
+                             
+                             <div className="bg-zinc-950 p-6 rounded-3xl border border-zinc-800 text-center mb-8">
+                                <span className="text-2xl text-blue-400 font-black tracking-widest">+91 98700 000XX</span>
+                                <p className="text-[10px] text-zinc-500 font-bold uppercase mt-2">Save this as "Farm Pump" in your contacts</p>
+                             </div>
+
+                             <div className="space-y-4">
+                                <h4 className="text-[10px] text-zinc-400 font-black uppercase tracking-widest mb-4">How to Message:</h4>
+                                <div className="p-4 bg-zinc-800/20 rounded-2xl border border-zinc-800 flex justify-between items-center group hover:bg-zinc-800/40 transition-all">
+                                    <span className="text-xs text-white font-black">START</span>
+                                    <span className="text-[10px] text-zinc-500 font-bold uppercase">To start water</span>
+                                </div>
+                                <div className="p-4 bg-zinc-800/20 rounded-2xl border border-zinc-800 flex justify-between items-center group hover:bg-zinc-800/40 transition-all">
+                                    <span className="text-xs text-white font-black">STOP</span>
+                                    <span className="text-[10px] text-zinc-500 font-bold uppercase">To stop water</span>
+                                </div>
+                                <div className="p-4 bg-zinc-800/20 rounded-2xl border border-zinc-800 flex justify-between items-center group hover:bg-zinc-800/40 transition-all">
+                                    <span className="text-xs text-white font-black">STATUS</span>
+                                    <span className="text-[10px] text-zinc-500 font-bold uppercase">To check moisture</span>
+                                </div>
+                             </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-zinc-900/30 p-10 rounded-3xl border-4 border-dashed border-zinc-800 flex flex-col items-center justify-center text-center opacity-70 group hover:opacity-100 hover:border-white transition-all cursor-pointer">
+                        <div className="text-6xl mb-6 group-hover:scale-110 transition-transform">🛎️</div>
+                        <h3 className="text-white font-black text-2xl mb-3 tracking-tighter">Test Phone Link</h3>
+                        <p className="text-zinc-500 text-sm font-bold uppercase tracking-widest mb-8 max-w-[280px]">Simulate sending an SMS to your pump from another phone</p>
+                        <button className="px-10 py-4 bg-white text-black font-black text-sm rounded-2xl shadow-[0_0_30px_rgba(255,255,255,0.2)] active:scale-95 transition-all">
+                            SEND TEST "START" SMS
+                        </button>
+                    </div>
+                 </div>
             </motion.div>
           )}
 
@@ -268,88 +310,14 @@ export default function SmartToolsPanel({ farmProfile }: { farmProfile?: any }) 
           {activeTab === 'vision' && (
             <motion.div key="vision" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <div className="max-w-lg mx-auto text-center py-8">
-                <div className="text-5xl mb-4">✨</div>
-                <h3 className="text-white font-bold text-xl mb-2">Ceres Vision Analysis</h3>
-                <p className="text-zinc-400 text-sm mb-6">Take a photo of your soil or crop — Gemini AI will verify its condition against your sensor data.</p>
-                <label className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold cursor-pointer transition-all">
-                  <FiCamera className="w-5 h-5" />
-                  {isVisionLoading ? 'Analyzing with AI...' : 'Upload Field Photo'}
+                <div className="text-6xl mb-6 animate-bounce">✨</div>
+                <h3 className="text-white font-black text-2xl mb-3 tracking-tighter uppercase">AI Camera Check</h3>
+                <p className="text-zinc-500 text-sm font-bold uppercase tracking-widest mb-10 leading-relaxed">Take a photo of your field - our AI will tell you if it's healthy.</p>
+                <label className="inline-flex items-center gap-3 px-10 py-4 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white font-black cursor-pointer transition-all shadow-xl shadow-purple-900/40 active:scale-95">
+                  <FiCamera className="w-6 h-6" />
+                  {isVisionLoading ? 'AI IS THINKING...' : 'CAPTURE FIELD PHOTO'}
                   <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoUpload} disabled={isVisionLoading} />
                 </label>
-                <AnimatePresence>
-                  {visionAnalysis && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                      className="mt-6 text-left rounded-2xl border border-zinc-700 bg-zinc-900 overflow-hidden"
-                    >
-                      <div className="flex items-center justify-between p-4 border-b border-zinc-800 bg-zinc-900/50">
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg">✨</span>
-                          <h4 className="text-xs font-bold text-white uppercase tracking-wider">Ground Reality Analysis</h4>
-                          <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                            visionAnalysis.visualStatus === 'Excellent' || visionAnalysis.visualStatus === 'Good' ? 'bg-green-500/20 text-green-400' :
-                            visionAnalysis.visualStatus === 'Stable' ? 'bg-blue-500/20 text-blue-400' :
-                            'bg-red-500/20 text-red-400'
-                          }`}>
-                            {visionAnalysis.visualStatus}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="p-5 space-y-5">
-                        {/* Farmer Friendly Insights */}
-                        <div className="bg-zinc-800/50 p-4 rounded-xl border border-zinc-700/50">
-                          <h5 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                            <FiCheckCircle className="text-zinc-400" /> Visual Reality Check
-                          </h5>
-                          <p className="text-sm text-zinc-200 leading-relaxed font-medium capitalize-first">
-                            {visionAnalysis.farmerFriendlyInsights || visionAnalysis.reasoning}
-                          </p>
-                        </div>
-
-                        {/* Soil & Crop Health Pills */}
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="bg-zinc-800/30 p-3 rounded-lg border border-zinc-700/30">
-                            <p className="text-[9px] font-bold text-zinc-500 uppercase mb-1">Soil Condition</p>
-                            <p className="text-xs font-bold text-zinc-300">{visionAnalysis.soilHealth || 'Stable'}</p>
-                          </div>
-                          <div className="bg-zinc-800/30 p-3 rounded-lg border border-zinc-700/30">
-                            <p className="text-[9px] font-bold text-zinc-500 uppercase mb-1">Crop State</p>
-                            <p className="text-xs font-bold text-zinc-300">{visionAnalysis.cropHealth || 'Good'}</p>
-                          </div>
-                        </div>
-
-                        {/* Yield Suggestions */}
-                        {visionAnalysis.yieldSuggestions && (
-                          <div className="space-y-3 pt-2">
-                            <h5 className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest flex items-center gap-1.5">
-                              <FiTrendingUp className="text-emerald-500" /> Yield Improvement Roadmap
-                            </h5>
-                            <div className="grid gap-3">
-                              {visionAnalysis.yieldSuggestions.map((sug: any, i: number) => (
-                                <div key={i} className="flex items-start gap-4 p-4 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl group hover:border-emerald-500/30 transition-all">
-                                  <div className={`mt-1 h-3 w-3 rounded-full flex-shrink-0 ${
-                                    sug.impact === 'High' ? 'bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.5)]' :
-                                    sug.impact === 'Medium' ? 'bg-amber-500' : 'bg-zinc-500'
-                                  }`} />
-                                  <div className="flex-1">
-                                    <div className="flex items-center justify-between mb-1">
-                                      <p className="text-xs font-bold text-white">{sug.title}</p>
-                                      <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-tighter">
-                                        {sug.impact} Impact
-                                      </span>
-                                    </div>
-                                    <p className="text-xs text-zinc-400 leading-relaxed">{sug.action}</p>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
               </div>
             </motion.div>
           )}

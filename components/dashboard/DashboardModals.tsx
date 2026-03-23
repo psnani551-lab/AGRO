@@ -33,7 +33,7 @@ export const DashboardModal = ({ isOpen, onClose, title, icon: Icon, colorClass 
 
 // --- Specific Modals ---
 
-export const IrrigationModal = ({ isOpen, onClose, analysis, farmProfile, t }: any) => {
+export const IrrigationModal = ({ isOpen, onClose, analysis, farmProfile, t, onStartPump, isPumpLoading, pumpStatus }: any) => {
     const amountMm = typeof analysis?.irrigationPlan?.amountPerIrrigation === 'number'
         ? analysis.irrigationPlan.amountPerIrrigation
         : parseFloat(analysis?.irrigationPlan?.amountPerIrrigation) || 0;
@@ -51,6 +51,7 @@ export const IrrigationModal = ({ isOpen, onClose, analysis, farmProfile, t }: a
     const totalHours = totalLitersNeeded / pumpLph;
     const hours = Math.floor(totalHours);
     const minutes = Math.round((totalHours - hours) * 60);
+    const totalMinutesToRun = Math.round(totalHours * 60);
 
     return (
         <DashboardModal title={t('dashboard.smartIrrigation') || "Irrigation Planner"} icon={FiDroplet} isOpen={isOpen} onClose={onClose}>
@@ -61,25 +62,52 @@ export const IrrigationModal = ({ isOpen, onClose, analysis, farmProfile, t }: a
                 </div>
 
                 {/* Practical Run Time (The "Dirt" Layer) */}
-                <div className="p-5 bg-zinc-950 rounded-2xl border-2 border-emerald-500/30 shadow-xl relative overflow-hidden group">
+                <div className="p-6 bg-zinc-950 rounded-2xl border-2 border-emerald-500/30 shadow-xl relative overflow-hidden group">
                     <div className="absolute -right-4 -bottom-4 opacity-5 rotate-12 transition-transform group-hover:scale-110">
                         <FiDroplet className="w-32 h-32 text-emerald-500" />
                     </div>
-                    <div className="relative z-10">
-                        <span className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.2em] mb-2 block">
-                            PUMP OPERATION TIME
-                        </span>
-                        <div className="flex items-baseline gap-2">
-                            <span className="text-4xl font-black text-white">
-                                {hours > 0 ? `${hours}h ` : ''}{minutes}m
+                    <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <div>
+                            <span className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.2em] mb-2 block">
+                                PUMP OPERATION TIME
                             </span>
-                            <span className="text-xs text-zinc-500 font-bold uppercase tracking-wider">
-                                {method} Method
-                            </span>
+                            <div className="flex items-baseline gap-2">
+                                <span className="text-4xl font-black text-white">
+                                    {hours > 0 ? `${hours}h ` : ''}{minutes}m
+                                </span>
+                                <span className="text-xs text-zinc-500 font-bold uppercase tracking-wider">
+                                    {method} Method
+                                </span>
+                            </div>
+                            <p className="text-xs text-zinc-400 mt-3 flex items-center gap-2">
+                                 Based on <span className="text-white font-bold">{pumpLph.toLocaleString()} LPH</span> pump on <span className="text-white font-bold">{areaAcres} acre(s)</span>.
+                            </p>
                         </div>
-                        <p className="text-xs text-zinc-400 mt-3 flex items-center gap-2">
-                             Based on your <span className="text-white font-bold">{pumpLph.toLocaleString()} LPH</span> pump on <span className="text-white font-bold">{areaAcres} acre(s)</span>.
-                        </p>
+                        
+                        {/* IoT Action Button */}
+                        <div className="flex-shrink-0">
+                            <button
+                                onClick={() => onStartPump?.(totalMinutesToRun)}
+                                disabled={isPumpLoading || totalMinutesToRun <= 0}
+                                className={`flex items-center gap-2 px-6 py-4 rounded-2xl font-bold transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
+                                    pumpStatus?.success ? 'bg-green-600 text-white' : 'bg-emerald-500 hover:bg-emerald-400 text-black'
+                                }`}
+                            >
+                                {isPumpLoading ? (
+                                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-black border-t-white" />
+                                ) : pumpStatus?.success ? (
+                                    <FiCheckCircle className="w-5 h-5" />
+                                ) : (
+                                    <FiDroplet className="w-5 h-5" />
+                                )}
+                                {isPumpLoading ? 'Connecting...' : pumpStatus?.success ? 'Pump Started' : 'START PUMP'}
+                            </button>
+                            {pumpStatus && !isPumpLoading && (
+                                <p className={`mt-2 text-[10px] font-bold text-center ${pumpStatus.success ? 'text-green-400' : 'text-red-400'}`}>
+                                    {pumpStatus.message}
+                                </p>
+                            )}
+                        </div>
                     </div>
                 </div>
 
