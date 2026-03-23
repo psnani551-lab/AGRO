@@ -53,6 +53,52 @@ export default function SmartToolsPanel({
     reader.readAsDataURL(file);
   };
 
+  const toggleAutoPilot = async () => {
+    const newVal = !isAutoOn;
+    setIsAutoOn(newVal);
+    try {
+      await fetch('/api/iot/control', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ farm_id: farmId, is_auto: newVal })
+      });
+    } catch (err) {
+      console.error("Failed to toggle auto-pilot:", err);
+      setIsAutoOn(!newVal); // Rollback
+    }
+  };
+
+  const updateMoisturePreset = async (threshold: number) => {
+    try {
+      await fetch('/api/iot/control', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ farm_id: farmId, moisture_threshold: threshold })
+      });
+    } catch (err) {
+      console.error("Failed to update threshold:", err);
+    }
+  };
+
+  const handleTestRemote = async () => {
+    setIsPumpLoading(true);
+    try {
+      const response = await fetch('/api/iot/control', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          farm_id: farmId, 
+          action: 'START', 
+          source: 'SMS_TEST' 
+        })
+      });
+      if (response.ok) {
+        setPumpStatus({ success: true, message: '✅ Command processed.' });
+      }
+    } catch {}
+    finally { setIsPumpLoading(false); }
+  };
+
   const tabs = [
     { id: 'overview', label: '🏠 Home', icon: FiZap },
     { id: 'automation', label: '🤖 Auto-Pilot', icon: FiSettings },
@@ -61,6 +107,14 @@ export default function SmartToolsPanel({
     { id: 'vision', label: '✨ AI Camera', icon: FiCamera },
     { id: 'export', label: '📦 Get Data', icon: FiDownload },
   ] as const;
+
+  const getAssistantMessage = () => {
+    if (isPumpLoading) return "Hang on, I'm starting the pump right now! 🚀";
+    if (pumpStatus?.success) return "The pump is running. Your crops are getting a drink! 💧";
+    if (visionAnalysis?.health_score < 50) return "Ceres AI says the field looks a bit stressed. Should we water it? 🧐";
+    if (isAutoOn) return "Auto-Pilot is active. I'll handle the watering while you rest. 😴";
+    return "I'm waiting. You can start the pump manually, or let 'Auto-Pilot' do the work.";
+  };
 
   return (
     <div className="mt-6 rounded-3xl bg-zinc-950 border border-zinc-800 overflow-hidden shadow-2xl">
@@ -75,7 +129,7 @@ export default function SmartToolsPanel({
         </div>
         
         <button 
-            onClick={() => setIsAutoOn(!isAutoOn)}
+            onClick={toggleAutoPilot}
             className={`flex items-center gap-3 px-4 py-2 rounded-2xl border-2 transition-all active:scale-95 ${
                 isAutoOn 
                 ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.1)]' 
@@ -120,16 +174,14 @@ export default function SmartToolsPanel({
                  <div>
                     <h4 className="text-emerald-400 text-[10px] font-black uppercase tracking-widest mb-1">Your Assistant Says:</h4>
                     <p className="text-white font-bold text-sm leading-relaxed">
-                        {isAutoOn 
-                            ? "I am watching your field. I will start the pump automatically if the soil gets too dry. Relax!" 
-                            : "I'm waiting. You can start the pump using the blue button below, or turn on 'Auto-Pilot' to let me handle it."}
+                        {getAssistantMessage()}
                     </p>
                  </div>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {/* IoT Pump Control */}
-                <div className="bg-zinc-900 rounded-3xl p-6 border-b-4 border-zinc-800 border-zinc-800 flex flex-col items-center text-center gap-4 relative overflow-hidden group hover:border-blue-500 transition-all">
+                <div className="bg-zinc-900 rounded-3xl p-6 border-b-4 border-zinc-800 flex flex-col items-center text-center gap-4 relative overflow-hidden group hover:border-blue-500 transition-all">
                   <div className="p-4 bg-blue-500/10 rounded-2xl">
                     <FiZap className="text-blue-400 w-8 h-8" />
                   </div>
@@ -147,7 +199,7 @@ export default function SmartToolsPanel({
                 </div>
 
                 {/* AI Vision */}
-                <div className="bg-zinc-900 rounded-3xl p-6 border-b-4 border-zinc-800 border-zinc-800 flex flex-col items-center text-center gap-4 hover:border-purple-500 transition-all">
+                <div className="bg-zinc-900 rounded-3xl p-6 border-b-4 border-zinc-800 flex flex-col items-center text-center gap-4 hover:border-purple-500 transition-all">
                   <div className="p-4 bg-purple-500/10 rounded-2xl">
                     <FiCamera className="text-purple-400 w-8 h-8" />
                   </div>
@@ -218,6 +270,7 @@ export default function SmartToolsPanel({
                         ].map((preset) => (
                             <button 
                                 key={preset.id}
+                                onClick={() => updateMoisturePreset(preset.threshold)}
                                 className={`flex flex-col items-center gap-4 p-6 rounded-3xl border-2 transition-all active:scale-95 ${
                                     (farmProfile?.moisture_threshold || 30) === preset.threshold 
                                     ? `border-white ${preset.bg} shadow-xl` 
@@ -258,7 +311,6 @@ export default function SmartToolsPanel({
           {activeTab === 'remote' && (
             <motion.div key="remote" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* Bridge Interface */}
                     <div className="space-y-6">
                         <div className="bg-zinc-900 p-8 rounded-3xl border border-zinc-800">
                              <h3 className="text-white font-black text-xl mb-2 tracking-tight">Your Farm's Phone Number</h3>
@@ -291,8 +343,12 @@ export default function SmartToolsPanel({
                         <div className="text-6xl mb-6 group-hover:scale-110 transition-transform">🛎️</div>
                         <h3 className="text-white font-black text-2xl mb-3 tracking-tighter">Test Phone Link</h3>
                         <p className="text-zinc-500 text-sm font-bold uppercase tracking-widest mb-8 max-w-[280px]">Simulate sending an SMS to your pump from another phone</p>
-                        <button className="px-10 py-4 bg-white text-black font-black text-sm rounded-2xl shadow-[0_0_30px_rgba(255,255,255,0.2)] active:scale-95 transition-all">
-                            SEND TEST "START" SMS
+                        <button 
+                            onClick={handleTestRemote}
+                            disabled={isPumpLoading}
+                            className="px-10 py-4 bg-white text-black font-black text-sm rounded-2xl shadow-[0_0_30px_rgba(255,255,255,0.2)] active:scale-95 transition-all disabled:opacity-50"
+                        >
+                            {isPumpLoading ? 'SENDING...' : 'SEND TEST "START" SMS'}
                         </button>
                     </div>
                  </div>
