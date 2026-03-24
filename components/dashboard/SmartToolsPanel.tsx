@@ -102,7 +102,7 @@ export default function SmartToolsPanel({
                 {/* IoT Pump Control */}
                 <div className="bg-zinc-900 rounded-2xl p-5 border border-zinc-800 flex flex-col gap-3">
                   <div className="p-2.5 bg-blue-500/10 rounded-xl w-fit">
-                    <FiCpu className="text-blue-400 w-5 h-5" />
+                    <FiLayers className="text-blue-400 w-5 h-5" />
                   </div>
                   <div>
                     <h3 className="text-white font-bold text-sm">Pump Control</h3>
@@ -129,9 +129,9 @@ export default function SmartToolsPanel({
                   </div>
                   <div>
                     <h3 className="text-white font-bold text-sm">Ceres Vision</h3>
-                    <p className="text-zinc-500 text-xs mt-0.5">AI soil & crop analysis</p>
+                    <p className="text-zinc-500 text-xs mt-0.5">AI crop & soil check</p>
                   </div>
-                  <label className="mt-auto w-full py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all text-center cursor-pointer">
+                  <label className="mt-auto w-full py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all text-center cursor-pointer block">
                     {isVisionLoading ? 'Analyzing...' : 'Upload Photo'}
                     <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoUpload} disabled={isVisionLoading} />
                   </label>
@@ -140,15 +140,15 @@ export default function SmartToolsPanel({
                 {/* Sensor Setup */}
                 <div className="bg-zinc-900 rounded-2xl p-5 border border-zinc-800 flex flex-col gap-3">
                   <div className="p-2.5 bg-green-500/10 rounded-xl w-fit">
-                    <FiZap className="text-green-400 w-5 h-5" />
+                    <FiCpu className="text-green-400 w-5 h-5" />
                   </div>
                   <div>
                     <h3 className="text-white font-bold text-sm">Connect Sensor</h3>
-                    <p className="text-zinc-500 text-xs mt-0.5">ESP32 calibration wizard</p>
+                    <p className="text-zinc-500 text-xs mt-0.5">ESP32 calibration tool</p>
                   </div>
                   <button
                     onClick={() => setActiveTab('sensor')}
-                    className="mt-auto w-full py-2 rounded-xl bg-green-700 hover:bg-green-600 text-white text-xs font-bold transition-all"
+                    className="mt-auto w-full py-2 rounded-xl bg-green-600 hover:bg-green-500 text-white text-xs font-bold transition-all"
                   >
                     Open Wizard
                   </button>
@@ -165,7 +165,7 @@ export default function SmartToolsPanel({
                   </div>
                   <button
                     onClick={() => setActiveTab('export')}
-                    className="mt-auto w-full py-2 rounded-xl bg-amber-700 hover:bg-amber-600 text-white text-xs font-bold transition-all"
+                    className="mt-auto w-full py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition-all"
                   >
                     Open Portal
                   </button>
