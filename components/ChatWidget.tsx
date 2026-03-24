@@ -248,7 +248,7 @@ export default function ChatWidget({ locale: propLocale, location }: ChatWidgetP
         } else {
            const errText = await ttsResponse.text();
            console.warn('TTS could not be rendered', errText);
-           setError('TTS Failed: Invalid Sarvam payload or missing API Key.');
+           setError(`API Error: ${errText}`);
         }
       } catch (ttsErr: any) {
          console.error('Failed to trigger TTS audio route:', ttsErr);

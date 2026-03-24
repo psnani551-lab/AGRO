@@ -37,8 +37,8 @@ export async function POST(req: Request) {
         pace: 1.0,
         loudness: 1.5,
         speech_sample_rate: 8000,
-        enable_preprocessing: true,
-        model: 'indic-tts' // Usually auto-detected if omitted, but indic-tts is their known legacy v1
+        enable_preprocessing: true
+        // model: Omitted. Sarvam auto-detects the latest model version for new Developer Keys
       })
     });
 
