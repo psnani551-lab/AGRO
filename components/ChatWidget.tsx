@@ -92,8 +92,33 @@ export default function ChatWidget({ locale: propLocale, location }: ChatWidgetP
 
   const handleStartRecording = async () => {
     try {
+      // 1. Strict Security Check: HTML5 Microphones REQUIRE HTTPS or localhost to function
+      if (typeof window !== 'undefined' && !window.isSecureContext) {
+         setError('Microphone requires a secure HTTPS connection or localhost. (Local Network IPs block audio API).');
+         return;
+      }
+
+      // 2. Browser API Check
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+         setError('Your browser does not support audio recording hardware.');
+         return;
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+      
+      // 3. Fallback for iOS Safari which doesn't support generic webm
+      let audioType = 'audio/webm';
+      if (typeof MediaRecorder !== 'undefined') {
+         if (!MediaRecorder.isTypeSupported('audio/webm')) {
+            if (MediaRecorder.isTypeSupported('audio/mp4')) audioType = 'audio/mp4';
+            else if (MediaRecorder.isTypeSupported('audio/ogg')) audioType = 'audio/ogg';
+            else audioType = ''; // Let browser pick default
+         }
+      }
+
+      // @ts-ignore
+      const options = audioType ? { mimeType: audioType } : undefined;
+      const mediaRecorder = new MediaRecorder(stream, options);
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
 
@@ -104,16 +129,21 @@ export default function ChatWidget({ locale: propLocale, location }: ChatWidgetP
       };
 
       mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const finalType = audioType || 'audio/webm';
+        const audioBlob = new Blob(audioChunksRef.current, { type: finalType });
         await handleSendVoice(audioBlob);
         stream.getTracks().forEach(track => track.stop());
       };
 
       mediaRecorder.start();
       setIsRecording(true);
-    } catch (err) {
-      console.error('Error accessing microphone:', err);
-      setError('Could not access microphone. Please check permissions.');
+    } catch (err: any) {
+      console.error('Microphone setup crashed:', err);
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        setError('Microphone access denied. Please click the lock icon in your URL bar and allow microphone permissions.');
+      } else {
+        setError(`Microphone error: ${err.message || 'Could not initialize audio device.'}`);
+      }
     }
   };
 
