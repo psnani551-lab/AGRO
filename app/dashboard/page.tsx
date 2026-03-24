@@ -69,7 +69,7 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-black">
+      <div className="flex min-h-screen items-center justify-center">
         <div className="h-12 w-12 animate-spin rounded-full border-4 border-zinc-700 border-t-white" />
       </div>
     );
@@ -77,7 +77,7 @@ export default function DashboardPage() {
 
   if (!farmProfile) {
     return (
-      <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
+      <div className="min-h-screen flex flex-col items-center justify-center p-4">
         <div className="text-center max-w-md">
           <h1 className="text-3xl font-bold text-white mb-4">{t('dashboard.setupProfile')}</h1>
           <p className="text-zinc-400 mb-8">
@@ -92,7 +92,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black pb-12">
+    <div className="min-h-screen pb-12">
       <DashboardHeader farmProfile={farmProfile} />
       {/* Original Rich Dashboard — weather, yield, market prices, etc. */}
       <UltimateDashboard 

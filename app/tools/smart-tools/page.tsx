@@ -66,7 +66,7 @@ export default function SmartToolsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[calc(100vh-80px)] items-center justify-center bg-black">
+      <div className="flex min-h-[calc(100vh-80px)] items-center justify-center">
         <div className="h-12 w-12 animate-spin rounded-full border-4 border-zinc-700 border-t-white" />
       </div>
     );
@@ -74,7 +74,7 @@ export default function SmartToolsPage() {
 
   if (!farmProfile) {
     return (
-      <div className="min-h-[calc(100vh-80px)] bg-black flex flex-col items-center justify-center p-4">
+      <div className="min-h-[calc(100vh-80px)] flex flex-col items-center justify-center p-4">
         <div className="text-center max-w-md">
           <h1 className="text-3xl font-bold text-white mb-4">{t('dashboard.setupProfile')}</h1>
           <p className="text-zinc-400 mb-8">
@@ -89,7 +89,7 @@ export default function SmartToolsPage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-80px)] bg-black px-4 sm:px-6 lg:px-8 py-8 pb-32">
+    <div className="min-h-[calc(100vh-80px)] px-4 sm:px-6 lg:px-8 py-8 pb-32">
       <div className="max-w-7xl mx-auto">
         <div className="mb-6 flex items-center gap-4">
            <Link href="/dashboard" className="p-2.5 bg-zinc-900 border border-zinc-800 rounded-xl text-zinc-400 hover:text-white transition-all">
