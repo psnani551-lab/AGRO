@@ -5,7 +5,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { FiUser, FiBell, FiRefreshCw, FiDollarSign, FiChevronDown, FiMenu, FiX, FiGrid, FiShoppingBag } from 'react-icons/fi';
+import { FiUser, FiBell, FiRefreshCw, FiDollarSign, FiChevronDown, FiMenu, FiX, FiGrid, FiShoppingBag, FiZap } from 'react-icons/fi';
 import { GiPlantRoots } from 'react-icons/gi';
 import { IconType } from 'react-icons';
 import { useI18n } from '@/lib/i18n';
@@ -83,6 +83,20 @@ export default function Navigation() {
               <FiBell className="h-4 w-4" />
               {t('tools.alerts')}
               {pathname === '/tools/alerts' && (
+                <span className="absolute -bottom-1 left-0 h-0.5 w-full bg-black dark:bg-white" />
+              )}
+            </Link>
+
+            <Link
+              href="/tools/smart-tools"
+              className={`relative flex items-center gap-1 text-sm font-medium transition-colors ${pathname === '/tools/smart-tools'
+                ? 'text-black dark:text-white'
+                : 'text-zinc-500 hover:text-black dark:text-zinc-400 dark:hover:text-white'
+                }`}
+            >
+              <FiZap className="h-4 w-4 text-emerald-500" />
+              Smart Tools
+              {pathname === '/tools/smart-tools' && (
                 <span className="absolute -bottom-1 left-0 h-0.5 w-full bg-black dark:bg-white" />
               )}
             </Link>

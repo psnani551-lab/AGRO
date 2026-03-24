@@ -2,6 +2,9 @@
 
 export interface FarmProfile {
   id: string;
+  user_id?: string;
+  sensor_id?: string;
+  pump_device_id?: string;
   farmName: string;
   location: {
     latitude: number;
