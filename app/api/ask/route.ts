@@ -78,6 +78,30 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // C. Live IoT & Machinery Context (New: Direct Deep Link)
+    let iotContext = { sensors: [] as any[], machinery: [] as any[] };
+    if (farmProfile?.id && farmProfile.id.length === 36) {
+        const { createClient } = await import('@supabase/supabase-js');
+        const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+        
+        const { data: sensors } = await supabase
+            .from('sensor_readings')
+            .select('moisture, created_at, sensor_type')
+            .eq('farm_id', farmProfile.id)
+            .order('created_at', { ascending: false })
+            .limit(5);
+
+        const { data: machinery } = await supabase
+            .from('iot_commands')
+            .select('command_type, status, created_at')
+            .eq('farm_id', farmProfile.id)
+            .order('created_at', { ascending: false })
+            .limit(3);
+
+        iotContext.sensors = sensors || [];
+        iotContext.machinery = machinery || [];
+    }
+
     // --- 2. PREPARE AI REQUEST ---
     const apiKey = process.env.GEMINI_API_KEY;
 
@@ -105,6 +129,11 @@ LIVE APPLICATION DATA (Use this to answer):
    ${contextData.market ? JSON.stringify(contextData.market, null, 2) : 'Data unavailable'}
 
 3. CURRENT PAGE: ${pageContext}
+
+4. IoT TELEMETRY & DEVICE STATUS:
+- Recent Soil Moisture: ${iotContext.sensors.length > 0 ? JSON.stringify(iotContext.sensors) : 'No live sensors detected yet.'}
+- Recent Pump/Machine Commands: ${iotContext.machinery.length > 0 ? JSON.stringify(iotContext.machinery) : 'No recent machinery activity.'}
+- Alert Threshold: Moisture below 15% is CRITICAL. Moisture above 40% is EXCELLENT.
 
 INSTRUCTIONS:
 - Keep responses EXTREMELY concise, casual, and conversational (maximum 1 or 2 short sentences). Speak like a friendly local farming companion, not a formal textbook.
