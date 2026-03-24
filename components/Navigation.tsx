@@ -5,7 +5,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { FiUser, FiBell, FiRefreshCw, FiDollarSign, FiChevronDown, FiMenu, FiX, FiGrid, FiShoppingBag, FiZap } from 'react-icons/fi';
+import { FiUser, FiBell, FiRefreshCw, FiDollarSign, FiChevronDown, FiMenu, FiX, FiGrid, FiShoppingBag, FiZap, FiHome, FiInfo } from 'react-icons/fi';
 import { GiPlantRoots } from 'react-icons/gi';
 import { IconType } from 'react-icons';
 import { useI18n } from '@/lib/i18n';
@@ -48,11 +48,12 @@ export default function Navigation() {
           <div className="hidden gap-6 md:flex">
             <Link
               href="/"
-              className={`relative text-sm font-medium transition-colors ${pathname === '/'
+              className={`relative flex items-center gap-1 text-sm font-medium transition-colors ${pathname === '/'
                 ? 'text-black dark:text-white'
                 : 'text-zinc-500 hover:text-black dark:text-zinc-400 dark:hover:text-white'
                 }`}
             >
+              <FiHome className="h-4 w-4" />
               {t('nav.home')}
               {pathname === '/' && (
                 <span className="absolute -bottom-1 left-0 h-0.5 w-full bg-black dark:bg-white" />
@@ -94,7 +95,7 @@ export default function Navigation() {
                 : 'text-zinc-500 hover:text-black dark:text-zinc-400 dark:hover:text-white'
                 }`}
             >
-              <FiZap className="h-4 w-4 text-emerald-500" />
+              <FiZap className="h-4 w-4" />
               Smart Tools
               {pathname === '/tools/smart-tools' && (
                 <span className="absolute -bottom-1 left-0 h-0.5 w-full bg-black dark:bg-white" />
@@ -131,11 +132,12 @@ export default function Navigation() {
 
             <Link
               href="/about"
-              className={`relative text-sm font-medium transition-colors ${pathname === '/about'
+              className={`relative flex items-center gap-1 text-sm font-medium transition-colors ${pathname === '/about'
                 ? 'text-black dark:text-white'
                 : 'text-zinc-500 hover:text-black dark:text-zinc-400 dark:hover:text-white'
                 }`}
             >
+              <FiInfo className="h-4 w-4" />
               {t('nav.about')}
               {pathname === '/about' && (
                 <span className="absolute -bottom-1 left-0 h-0.5 w-full bg-black dark:bg-white" />
@@ -169,11 +171,12 @@ export default function Navigation() {
               <Link
                 href="/"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className={`rounded-lg px-3 py-2 text-sm font-medium ${pathname === '/'
+                className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium ${pathname === '/'
                   ? 'bg-zinc-100 text-black dark:bg-zinc-800 dark:text-white'
                   : 'text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-900'
                   }`}
               >
+                <FiHome className="h-4 w-4" />
                 {t('nav.home')}
               </Link>
 
@@ -199,6 +202,18 @@ export default function Navigation() {
               >
                 <FiBell className="h-4 w-4" />
                 {t('tools.alerts')}
+              </Link>
+
+              <Link
+                href="/tools/smart-tools"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium ${pathname === '/tools/smart-tools'
+                  ? 'bg-zinc-100 text-black dark:bg-zinc-800 dark:text-white'
+                  : 'text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-900'
+                  }`}
+              >
+                <FiZap className="h-4 w-4" />
+                Smart Tools
               </Link>
 
               <Link
@@ -228,11 +243,12 @@ export default function Navigation() {
               <Link
                 href="/about"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className={`rounded-lg px-3 py-2 text-sm font-medium ${pathname === '/about'
+                className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium ${pathname === '/about'
                   ? 'bg-zinc-100 text-black dark:bg-zinc-800 dark:text-white'
                   : 'text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-900'
                   }`}
               >
+                <FiInfo className="h-4 w-4" />
                 {t('nav.about')}
               </Link>
 
