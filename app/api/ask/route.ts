@@ -14,6 +14,7 @@ const chatRequestSchema = z.object({
     })
     .optional(),
   farmProfile: z.any().optional(),
+  forceLanguage: z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { message, pageContext, locale, location, farmProfile } = validation.data;
+    const { message, pageContext, locale, location, farmProfile, forceLanguage } = validation.data;
 
     // --- 1. GATHER CONTEXT DATA ---
     const getSafeLocationString = (loc: any) => {
@@ -112,6 +113,7 @@ INSTRUCTIONS:
 - If Market Price is high, congratulate them.
 - Provide actionable advice based on the Soil Type (${contextData.soil}).
 - Keep responses concise (under 3-4 sentences unless detailed analysis is asked).
+${forceLanguage ? `\nCRITICAL LANGUAGE INSTRUCTION:\nYOU MUST FORMULATE YOUR ENTIRE RESPONSE NATIVELY IN THE LANGUAGE CORRESPONDING TO THE LOCALE CODE: "${forceLanguage}". Do not reply in English unless specifically using agricultural proper nouns.` : ''}
 `;
 
     if (!apiKey) {

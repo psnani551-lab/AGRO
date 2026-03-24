@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiMessageCircle, FiX, FiSend } from 'react-icons/fi';
+import { FiMessageCircle, FiX, FiSend, FiMic, FiSquare } from 'react-icons/fi';
 import FocusLock from 'react-focus-lock';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -31,6 +31,12 @@ export default function ChatWidget({ locale: propLocale, location }: ChatWidgetP
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Voice Recording State
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -46,8 +52,6 @@ export default function ChatWidget({ locale: propLocale, location }: ChatWidgetP
             content: m.content,
             timestamp: new Date(m.created_at)
           }));
-          // Only set if we haven't started chatting yet to avoid overwrite? 
-          // Or just replacing initial state.
           setMessages(formatted);
         }
       });
@@ -86,6 +90,144 @@ export default function ChatWidget({ locale: propLocale, location }: ChatWidgetP
     }
   }, [error]);
 
+  const handleStartRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        await handleSendVoice(audioBlob);
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (err) {
+      console.error('Error accessing microphone:', err);
+      setError('Could not access microphone. Please check permissions.');
+    }
+  };
+
+  const handleStopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const handleSendVoice = async (audioBlob: Blob) => {
+    setIsTyping(true);
+    
+    // Optimistic UI for Voice Input
+    const userVoiceMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: '🎙️ *Voice message sent*',
+      timestamp: new Date(),
+    };
+    setMessages((prev) => [...prev, userVoiceMessage]);
+
+    try {
+      // 1. Send Audio to Sarvam STT Backend
+      const formData = new FormData();
+      formData.append('audio', audioBlob, 'voice.webm');
+      
+      const transcribeResponse = await fetch('/api/voice/transcribe', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!transcribeResponse.ok) throw new Error('Failed to transcribe audio');
+      
+      const { transcript, language_code } = await transcribeResponse.json();
+
+      // Update the optimistic message with the actual transcript
+      setMessages((prev) => prev.map(msg => 
+        msg.id === userVoiceMessage.id ? { ...msg, content: `🎙️ "${transcript}"` } : msg
+      ));
+
+      if (user) {
+        db.saveChatMessage(user.id, { role: 'user', content: `🎙️ "${transcript}"` }).catch(console.error);
+      }
+
+      // 2. Ask Ceres AI with the Language Lock
+      let farmProfile = null;
+      try {
+        const storedProfile = localStorage.getItem('farmProfile');
+        if (storedProfile) farmProfile = JSON.parse(storedProfile);
+      } catch (e) {}
+
+      const askResponse = await fetch('/api/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: transcript,
+          pageContext: window.location.pathname,
+          locale: language_code || locale, // Pass detected language!
+          location,
+          farmProfile,
+          forceLanguage: language_code, // Tell AI to lock into this language
+        }),
+      });
+
+      const data = await askResponse.json();
+      const replyContent = data.reply || data.error || 'Sorry, I could not process your request.';
+
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: replyContent,
+        timestamp: new Date(),
+      };
+
+      setMessages((prev) => [...prev, assistantMessage]);
+
+      if (user) {
+        db.saveChatMessage(user.id, { role: 'assistant', content: replyContent }).catch(console.error);
+      }
+
+      // 3. Audio Playback via TTS
+      try {
+        const ttsResponse = await fetch('/api/voice/speak', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: replyContent,
+            language_code: language_code || locale || 'hi-IN'
+          })
+        });
+
+        if (ttsResponse.ok) {
+           const { audioBase64 } = await ttsResponse.json();
+           if (audioBase64) {
+               const audio = new Audio(`data:audio/wav;base64,${audioBase64}`);
+               audio.play().catch(e => console.error('Audio playback blocked by browser:', e));
+           }
+        } else {
+           // Provide a silent failure if Sarvam key is missing so we don't break the chat
+           console.warn('TTS could not be rendered', await ttsResponse.text());
+        }
+      } catch (ttsErr) {
+         console.error('Failed to trigger TTS audio route:', ttsErr);
+      }
+
+    } catch (err) {
+      console.error(err);
+      setError('Voice synthesis failed. Ensure Sarvam API is configured.');
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
   const handleSendMessage = async () => {
     if (!input.trim()) return;
 
@@ -100,22 +242,16 @@ export default function ChatWidget({ locale: propLocale, location }: ChatWidgetP
     setInput('');
     setIsTyping(true);
 
-    // Save User Msg
     if (user) {
       db.saveChatMessage(user.id, { role: 'user', content: input }).catch(console.error);
     }
 
     try {
-      // Get Farm Profile from storage
       let farmProfile = null;
       try {
         const storedProfile = localStorage.getItem('farmProfile');
-        if (storedProfile) {
-          farmProfile = JSON.parse(storedProfile);
-        }
-      } catch (e) {
-        console.error('Error reading farm profile', e);
-      }
+        if (storedProfile) farmProfile = JSON.parse(storedProfile);
+      } catch (e) {}
 
       const response = await fetch('/api/ask', {
         method: 'POST',
@@ -125,7 +261,7 @@ export default function ChatWidget({ locale: propLocale, location }: ChatWidgetP
           pageContext: window.location.pathname,
           locale,
           location,
-          farmProfile, // Sending the profile
+          farmProfile,
         }),
       });
 
@@ -141,7 +277,6 @@ export default function ChatWidget({ locale: propLocale, location }: ChatWidgetP
 
       setMessages((prev) => [...prev, assistantMessage]);
 
-      // Save Assistant Msg
       if (user) {
         db.saveChatMessage(user.id, { role: 'assistant', content: replyContent }).catch(console.error);
       }
@@ -168,7 +303,6 @@ export default function ChatWidget({ locale: propLocale, location }: ChatWidgetP
 
   return (
     <>
-      {/* Floating Action Button */}
       <AnimatePresence>
         {!isOpen && (
           <motion.button
@@ -184,7 +318,6 @@ export default function ChatWidget({ locale: propLocale, location }: ChatWidgetP
         )}
       </AnimatePresence>
 
-      {/* Chat Window */}
       <AnimatePresence>
         {isOpen && (
           <FocusLock disabled={!isOpen}>
@@ -199,7 +332,6 @@ export default function ChatWidget({ locale: propLocale, location }: ChatWidgetP
               aria-modal="true"
               className="fixed bottom-6 right-6 z-40 flex h-[600px] w-[400px] flex-col rounded-lg border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-800"
             >
-              {/* Header */}
               <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50 rounded-t-lg">
                 <div>
                   <h2 id="chat-title" className="text-lg font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
@@ -218,7 +350,6 @@ export default function ChatWidget({ locale: propLocale, location }: ChatWidgetP
                 </button>
               </div>
 
-              {/* Messages */}
               <div className="flex-1 overflow-y-auto p-4 bg-gray-50/50 dark:bg-gray-900/50">
                 <div role="log" aria-live="polite" aria-atomic="false" className="space-y-6">
                   {messages.map((message) => (
@@ -260,7 +391,6 @@ export default function ChatWidget({ locale: propLocale, location }: ChatWidgetP
                 </div>
               </div>
 
-              {/* Input */}
               <div className="border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 rounded-b-lg">
                 {error && (
                   <motion.div
@@ -272,6 +402,30 @@ export default function ChatWidget({ locale: propLocale, location }: ChatWidgetP
                     {error}
                   </motion.div>
                 )}
+                
+                {isRecording && (
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    className="mb-3 flex items-center justify-between bg-red-50/50 dark:bg-red-900/10 rounded-xl px-4 py-2 border border-red-100 dark:border-red-900/30"
+                  >
+                    <div className="flex items-center gap-2">
+                       <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                       <span className="text-xs font-semibold text-red-600 dark:text-red-400">Listening to your voice...</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                       {[...Array(5)].map((_, i) => (
+                         <motion.div
+                           key={i}
+                           animate={{ height: ['8px', '16px', '8px'] }}
+                           transition={{ repeat: Infinity, duration: 1, delay: i * 0.1 }}
+                           className="w-1 bg-red-400 rounded-full"
+                         />
+                       ))}
+                    </div>
+                  </motion.div>
+                )}
+
                 <div className="flex gap-2 relative items-end">
                   <div className="flex-1 relative">
                     <input
@@ -280,18 +434,39 @@ export default function ChatWidget({ locale: propLocale, location }: ChatWidgetP
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                       onKeyPress={handleKeyPress}
-                      placeholder={t('chat.placeholder')}
+                      placeholder={isRecording ? "Listening..." : t('chat.placeholder')}
+                      disabled={isRecording}
                       aria-label="Chat message input"
                       className={`w-full rounded-xl border ${error ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-primary-500'
-                        } px-4 py-3 text-sm focus:outline-none focus:ring-2 ${error ? 'focus:ring-red-200' : 'focus:ring-primary-100'
-                        } dark:border-gray-600 dark:bg-gray-700 dark:text-white transition-all shadow-sm`}
+                        } px-4 py-3 pr-12 text-sm focus:outline-none focus:ring-2 ${error ? 'focus:ring-red-200' : 'focus:ring-primary-100'
+                        } dark:border-gray-600 dark:bg-gray-700 dark:text-white transition-all shadow-sm disabled:opacity-50`}
                     />
+                    
+                    {/* Voice Mic Button */}
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center">
+                       {isRecording ? (
+                         <button
+                           onClick={handleStopRecording}
+                           className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                         >
+                           <FiSquare className="w-5 h-5 fill-current" />
+                         </button>
+                       ) : (
+                         <button
+                           onClick={handleStartRecording}
+                           disabled={isTyping || input.length > 0}
+                           className="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-gray-600 rounded-lg transition-colors disabled:opacity-0"
+                         >
+                           <FiMic className="w-5 h-5" />
+                         </button>
+                       )}
+                    </div>
                   </div>
                   <button
                     onClick={handleSendMessage}
-                    disabled={!input.trim() || isTyping}
+                    disabled={!input.trim() || isTyping || isRecording}
                     aria-label={t('chat.send')}
-                    className="rounded-xl bg-primary-600 p-3 text-white transition-all hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 shadow-sm hover:shadow-md active:scale-95 flex items-center justify-center"
+                    className="rounded-xl bg-primary-600 p-3 text-white transition-all hover:bg-primary-700 disabled:cursor-not-allowed disabled:bg-gray-300 dark:disabled:bg-gray-600 focus:outline-none shadow-sm hover:shadow-md active:scale-95 flex items-center justify-center shrink-0"
                   >
                     <FiSend className="h-5 w-5" />
                   </button>
