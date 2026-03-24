@@ -32,7 +32,7 @@ export async function POST(req: Request) {
       body: JSON.stringify({
         inputs: [text.substring(0, 500)],
         target_language_code: targetLangCode,
-        speaker: 'meera',
+        speaker: 'anushka',
         pitch: 0,
         pace: 1.0,
         loudness: 1.5,
