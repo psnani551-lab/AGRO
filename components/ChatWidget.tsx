@@ -240,14 +240,19 @@ export default function ChatWidget({ locale: propLocale, location }: ChatWidgetP
            const { audioBase64 } = await ttsResponse.json();
            if (audioBase64) {
                const audio = new Audio(`data:audio/wav;base64,${audioBase64}`);
-               audio.play().catch(e => console.error('Audio playback blocked by browser:', e));
+               audio.play().catch(e => {
+                   console.error('Audio playback blocked by browser:', e);
+                   setError('Audio generated, but browser blocked auto-play (Gesture Timeout).');
+               });
            }
         } else {
-           // Provide a silent failure if Sarvam key is missing so we don't break the chat
-           console.warn('TTS could not be rendered', await ttsResponse.text());
+           const errText = await ttsResponse.text();
+           console.warn('TTS could not be rendered', errText);
+           setError('TTS Failed: Invalid Sarvam payload or missing API Key.');
         }
-      } catch (ttsErr) {
+      } catch (ttsErr: any) {
          console.error('Failed to trigger TTS audio route:', ttsErr);
+         setError(`TTS Network Error: ${ttsErr.message}`);
       }
 
     } catch (err) {

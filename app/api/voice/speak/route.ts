@@ -42,13 +42,13 @@ export async function POST(req: Request) {
         'api-subscription-key': sarvamApiKey,
       },
       body: JSON.stringify({
-        inputs: [text.substring(0, 500)], // Sarvam allows up to 500 chars per input array item
+        inputs: [text.substring(0, 500)],
         target_language_code: targetLangCode,
         speaker: speaker,
         pitch: 0,
         pace: 1.0,
-        loudness: 1.2,
-        speech_sample_rate: 16000,
+        loudness: 1.5,
+        speech_sample_rate: 8000,
         enable_preprocessing: true,
         model: 'indic-tts'
       })
