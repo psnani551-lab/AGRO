@@ -6,7 +6,7 @@ import { getMarketPrice } from '@/lib/marketPriceDatabase';
 const chatRequestSchema = z.object({
   message: z.string().min(1).max(1000),
   pageContext: z.string().min(1).max(100),
-  locale: z.enum(['en', 'hi', 'te', 'mr', 'ta']).optional(),
+  locale: z.string().optional(),
   location: z
     .object({
       lat: z.number().min(-90).max(90),
