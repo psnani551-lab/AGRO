@@ -136,24 +136,31 @@ const WeatherCard = memo(({ weatherData, t }: any) => {
                         <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-[0.15em] flex items-center gap-2">
                             <FiActivity /> {t('climate.forecast')}
                         </h4>
-                        <span className="text-[10px] text-zinc-950 bg-white px-2 py-0.5 rounded font-bold">{t('weather.liveUpdate')}</span>
+                        <span className="text-[10px] text-zinc-950 bg-white px-2 py-0.5 rounded font-bold">{weatherData?.isHyperLocal ? 'Satellite Grounded' : t('weather.liveUpdate')}</span>
                     </div>
 
-                    <div className="grid grid-cols-7 gap-3">
-                        {weatherData?.forecast?.map((day: any, i: number) => (
-                            <div key={i} className="group/day relative flex flex-col items-center justify-between bg-zinc-900 border border-zinc-800 rounded-xl p-3 hover:bg-zinc-800 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg cursor-default h-[110px]">
-                                <span className="text-[10px] font-bold opacity-70 uppercase tracking-wide text-zinc-400">{day.date?.slice(0, 3)}</span>
-                                <div className="my-1 transform transition-transform group-hover/day:scale-110 duration-300 text-white">
-                                    {getWeatherIcon(day.rain > 30 ? 'rain' : day.temp < 15 ? 'cloud' : 'sun', true)}
+                    <div className="grid grid-cols-5 md:grid-cols-7 gap-3 overflow-x-auto pb-2">
+                        {weatherData?.forecast?.map((day: any, i: number) => {
+                            const date = day.dt ? new Date(day.dt * 1000) : new Date(day.date);
+                            const temp = day.main?.temp || day.maxTemp || day.temperature || day.temp;
+                            const cond = day.weather?.[0]?.description || day.condition || '';
+                            const rain = day.rain?.['3h'] || day.rain || 0;
+
+                            return (
+                                <div key={i} className="group/day relative flex flex-col items-center justify-between bg-zinc-900 border border-zinc-800 rounded-xl p-3 hover:bg-zinc-800 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg cursor-default min-w-[60px] h-[110px]">
+                                    <span className="text-[10px] font-bold opacity-70 uppercase tracking-wide text-zinc-400">{date.toLocaleDateString('en-US', { weekday: 'short' })}</span>
+                                    <div className="my-1 transform transition-transform group-hover/day:scale-110 duration-300 text-white">
+                                        {getWeatherIcon(cond.includes('rain') || cond.includes('Rain') || cond.includes('drizzle') || rain > 0 ? 'rain' : temp < 15 ? 'cloud' : 'sun', true)}
+                                    </div>
+                                    <div className="flex flex-col items-center gap-0.5">
+                                        <span className="text-sm font-bold text-white">{Math.round(temp)}°</span>
+                                        {rain > 0 && <span className="text-[9px] text-blue-400 font-bold">{rain.toFixed(1)}mm</span>}
+                                    </div>
                                 </div>
-                                <div className="flex flex-col items-center gap-0.5">
-                                    <span className="text-sm font-bold text-white">{Math.round(day.temp)}°</span>
-                                    <span className="text-[9px] text-zinc-500">{Math.round(day.temp - 8)}°</span>
-                                </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                         {!weatherData?.forecast && [1, 2, 3, 4, 5, 6, 7].map(i => (
-                            <div key={i} className="h-[110px] bg-zinc-800 rounded-xl animate-pulse" />
+                            <div key={i} className="min-w-[60px] h-[110px] bg-zinc-800 rounded-xl animate-pulse" />
                         ))}
                     </div>
                 </div>
@@ -401,6 +408,7 @@ export default function UltimateDashboard({
     const [marketData, setMarketData] = useState<any>(null);
     const [analysis, setAnalysis] = useState<any>(null);
     const [valuation, setValuation] = useState<any>(null);
+    const [satelliteData, setSatelliteData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
     // Modals
@@ -450,14 +458,42 @@ export default function UltimateDashboard({
                 }
             }
 
-            // 2. Sequential Fetching (Analysis needs Weather)
-            const weatherRes = await fetch('/api/weather', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ location: locationQuery })
-            }).then(r => r.json());
+            // 2. A. FETCH SATELLITE DATA FIRST (Primary Grounding)
+            let satData = null;
+            try {
+                if (profileData?.id || profileData?.agro_monitoring_id) {
+                    const satResponse = await fetch('/api/satellite/ndvi', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            farmId: profileData.id,
+                            polygonId: profileData.agro_monitoring_id,
+                            coords: profileData.polygon_coords,
+                            name: profileData.farmName || 'Farm Field'
+                        }),
+                    });
 
-            setWeatherData(weatherRes);
+                    if (satResponse.ok) {
+                        satData = await satResponse.json();
+                        setSatelliteData(satData);
+                    }
+                }
+            } catch (e) {
+                console.warn('Satellite fetch failed');
+            }
+
+            // 2. B. Sequential Fetching (Analysis needs Weather)
+            let weatherRes = null;
+            try {
+                weatherRes = await fetch('/api/weather', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ location: locationQuery })
+                }).then(r => r.json());
+                setWeatherData(weatherRes);
+            } catch (e) {
+                console.warn('Weather fetch failed');
+            }
 
             // Parse Location for Market API
             let state = 'India';
@@ -484,17 +520,21 @@ export default function UltimateDashboard({
                     })
                 }).then(r => r.json()),
 
-                fetch('/api/analysis', {
+                fetch('/api/analysis-pro', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         farmProfile: {
+                            ...profileData, // Pass the whole profile dynamically
                             location: locationQuery,
                             currentCrops: [cropQuery],
-                            soilType: 'Loamy',
-                            farmSize: 5
+                            soilType: profileData?.soilType || 'Loamy',
+                            farmSize: profileData?.farmSize || 5,
+                            irrigationType: profileData?.irrigationType || 'Drip Irrigation'
                         },
-                        weatherData: weatherRes
+                        weatherData: weatherRes,
+                        satelliteData: satData, // CRITICAL: Pass satellite intelligence
+                        plantingDate: profileData?.plantingDate || new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
                     })
                 }).then(r => r.json())
             ]);
@@ -579,11 +619,58 @@ export default function UltimateDashboard({
 
                 {/* Row 1: Key Metrics & Weather */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-1 h-[400px]">
-                        <ValuationHero valuation={valuation} marketData={marketData} analysis={analysis} t={t} />
+                    {/* Valuation / Satellite Overview */}
+                    <div className="lg:col-span-1 flex flex-col gap-6">
+                        <div className="h-[250px] lg:h-[300px]">
+                            <ValuationHero valuation={valuation} marketData={marketData} analysis={analysis} t={t} />
+                        </div>
+                        
+                        {/* Sentinel-2 Live Visual Scan Embedded */}
+                        {satelliteData?.imagery && (
+                            <div className="bg-zinc-950 rounded-3xl p-5 border border-zinc-800 shadow-xl relative overflow-hidden group">
+                                <div className="flex justify-between items-center mb-3 relative z-10">
+                                    <p className="text-xs text-zinc-400 uppercase font-bold tracking-wider flex items-center gap-2">
+                                        <FiMapPin /> Live Visual Scan
+                                    </p>
+                                    <span className="text-[9px] px-2 py-0.5 bg-green-500/10 text-green-500 rounded-full border border-green-500/20 font-bold uppercase">Sentinel-2</span>
+                                </div>
+                                <div className="aspect-[16/7] w-full rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900 relative">
+                                    <img 
+                                        src={satelliteData.imagery.image.truecolor} 
+                                        alt="Recent Satellite View" 
+                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                    />
+                                    <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/70 backdrop-blur-md rounded text-[9px] text-white/90 font-bold uppercase tracking-widest border border-white/10">
+                                        Active: {new Date(satelliteData.imagery.dt * 1000).toLocaleDateString()}
+                                    </div>
+                                </div>
+
+                                {/* GDD Progress Bar */}
+                                {satelliteData?.accumulated?.gdd && (
+                                    <div className="mt-4">
+                                        <div className="flex justify-between items-end mb-1.5">
+                                            <p className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Harvest Countdown</p>
+                                            <p className="text-xs font-bold text-white">{Math.min(100, Math.floor((satelliteData.accumulated.gdd / 2500) * 100))}%</p>
+                                        </div>
+                                        <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
+                                            <motion.div 
+                                                initial={{ width: 0 }}
+                                                animate={{ width: `${Math.min(100, (satelliteData.accumulated.gdd / 2500) * 100)}%` }}
+                                                className="h-full bg-gradient-to-r from-emerald-500 to-sky-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]"
+                                            />
+                                        </div>
+                                        <p className="text-[9px] text-zinc-500 mt-1.5 flex items-center gap-1 font-medium">
+                                            <FiTrendingUp className="w-3 h-3 text-emerald-500" />
+                                            {satelliteData.accumulated.gdd.toFixed(0)} Heat Units (GDD) accumulated.
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
-                    <div className="lg:col-span-2 h-[400px]">
-                        <WeatherCard weatherData={weatherData} t={t} />
+
+                    <div className="lg:col-span-2 h-[550px] lg:h-auto">
+                        <WeatherCard weatherData={satelliteData?.forecast ? { ...weatherData, forecast: satelliteData.forecast.slice(0, 7), isHyperLocal: true } : weatherData} t={t} />
                     </div>
                 </div>
 
