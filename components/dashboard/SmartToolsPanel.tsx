@@ -68,7 +68,6 @@ export default function SmartToolsPanel({
     { id: 'sensor', label: '📡 Soil Node', icon: FiCpu },
     { id: 'pump', label: '💧 Pump Node', icon: FiLayers },
     { id: 'vision', label: '✨ AI Vision', icon: FiCamera },
-    { id: 'imagery', label: '🛰️ Satellite', icon: FiImage },
     { id: 'export', label: '📦 Export', icon: FiDownload },
   ] as const;
 
