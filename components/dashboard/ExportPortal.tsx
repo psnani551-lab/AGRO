@@ -3,12 +3,16 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FiDownload, FiFileText, FiCalendar, FiFilter, FiCheckCircle } from 'react-icons/fi';
+import { useI18n } from '@/lib/i18n';
 
 interface ExportPortalProps {
   farmId: string;
+  farmProfile?: any;
+  analysis?: any;
 }
 
-export const ExportPortal: React.FC<ExportPortalProps> = ({ farmId }) => {
+export const ExportPortal: React.FC<ExportPortalProps> = ({ farmId, farmProfile, analysis }) => {
+  const { language } = useI18n();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [dataTypes, setDataTypes] = useState<string[]>(['sensors']);
@@ -26,6 +30,9 @@ export const ExportPortal: React.FC<ExportPortalProps> = ({ farmId }) => {
           farmId,
           dataTypes,
           format,
+          locale: language,
+          farmProfile,
+          analysis,
           dateRange: {
             start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), // Last 30 days
             end: new Date().toISOString()

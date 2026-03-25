@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FiCpu, FiCamera, FiDownload, FiZap, FiCheckCircle, FiAlertCircle, FiX, FiTrendingUp, FiLayers } from 'react-icons/fi';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { storage } from '@/lib/storage';
 import ConnectSensor from './ConnectSensor';
 import ConnectPump from './ConnectPump';
 import { ExportPortal } from './ExportPortal';
@@ -358,7 +359,15 @@ export default function SmartToolsPanel({
           {/* Export Tab */}
           {activeTab === 'export' && (
             <motion.div key="export" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <ExportPortal farmId={farmId} />
+              <ExportPortal 
+                farmId={farmId} 
+                farmProfile={farmProfile}
+                analysis={storage.get('irrigationPlanPro') ? { 
+                  irrigationPlan: storage.get('irrigationPlanPro'),
+                  yieldForecast: storage.get('yieldForecastPro'),
+                  diseaseRisk: storage.get('diseaseRiskPro')
+                } : null}
+              />
             </motion.div>
           )}
         </AnimatePresence>

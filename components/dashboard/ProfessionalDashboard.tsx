@@ -12,6 +12,7 @@ import { ExportPortal } from './ExportPortal';
 
 export default function ProfessionalDashboard({ farmProfile: farmProfileProp }: { farmProfile?: any }) {
   const { t, locale } = useI18n();
+  const currentProfile = farmProfileProp || storage.getFarmProfile();
   const [loading, setLoading] = useState(true);
   const [isOffline, setIsOffline] = useState(false);
   const [weatherData, setWeatherData] = useState<any>(null);
@@ -1125,7 +1126,11 @@ export default function ProfessionalDashboard({ farmProfile: farmProfileProp }: 
 
       {/* Professional Tools: Export Center */}
       <div className="mt-8 mb-4">
-        <ExportPortal farmId={analysis?.irrigationPlan?.farmId || 'default-farm'} />
+        <ExportPortal 
+          farmId={analysis?.irrigationPlan?.farmId || 'default-farm'} 
+          farmProfile={currentProfile}
+          analysis={analysis}
+        />
       </div>
 
       {/* Data Source Footer */}
