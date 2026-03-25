@@ -16,7 +16,7 @@ import { supabase } from '@/lib/supabaseClient';
 
 export async function POST(request: NextRequest) {
   try {
-    const { farmProfile, weatherData, plantingDate, locale } = await request.json();
+    const { farmProfile, weatherData, plantingDate, locale, satelliteData } = await request.json();
 
     if (!farmProfile) {
       return NextResponse.json(
@@ -48,7 +48,8 @@ export async function POST(request: NextRequest) {
       weatherData,
       plantingDate,
       locale || 'en',
-      sensorData
+      sensorData,
+      satelliteData
     );
 
     return NextResponse.json(analysis);
@@ -66,7 +67,8 @@ async function generateProfessionalAnalysis(
   weatherData: any,
   plantingDate?: string,
   locale: Locale = 'en',
-  sensorData: any = null
+  sensorData: any = null,
+  satelliteData: any = null
 ) {
   const { soilType, currentCrops, farmSize, irrigationType } = farmProfile;
   const crops = Array.isArray(currentCrops) && currentCrops.length > 0 ? currentCrops : ['Rice'];
@@ -80,25 +82,27 @@ async function generateProfessionalAnalysis(
     plantingDate,
     irrigationType || 'Drip Irrigation',
     locale,
-    sensorData
+    sensorData,
+    satelliteData
   );
 
   const yieldForecast = generateProfessionalYieldForecast(
     crops,
     soilType || 'Loamy',
-    weatherData,
     farmSize || 1,
     irrigationPlan,
-    locale
+    locale,
+    satelliteData
   );
 
-  const diseaseRisk = generateProfessionalDiseaseRisk(crops, weatherData, locale);
+  const diseaseRisk = generateProfessionalDiseaseRisk(crops, weatherData, satelliteData, locale);
 
   const ecoScore = calculateProfessionalEcoScore(
     soilType,
     irrigationPlan,
     diseaseRisk,
-    irrigationType
+    irrigationType,
+    satelliteData
   );
 
   // 2. AI ENHANCEMENT (Gemini)
@@ -108,7 +112,7 @@ async function generateProfessionalAnalysis(
 
   try {
     if (process.env.GEMINI_API_KEY) {
-      const aiInsights = await generateGenericAIInsights(farmProfile, weatherData, irrigationPlan, diseaseRisk);
+      const aiInsights = await generateGenericAIInsights(farmProfile, weatherData, irrigationPlan, diseaseRisk, satelliteData);
       if (aiInsights) {
         recommendations = aiInsights.recommendations || [];
         aiTips = aiInsights.tips || [];
@@ -146,25 +150,28 @@ async function generateProfessionalAnalysis(
 /**
  * AI INSIGHT GENERATOR
  */
-async function generateGenericAIInsights(profile: any, weather: any, irrigation: any, disease: any) {
+async function generateGenericAIInsights(profile: any, weather: any, irrigation: any, disease: any, satellite: any = null) {
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
     const prompt = `
-      You are an expert Agronomist. Analyze this farm data and provide 3 specific actionable recommendations and 3 quick tips.
+      You are an expert Agronomist. Analyze this unified farm data (Satellite + Local Weather + IoT) and provide 3 specific actionable recommendations and 3 quick tips.
       
       FARM DATA:
       - Location: ${profile.location}
       - Crop: ${profile.currentCrops.join(', ')}
       - Soil: ${profile.soilType}
       - Irrigation: ${profile.irrigationType}
-      - Pump Run Time: ${irrigation.actionable.pumpRunTime} minutes
-      - Total liters: ${irrigation.actionable.totalLiters}L
+      
+      SATELLITE & SENSOR DATA:
+      - Current NDVI (Health): ${satellite?.ndvi?.mean || 'N/A'}
+      - Soil Moisture (10cm): ${satellite?.soil?.moisture || 'N/A'}%
+      - Accumulated Heat (GDD): ${satellite?.accumulated?.gdd || 'N/A'}
       
       ANALYSIS RESULTS:
       - Water Need: ${irrigation.irrigationNeed} mm/day
       - Disease Risk: ${disease.level}
-      - Weather: ${weather?.current?.condition?.text}, ${weather?.current?.temp_c}°C
+      - Hyper-local Forecast: ${satellite?.forecast?.[0]?.temp?.day || 'N/A'}°C, ${satellite?.forecast?.[0]?.weather?.[0]?.description || 'N/A'}
       
       OUTPUT FORMAT (JSON ONLY, NO MARKDOWN):
       {
@@ -203,7 +210,8 @@ async function generateProfessionalIrrigationPlan(
   plantingDate?: string,
   irrigationType?: string,
   locale: Locale = 'en',
-  sensorData: any = null
+  sensorData: any = null,
+  satelliteData: any = null
 ) {
   const cropData = getCropData(cropName);
   // ... existing setup ...
@@ -251,6 +259,16 @@ async function generateProfessionalIrrigationPlan(
     }
     reliability = 100; 
     calculationMethod = `FAO-56 + IoT Sensor (${sensorData.sensor_id})`;
+  } else if (satelliteData?.soil?.moisture) {
+    // VIRTUAL SENSING FALLBACK
+    const moisturePerc = satelliteData.soil.moisture;
+    if (moisturePerc > 35) {
+      irrigationNeed = Math.max(0, irrigationNeed - 1);
+    } else if (moisturePerc < 15) {
+      irrigationNeed += 2;
+    }
+    reliability = 85;
+    calculationMethod = 'FAO-56 + Virtual Satellite Sensing';
   }
 
   // --- NEW: PUMP RUN-TIME CALCULATION ---
@@ -373,13 +391,14 @@ function generateIrrigationSteps(method: string, amount: number, eff: number) {
   ];
 }
 
-function generateProfessionalYieldForecast(crops: string[], soil: string, weather: any, size: number, plan: any, locale: string) {
-  const avgTemp = weather?.forecast?.reduce((sum: number, day: any) => sum + day.temp, 0) / 7 || 25;
+function generateProfessionalYieldForecast(crops: string[], soil: string, size: number, plan: any, locale: string, satelliteData: any = null) {
+  const ndviFactor = satelliteData?.ndvi?.mean ? (satelliteData.ndvi.mean > 0.6 ? 1.15 : (satelliteData.ndvi.mean < 0.3 ? 0.7 : 1.0)) : 1.0;
+  const gddFactor = satelliteData?.accumulated?.gdd ? (satelliteData.accumulated.gdd > 1500 ? 1.1 : 1.0) : 1.0;
 
   return {
     crops: crops.map(c => {
-      // Simple logic for the demo, in real app uses DB
-      const estimated = 4000 * size;
+      const baseYield = 4000 * size;
+      const estimated = Math.round(baseYield * ndviFactor * gddFactor);
       const potential = 5500 * size;
       return {
         crop: c,
@@ -391,7 +410,7 @@ function generateProfessionalYieldForecast(crops: string[], soil: string, weathe
         confidence: 85,
         factors: {
           soil: soil === 'Loamy' ? '+10%' : '-5%',
-          temperature: avgTemp > 35 ? '-15%' : '+5%',
+          temperature: satelliteData?.forecast?.[0]?.main?.temp > 35 ? '-15%' : '+5%',
           rainfall: '+5%',
           irrigation: '+10%'
         },
@@ -406,26 +425,33 @@ function generateProfessionalYieldForecast(crops: string[], soil: string, weathe
   };
 }
 
-function generateProfessionalDiseaseRisk(crops: string[], weather: any, locale: string) {
-  // Basic reliable default
+function generateProfessionalDiseaseRisk(crops: string[], weather: any, satelliteData: any, locale: string) {
+  const humidity = satelliteData?.forecast?.[0]?.main?.humidity || 60;
+  const temp = satelliteData?.forecast?.[0]?.main?.temp || 25;
+  
+  let risk = 'Low';
+  if (humidity > 85 && temp > 22) risk = 'High';
+  else if (humidity > 70) risk = 'Medium';
+
   return {
-    level: 'Low',
-    diseases: [],
+    level: risk,
+    diseases: risk === 'High' ? ['Fungal Blast (Potential)', 'Leaf Spot'] : [],
     factors: {
-      temperature: '25°C',
-      humidity: '50%',
-      rainfall: '0mm (Low)'
+      temperature: `${temp.toFixed(1)}°C`,
+      humidity: `${humidity}%`,
+      rainfall: `${satelliteData?.forecast?.[0]?.rain?.['3h'] || 0}mm`
     },
     reliability: 90,
-    dataSource: 'ICAR'
+    dataSource: 'AgroMonitoring Real-time NWPs'
   };
 }
 
-function calculateProfessionalEcoScore(soil: string, plan: any, disease: any, type: string) {
+function calculateProfessionalEcoScore(soil: string, plan: any, disease: any, type: string, satelliteData: any = null) {
   let score = 70;
   if (type === 'Drip Irrigation') score += 20;
   if (disease.level === 'Low') score += 10;
-  return score;
+  if (satelliteData?.ndvi?.mean > 0.5) score += 5;
+  return Math.min(100, score);
 }
 
 function generateProfessionalRecommendations(profile: any, weather: any, plan: any, yieldF: any, disease: any) {

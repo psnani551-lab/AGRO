@@ -69,19 +69,32 @@ export default function ProfessionalDashboard({ farmProfile: farmProfileProp }: 
         return;
       }
 
-      // Extract location string from any format
+      // 1. --- SATELLITE DATA FETCH (PRIMARY GROUNDING) ---
+      let satData = null;
+      try {
+        const satResponse = await fetch('/api/satellite/ndvi', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            farmId: farmProfile.id,
+            polygonId: farmProfile.agro_monitoring_id,
+            coords: farmProfile.polygon_coords,
+            name: farmProfile.farmName || 'Farm Field'
+          }),
+        });
+
+        if (satResponse.ok) {
+          satData = await satResponse.json();
+          setSatelliteData(satData);
+        }
+      } catch (e) {
+        console.warn('Satellite fetch failed');
+      }
+
+      // 2. --- WEATHER FETCH (SUPPLEMENTARY) ---
       const locationString = typeof farmProfile.location === 'string'
         ? farmProfile.location
-        : farmProfile.location?.address
-        || farmProfile.city
-        || farmProfile.district
-        || 'Hyderabad, India';
-
-      if (!locationString) {
-        setError('Please add a location to your farm profile');
-        setLoading(false);
-        return;
-      }
+        : farmProfile.location?.address || farmProfile.city || farmProfile.district || 'Hyderabad, India';
 
       let weather;
       try {
@@ -91,18 +104,18 @@ export default function ProfessionalDashboard({ farmProfile: farmProfileProp }: 
           body: JSON.stringify({ location: locationString }),
         });
 
-        if (!weatherResponse.ok) throw new Error('Weather API error');
-        weather = await weatherResponse.json();
-        setWeatherData(weather);
-        storage.save('weatherData', weather.forecast);
+        if (weatherResponse.ok) {
+          weather = await weatherResponse.json();
+          setWeatherData(weather);
+          storage.save('weatherData', weather.forecast);
+        }
       } catch (e) {
-        console.warn('Weather fetch failed, using cache');
-        setIsOffline(true);
+        console.warn('Weather fetch failed');
         weather = { forecast: storage.get('weatherData') };
-        if (!weather.forecast) throw new Error('No weather data available');
       }
 
-      // Generate PROFESSIONAL analysis
+      // 3. --- UNIFIED PROFESSIONAL ANALYSIS ---
+      // Grounded in Satellite Data + AI
       try {
         const analysisResponse = await fetch('/api/analysis-pro', {
           method: 'POST',
@@ -110,6 +123,7 @@ export default function ProfessionalDashboard({ farmProfile: farmProfileProp }: 
           body: JSON.stringify({ 
             farmProfile, 
             weatherData: weather,
+            satelliteData: satData, // CRITICAL: Pass satellite intelligence
             plantingDate: farmProfile.plantingDate || new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
             locale: locale
           }),
@@ -136,7 +150,8 @@ export default function ProfessionalDashboard({ farmProfile: farmProfileProp }: 
         if (cachedAnalysis.irrigationPlan) setAnalysis(cachedAnalysis);
       }
 
-      // Fetch market prices
+      // 4. --- MARKET DATA & CERTIFICATES ---
+      // ... (Market fetch logic remains same)
       try {
         const cropId = farmProfile.currentCrops?.[0]?.toLowerCase() || 'rice';
         const marketResponse = await fetch('/api/market-prices', {
@@ -159,28 +174,6 @@ export default function ProfessionalDashboard({ farmProfile: farmProfileProp }: 
         console.warn('Market fetch failed');
       }
 
-      // --- NEW: SATELLITE DATA FETCH ---
-      try {
-        const satResponse = await fetch('/api/satellite/ndvi', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            farmId: farmProfile.id,
-            polygonId: farmProfile.agro_monitoring_id,
-            coords: farmProfile.polygon_coords, // [[lon, lat], ...]
-            name: farmProfile.farmName || 'Farm Field'
-          }),
-        });
-
-        if (satResponse.ok) {
-          const sat = await satResponse.json();
-          setSatelliteData(sat);
-        }
-      } catch (e) {
-        console.warn('Satellite fetch failed');
-      }
-
-      // --- NEW: CERTIFICATE & TRUST FETCH ---
       try {
         const certResponse = await fetch('/api/export/certificate', {
           method: 'POST',
@@ -198,10 +191,7 @@ export default function ProfessionalDashboard({ farmProfile: farmProfileProp }: 
 
     } catch (err: any) {
       console.error('Professional Dashboard Error:', err);
-      // Only show full error if we have NO data at all
-      if (!analysis) {
-        setError(err.message || 'Failed to load professional analysis');
-      }
+      if (!analysis) setError(err.message || 'Failed to load professional analysis');
     } finally {
       setLoading(false);
     }
@@ -458,31 +448,51 @@ export default function ProfessionalDashboard({ farmProfile: farmProfileProp }: 
                    </div>
                 </div>
 
-                {/* Growth Stage Progress (GDD) */}
-                {satelliteData?.accumulated?.gdd && (
-                  <div className="mt-4 pt-4 border-t border-zinc-800/50">
-                    <div className="flex justify-between items-end mb-2">
-                      <div>
-                        <p className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Harvest Countdown</p>
-                        <p className="text-xs text-white font-medium">Stage: {analysis?.irrigationPlan?.growthStage || 'Vegetative'}</p>
+                 {/* Growth Stage Progress (GDD) */}
+                 {satelliteData?.accumulated?.gdd && (
+                   <div className="mt-4 pt-4 border-t border-zinc-800/50">
+                     <div className="flex justify-between items-end mb-2">
+                       <div>
+                         <p className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Harvest Countdown</p>
+                         <p className="text-xs text-white font-medium">Stage: {analysis?.irrigationPlan?.growthStage || 'Vegetative'}</p>
+                       </div>
+                       <p className="text-xs font-bold text-white">{Math.min(100, Math.floor((satelliteData.accumulated.gdd / 2500) * 100))}%</p>
+                     </div>
+                     <div className="h-2 w-full bg-zinc-800 rounded-full overflow-hidden">
+                       <motion.div 
+                         initial={{ width: 0 }}
+                         animate={{ width: `${Math.min(100, (satelliteData.accumulated.gdd / 2500) * 100)}%` }}
+                         className="h-full bg-gradient-to-r from-emerald-500 to-sky-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]"
+                       />
+                     </div>
+                     <p className="text-[9px] text-zinc-500 mt-2 flex items-center gap-1">
+                       <FiTrendingUp className="w-3 h-3" />
+                       {satelliteData.accumulated.gdd.toFixed(0)} Heat Units (GDD) accumulated.
+                     </p>
+                   </div>
+                 )}
+
+                 {/* NEW: SATELLITE VISUAL SCAN (Direct in Dashboard) */}
+                 {satelliteData?.imagery && (
+                   <div className="mt-4 pt-4 border-t border-zinc-800/50">
+                      <div className="flex justify-between items-center mb-2">
+                        <p className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Live Visual Scan</p>
+                        <span className="text-[9px] px-2 py-0.5 bg-green-500/10 text-green-500 rounded-full border border-green-500/20 font-bold">Sentinel-2</span>
                       </div>
-                      <p className="text-xs font-bold text-white">{Math.min(100, Math.floor((satelliteData.accumulated.gdd / 2500) * 100))}%</p>
-                    </div>
-                    <div className="h-2 w-full bg-zinc-800 rounded-full overflow-hidden">
-                      <motion.div 
-                        initial={{ width: 0 }}
-                        animate={{ width: `${Math.min(100, (satelliteData.accumulated.gdd / 2500) * 100)}%` }}
-                        className="h-full bg-gradient-to-r from-emerald-500 to-sky-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]"
-                      />
-                    </div>
-                    <p className="text-[9px] text-zinc-500 mt-2 flex items-center gap-1">
-                      <FiTrendingUp className="w-3 h-3" />
-                      {satelliteData.accumulated.gdd.toFixed(0)} Heat Units (GDD) accumulated this season.
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
+                      <div className="aspect-video w-full rounded-xl overflow-hidden border border-zinc-700 bg-zinc-950 relative group">
+                        <img 
+                          src={satelliteData.imagery.image.truecolor} 
+                          alt="Recent Satellite View" 
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        />
+                        <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 backdrop-blur-md rounded text-[8px] text-white/80 font-medium">
+                          Updated: {new Date(satelliteData.imagery.dt * 1000).toLocaleDateString()}
+                        </div>
+                      </div>
+                   </div>
+                 )}
+               </div>
+             )}
             {analysis?.irrigationPlan?.liveSensor && (
               <div className="mt-2 flex flex-wrap items-center gap-4">
                 <div className="flex items-center gap-1.5 px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-[10px] font-bold dark:bg-blue-900/40 dark:text-blue-300 uppercase">
@@ -535,8 +545,8 @@ export default function ProfessionalDashboard({ farmProfile: farmProfileProp }: 
         </div>
       </motion.div>
 
-      {/* Weather Forecast Widget */}
-      {weatherData?.forecast && weatherData.forecast.length > 0 && (
+      {/* Unified Weather Forecast Widget (Satellite Powered) */}
+      {(satelliteData?.forecast || weatherData?.forecast) && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -544,36 +554,44 @@ export default function ProfessionalDashboard({ farmProfile: farmProfileProp }: 
         >
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-sky-900 dark:text-sky-100 flex items-center gap-2">
-              🌤️ Weather Forecast
+              🌤️ Hyper-local Forecast
             </h3>
-            <span className="text-xs text-sky-600 dark:text-sky-400 font-bold">
-              {weatherData.location || 'Your Location'}
+            <span className="text-[10px] px-2 py-0.5 bg-sky-100 dark:bg-sky-900/50 text-sky-600 dark:text-sky-400 font-black rounded-full uppercase tracking-tighter cursor-help" title="Using AgroMonitoring NWP Models">
+              Satellite Grounded
             </span>
           </div>
           <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
-            {weatherData.forecast.slice(0, 5).map((day: any, index: number) => (
-              <div key={index} className="bg-white dark:bg-gray-800 rounded-lg p-3 text-center border border-sky-100 dark:border-sky-900">
-                <p className="text-[10px] font-bold text-sky-600 dark:text-sky-400 uppercase mb-1">
-                  {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
-                </p>
-                <p className="text-2xl mb-1">
-                  {day.condition?.includes('rain') || day.condition?.includes('Rain') ? '🌧️' :
-                   day.condition?.includes('cloud') || day.condition?.includes('Cloud') ? '☁️' :
-                   day.condition?.includes('thunder') ? '⛈️' : '☀️'}
-                </p>
-                <p className="text-sm font-bold text-gray-900 dark:text-white">
-                  {day.maxTemp ?? day.temperature ?? '--'}°C
-                </p>
-                <p className="text-[10px] text-gray-500 dark:text-gray-400">
-                  {day.minTemp ? `${day.minTemp}° low` : day.condition ?? ''}
-                </p>
-                {day.rainfall > 0 && (
-                  <p className="text-[10px] text-blue-600 dark:text-blue-400 font-bold mt-1">
-                    💧 {day.rainfall}mm
+            {(satelliteData?.forecast || weatherData.forecast).slice(0, 5).map((day: any, index: number) => {
+              // Map satellite forecast data (hourly intervals or daily summaries)
+              const date = day.dt ? new Date(day.dt * 1000) : new Date(day.date);
+              const temp = day.main?.temp || day.maxTemp || day.temperature;
+              const cond = day.weather?.[0]?.description || day.condition || '';
+              const rain = day.rain?.['3h'] || day.rain || 0;
+
+              return (
+                <div key={index} className="bg-white dark:bg-gray-800 rounded-lg p-3 text-center border border-sky-100 dark:border-sky-900 shadow-sm">
+                  <p className="text-[10px] font-bold text-sky-600 dark:text-sky-400 uppercase mb-1">
+                    {date.toLocaleDateString('en-US', { weekday: 'short' })}
                   </p>
-                )}
-              </div>
-            ))}
+                  <p className="text-2xl mb-1">
+                    {cond.includes('Rain') || cond.includes('rain') ? '🌧️' :
+                     cond.includes('Cloud') || cond.includes('cloud') ? '☁️' :
+                     cond.includes('Thunder') ? '⛈️' : '☀️'}
+                  </p>
+                  <p className="text-sm font-bold text-gray-900 dark:text-white">
+                    {Math.round(temp)}°C
+                  </p>
+                  <p className="text-[10px] text-gray-500 dark:text-gray-400 capitalize">
+                    {cond.toLowerCase()}
+                  </p>
+                  {rain > 0 && (
+                    <p className="text-[10px] text-blue-600 dark:text-blue-400 font-bold mt-1">
+                      💧 {rain.toFixed(1)}mm
+                    </p>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </motion.div>
       )}
