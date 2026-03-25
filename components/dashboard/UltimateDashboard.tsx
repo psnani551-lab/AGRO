@@ -542,7 +542,7 @@ export default function UltimateDashboard({
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         farmId: profileData?.id || profileData?.farmId || 'default-farm',
-                        polygonId: profileData?.agro_monitoring_id || 'mock_poly_default',
+                        polygonId: profileData?.agro_monitoring_id || null, // Allow backend to register if missing
                         coords: profileData?.polygon_coords || [],
                         name: profileData?.farm_name || 'My Field'
                     }),

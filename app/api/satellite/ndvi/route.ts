@@ -13,8 +13,9 @@ export async function POST(request: NextRequest) {
       activePolygonId = registration.id || registration.mockId;
     }
 
+    // 1b. If still no activePolygonId (meaning no coords either), use a mock
     if (!activePolygonId) {
-      return NextResponse.json({ error: 'No polygon ID or coordinates provided' }, { status: 400 });
+      activePolygonId = 'mock_poly_default';
     }
 
     // 2. Fetch NDVI data
