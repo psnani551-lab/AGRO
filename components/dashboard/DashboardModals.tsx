@@ -1,6 +1,8 @@
+'use client';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FiX, FiDroplet, FiActivity, FiBarChart2, FiCheckCircle, FiTrendingUp } from 'react-icons/fi';
+import { useRouter } from 'next/navigation';
+import { FiX, FiDroplet, FiActivity, FiBarChart2, FiCheckCircle, FiTrendingUp, FiCamera, FiShoppingCart, FiCpu } from 'react-icons/fi';
 
 // --- Generic Modal Shell ---
 export const DashboardModal = ({ isOpen, onClose, title, icon: Icon, colorClass = "bg-zinc-950", children }: any) => {
@@ -34,6 +36,7 @@ export const DashboardModal = ({ isOpen, onClose, title, icon: Icon, colorClass 
 // --- Specific Modals ---
 
 export const IrrigationModal = ({ isOpen, onClose, analysis, farmProfile, t, onStartPump, isPumpLoading, pumpStatus }: any) => {
+    const router = useRouter();
     const amountMm = typeof analysis?.irrigationPlan?.amountPerIrrigation === 'number'
         ? analysis.irrigationPlan.amountPerIrrigation
         : parseFloat(analysis?.irrigationPlan?.amountPerIrrigation) || 0;
@@ -85,11 +88,11 @@ export const IrrigationModal = ({ isOpen, onClose, analysis, farmProfile, t, onS
                         </div>
                         
                         {/* IoT Action Button */}
-                        <div className="flex-shrink-0">
+                        <div className="flex-shrink-0 flex flex-col gap-3">
                             <button
                                 onClick={() => onStartPump?.(totalMinutesToRun)}
                                 disabled={isPumpLoading || totalMinutesToRun <= 0}
-                                className={`flex items-center gap-2 px-6 py-4 rounded-2xl font-bold transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
+                                className={`flex items-center justify-center gap-2 px-6 py-4 rounded-2xl font-bold transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
                                     pumpStatus?.success ? 'bg-green-600 text-white' : 'bg-emerald-500 hover:bg-emerald-400 text-black'
                                 }`}
                             >
@@ -102,8 +105,16 @@ export const IrrigationModal = ({ isOpen, onClose, analysis, farmProfile, t, onS
                                 )}
                                 {isPumpLoading ? 'Connecting...' : pumpStatus?.success ? 'Pump Started' : 'START PUMP'}
                             </button>
+                            <button
+                                onClick={() => {
+                                    router.push('/tools/smart-tools');
+                                }}
+                                className="text-[10px] text-zinc-500 hover:text-white font-bold uppercase tracking-widest flex items-center justify-center gap-1.5 transition-colors"
+                            >
+                                <FiCpu className="w-3.5 h-3.5" /> Manage IoT Devices
+                            </button>
                             {pumpStatus && !isPumpLoading && (
-                                <p className={`mt-2 text-[10px] font-bold text-center ${pumpStatus.success ? 'text-green-400' : 'text-red-400'}`}>
+                                <p className={`text-[10px] font-bold text-center ${pumpStatus.success ? 'text-green-400' : 'text-red-400'}`}>
                                     {pumpStatus.message}
                                 </p>
                             )}
@@ -193,6 +204,7 @@ export const IrrigationModal = ({ isOpen, onClose, analysis, farmProfile, t, onS
 };
 
 export const DiseaseModal = ({ isOpen, onClose, analysis, t }: any) => {
+    const router = useRouter();
     const risk = analysis?.diseaseRisk || {};
     const isHigh = risk.level === 'High';
     const isMedium = risk.level === 'Medium';
@@ -266,12 +278,27 @@ export const DiseaseModal = ({ isOpen, onClose, analysis, t }: any) => {
                     </div>
                 </div>
 
+                {/* 4. Action Button */}
+                <div className="mt-8 pt-6 border-t border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
+                    <p className="text-xs text-zinc-500 font-medium">Need real-time verification?</p>
+                    <button 
+                        onClick={() => {
+                            router.push('/tools/smart-tools');
+                        }}
+                        className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-2 active:scale-95"
+                    >
+                        <FiCamera className="w-4 h-4" />
+                        Scan Crop Now
+                    </button>
+                </div>
+
             </div>
         </DashboardModal>
     );
 };
 
 export const YieldModal = ({ isOpen, onClose, analysis, t }: any) => {
+    const router = useRouter();
     const [activeScenarios, setActiveScenarios] = useState<string[]>([]);
 
     // Reset scenarios when modal opens
@@ -401,6 +428,19 @@ export const YieldModal = ({ isOpen, onClose, analysis, t }: any) => {
                             <p className="text-sm text-gray-500 italic">{t('dashboard.noScenarios') || 'No improvement scenarios available for current conditions.'}</p>
                         )}
                     </div>
+                </div>
+                {/* Market Action Button */}
+                <div className="mt-8 pt-6 border-t border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
+                    <p className="text-xs text-zinc-500 font-medium">{t('dashboard.readyToSell') || 'Ready to sell your expected yield?'}</p>
+                    <button 
+                        onClick={() => {
+                            router.push('/machinery-market/post');
+                        }}
+                        className="px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl shadow-lg shadow-purple-600/20 transition-all flex items-center gap-2 active:scale-95"
+                    >
+                        <FiShoppingCart className="w-4 h-4" />
+                        {t('dashboard.postOnMarketplace') || 'Post on Marketplace'}
+                    </button>
                 </div>
             </div>
         </DashboardModal>

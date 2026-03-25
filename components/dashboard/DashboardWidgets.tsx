@@ -146,7 +146,7 @@ export const YieldWidget = ({ analysis, t, onOpen }: any) => {
     );
 };
 
-export const RecommendationsWidget = ({ analysis, t }: any) => {
+export const RecommendationsWidget = ({ analysis, t, onAction }: any) => {
     const recommendations = analysis?.recommendations || [];
 
     // Fill with placeholders if empty to maintain layout
@@ -164,15 +164,19 @@ export const RecommendationsWidget = ({ analysis, t }: any) => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {displayItems.map((item: any, i: number) => (
-                    <div key={i} className="flex gap-4 p-4 bg-zinc-950 rounded-xl border border-zinc-900/50 hover:border-zinc-700 transition-all group">
-                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-zinc-900 text-white font-bold flex items-center justify-center border border-zinc-800 group-hover:bg-white group-hover:text-black transition-colors">
+                    <div 
+                        key={i} 
+                        onClick={() => onAction && onAction(item.category)}
+                        className="flex gap-4 p-4 bg-zinc-950 rounded-xl border border-zinc-900/50 hover:border-zinc-700 transition-all group cursor-pointer active:scale-[0.98] hover:shadow-lg"
+                    >
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-zinc-900 text-white font-bold flex items-center justify-center border border-zinc-800 group-hover:bg-emerald-500 group-hover:text-black group-hover:border-emerald-500 transition-colors">
                             {i + 1}
                         </div>
                         <div>
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-0.5 block">{item.category}</span>
-                            <p className="text-zinc-300 font-medium text-sm leading-snug mb-1">{item.message}</p>
-                            <p className="text-xs text-emerald-500 font-bold flex items-center gap-1">
-                                <FiArrowRight className="w-3 h-3" /> {item.action}
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-0.5 block group-hover:text-emerald-400/80 transition-colors">{item.category}</span>
+                            <p className="text-zinc-300 font-medium text-sm leading-snug mb-1 group-hover:text-white transition-colors">{item.message}</p>
+                            <p className="text-xs text-emerald-500 font-bold flex items-center gap-1 group-hover:text-emerald-400 transition-colors">
+                                <FiArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" /> {item.action}
                             </p>
                         </div>
                     </div>

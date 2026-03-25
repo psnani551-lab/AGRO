@@ -1,14 +1,17 @@
 'use client';
 
 import { useI18n } from '@/lib/i18n';
-import { FiMapPin, FiCalendar, FiLayers, FiFeather } from 'react-icons/fi';
+import { useRouter } from 'next/navigation';
+import { FiMapPin, FiCalendar, FiLayers, FiFeather, FiBell } from 'react-icons/fi';
 
 interface Props {
-  farmProfile: any; // Type as any for flexibility with Supabase shape
+  farmProfile: any;
+  alertsCount?: number;
 }
 
-export default function DashboardHeader({ farmProfile }: Props) {
+export default function DashboardHeader({ farmProfile, alertsCount = 0 }: Props) {
   const { t } = useI18n();
+  const router = useRouter();
   const today = new Date().toLocaleDateString('en-IN', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
   });
@@ -63,16 +66,30 @@ export default function DashboardHeader({ farmProfile }: Props) {
             </div>
           </div>
 
-          {/* Current Crops Card */}
-          <div className="md:min-w-[200px]">
-            <div className="rounded-2xl bg-zinc-800/40 backdrop-blur-md p-4 border border-zinc-700/50 hover:border-emerald-500/30 transition-colors group">
-              <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 flex items-center gap-2">
-                <FiFeather className="group-hover:text-emerald-400 transition-colors" />
-                {t('form.currentCrops')}
-              </p>
-              <p className="font-bold text-white text-lg">
-                {cropsDisplay}
-              </p>
+          {/* Alerts & Current Crops */}
+          <div className="flex items-center gap-4">
+            {alertsCount > 0 && (
+              <button
+                onClick={() => router.push('/tools/alerts')}
+                className="relative p-3 bg-zinc-800/40 backdrop-blur-md border border-zinc-700/50 rounded-2xl hover:border-red-500/50 transition-all group active:scale-95"
+              >
+                <FiBell className="w-5 h-5 text-zinc-400 group-hover:text-red-400 transition-colors" />
+                <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white shadow-lg animate-bounce">
+                  {alertsCount}
+                </span>
+              </button>
+            )}
+
+            <div className="md:min-w-[200px]">
+              <div className="rounded-2xl bg-zinc-800/40 backdrop-blur-md p-4 border border-zinc-700/50 hover:border-emerald-500/30 transition-colors group">
+                <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                  <FiFeather className="group-hover:text-emerald-400 transition-colors" />
+                  {t('form.currentCrops')}
+                </p>
+                <p className="font-bold text-white text-lg">
+                  {cropsDisplay}
+                </p>
+              </div>
             </div>
           </div>
         </div>

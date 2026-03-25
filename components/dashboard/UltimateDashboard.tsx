@@ -225,6 +225,7 @@ const PIECE_WEIGHTS: Record<string, number> = {
 };
 
 const MarketAnalysisTable = memo(({ marketData, t }: any) => {
+    const router = useRouter();
     const [unit, setUnit] = useState<'quintal' | 'kg' | 'piece'>('quintal');
 
     // Was: if (!marketData?.regional) return null;
@@ -343,7 +344,11 @@ const MarketAnalysisTable = memo(({ marketData, t }: any) => {
                                 const isPieceItem = unit === 'piece'; // We already filtered, so it must be true
 
                                 return (
-                                    <tr key={i} className="hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
+                                    <tr 
+                                        key={i} 
+                                        onClick={() => router.push(`/machinery-market?search=${item.commodity}`)}
+                                        className="group border-b border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors cursor-pointer"
+                                    >
                                         <td className="px-6 py-4 font-bold text-zinc-900 dark:text-zinc-200 capitalize">
                                             {normalizedName}
                                             {unit === 'piece' && (
@@ -373,7 +378,10 @@ const MarketAnalysisTable = memo(({ marketData, t }: any) => {
             </div>
 
             <div className="p-4 bg-zinc-50 dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800 flex justify-center">
-                <button className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white text-sm font-bold flex items-center gap-2 transition-colors">
+                <button 
+                    onClick={() => router.push('/machinery-market')}
+                    className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white text-sm font-bold flex items-center gap-2 transition-colors active:scale-95"
+                >
                     {t('market.viewFullReport')} <FiTrendingUp />
                 </button>
             </div>
@@ -400,6 +408,7 @@ const ActionButton = memo(({ icon: Icon, label, color, onClick, t }: any) => (
 export default function UltimateDashboard({ 
     farmProfile, 
     onStartPump, 
+    onAlertsUpdate,
     isPumpLoading, 
     pumpStatus, 
     visionAnalysis, 
@@ -407,6 +416,7 @@ export default function UltimateDashboard({
 }: { 
     farmProfile?: any;
     onStartPump?: (durationMin?: number) => void;
+    onAlertsUpdate?: (count: number) => void;
     isPumpLoading?: boolean;
     pumpStatus?: any;
     visionAnalysis?: any;
@@ -583,6 +593,7 @@ export default function UltimateDashboard({
                 if (alerts.length > 0) {
                     await saveAlerts(alerts, user?.id);
                     setNewAlertsCount(alerts.length);
+                    if (onAlertsUpdate) onAlertsUpdate(alerts.length);
                 }
             });
 
@@ -591,7 +602,7 @@ export default function UltimateDashboard({
         } finally {
             setLoading(false);
         }
-    }, [user, farmProfile]);
+    }, [user, farmProfile, onAlertsUpdate]);
 
     useEffect(() => {
         fetchDashboardData();
@@ -646,7 +657,16 @@ export default function UltimateDashboard({
                         <SmartRotationCard farmProfile={farmProfile} weatherData={weatherData} t={t} />
                     </div>
                     <div className="lg:col-span-2">
-                        <RecommendationsWidget analysis={analysis} t={t} />
+                        <RecommendationsWidget 
+                            analysis={analysis} 
+                            t={t} 
+                            onAction={(category: string) => {
+                                if (category.toLowerCase().includes('irrigation')) setActiveModal('irrigation');
+                                else if (category.toLowerCase().includes('health') || category.toLowerCase().includes('disease')) setActiveModal('disease');
+                                else if (category.toLowerCase().includes('market')) router.push('/machinery-market');
+                                else router.push('/tools/smart-tools');
+                            }}
+                        />
                     </div>
                 </div>
 

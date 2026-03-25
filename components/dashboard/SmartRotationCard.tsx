@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import { FiRefreshCw, FiArrowRight, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
 import { useI18n } from '@/lib/i18n';
 import { getCropData } from '@/lib/cropDatabase';
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export default function SmartRotationCard({ farmProfile, weatherData, t }: Props) {
+    const router = useRouter();
     const currentCrop = farmProfile?.crop?.toLowerCase() || 'rice';
     const soilType = farmProfile?.soilType || 'Loamy';
 
@@ -106,11 +108,22 @@ export default function SmartRotationCard({ farmProfile, weatherData, t }: Props
                             )}
                         </div>
 
-                        <div className="flex items-center gap-3">
-                            <h4 className="text-xl font-bold text-white capitalize">{step.crop}</h4>
-                            {idx === 0 && (
-                                <FiArrowRight className="text-zinc-600" />
-                            )}
+                        <div className="flex justify-between items-center pr-2">
+                            <div className="flex items-center gap-3">
+                                <h4 className="text-xl font-bold text-white capitalize">{step.crop}</h4>
+                                {idx === 0 && (
+                                    <FiArrowRight className="text-zinc-600" />
+                                )}
+                            </div>
+                            <button
+                                onClick={() => {
+                                    if (idx === 0) router.push('/tools/farm-profile');
+                                    else router.push(`/machinery-market?search=${step.crop}`);
+                                }}
+                                className="text-[10px] px-2.5 py-1.5 rounded-lg font-bold uppercase tracking-wider transition-colors active:scale-95 bg-zinc-950 border border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800"
+                            >
+                                {idx === 0 ? 'Update Profile' : 'Find Seeds'}
+                            </button>
                         </div>
 
                         <div className="mt-2 flex flex-wrap gap-2">

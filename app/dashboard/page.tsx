@@ -19,6 +19,7 @@ export default function DashboardPage() {
   const [isPumpLoading, setIsPumpLoading] = useState(false);
   const [pumpStatus, setPumpStatus] = useState<{ success?: boolean; message?: string } | null>(null);
   const [visionAnalysis, setVisionAnalysis] = useState<any>(null);
+  const [alertsCount, setAlertsCount] = useState(0);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -93,11 +94,12 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen pb-12">
-      <DashboardHeader farmProfile={farmProfile} />
+      <DashboardHeader farmProfile={farmProfile} alertsCount={alertsCount} />
       {/* Original Rich Dashboard — weather, yield, market prices, etc. */}
       <UltimateDashboard 
         farmProfile={farmProfile} 
         onStartPump={handleStartPump}
+        onAlertsUpdate={setAlertsCount}
         isPumpLoading={isPumpLoading}
         pumpStatus={pumpStatus}
         visionAnalysis={visionAnalysis}

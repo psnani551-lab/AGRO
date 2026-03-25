@@ -1,5 +1,6 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { FiSearch, FiFilter, FiPlus } from 'react-icons/fi';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -10,11 +11,27 @@ import { supabase } from '@/lib/supabaseClient';
 import { useI18n } from '@/lib/i18n';
 
 export default function Marketplace() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center"><div className="w-12 h-12 border-4 border-zinc-800 border-t-white animate-spin rounded-full"></div></div>}>
+            <MarketplaceContent />
+        </Suspense>
+    );
+}
+
+function MarketplaceContent() {
     const { t } = useI18n();
+    const searchParams = useSearchParams();
+    const initialSearch = searchParams.get('search') || '';
     const [filterType, setFilterType] = useState<'all' | 'rent' | 'sale' | 'both'>('all');
     const [listings, setListings] = useState<Listing[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [searchQuery, setSearchQuery] = useState('');
+    const [searchQuery, setSearchQuery] = useState(initialSearch);
+
+    useEffect(() => {
+        if (initialSearch) {
+            setSearchQuery(initialSearch);
+        }
+    }, [initialSearch]);
 
     useEffect(() => {
         fetchListings();
