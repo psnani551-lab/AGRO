@@ -620,10 +620,10 @@ export default function UltimateDashboard({
 
                 {/* Row 1: Key Metrics & Weather */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-1 h-[400px]">
+                    <div className="lg:col-span-1 h-full min-h-[400px]">
                         <ValuationHero valuation={valuation} marketData={marketData} analysis={analysis} t={t} />
                     </div>
-                    <div className="lg:col-span-2 h-[400px]">
+                    <div className="lg:col-span-2 h-full min-h-[400px]">
                         <WeatherCard weatherData={weatherData} satelliteData={satelliteData} t={t} />
                     </div>
                 </div>
