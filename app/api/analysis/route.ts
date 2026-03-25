@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { farmProfile, weatherData } = await request.json();
+    const { farmProfile, weatherData, satelliteData } = await request.json();
 
     if (!farmProfile) {
       return NextResponse.json(
@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const analysis = generateIntelligentAnalysis(farmProfile, weatherData);
+    const analysis = generateIntelligentAnalysis(farmProfile, weatherData, satelliteData);
 
     return NextResponse.json(analysis);
   } catch (error) {
@@ -23,17 +23,17 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function generateIntelligentAnalysis(farmProfile: any, weatherData: any) {
+function generateIntelligentAnalysis(farmProfile: any, weatherData: any, satelliteData?: any) {
   const { soilType, currentCrops, location, farmSize } = farmProfile;
 
   // Soil-based irrigation recommendations
-  const irrigationPlan = generateIrrigationPlan(soilType, currentCrops, weatherData);
+  const irrigationPlan = generateIrrigationPlan(soilType, currentCrops, weatherData, satelliteData);
 
   // Weather and soil-based yield forecast
-  const yieldForecast = generateYieldForecast(soilType, currentCrops, weatherData, farmSize);
+  const yieldForecast = generateYieldForecast(soilType, currentCrops, weatherData, farmSize, satelliteData);
 
   // Disease risk based on weather
-  const diseaseRisk = calculateDiseaseRisk(currentCrops, weatherData);
+  const diseaseRisk = calculateDiseaseRisk(currentCrops, weatherData, satelliteData);
 
   // Sustainability score
   const ecoScore = calculateEcoScore(soilType, irrigationPlan);
@@ -43,11 +43,11 @@ function generateIntelligentAnalysis(farmProfile: any, weatherData: any) {
     yieldForecast,
     diseaseRisk,
     ecoScore,
-    recommendations: generateRecommendations(farmProfile, weatherData, irrigationPlan, yieldForecast),
+    recommendations: generateRecommendations(farmProfile, weatherData, irrigationPlan, yieldForecast, satelliteData),
   };
 }
 
-function generateIrrigationPlan(soilType: string, crops: string[], weatherData: any) {
+function generateIrrigationPlan(soilType: string, crops: string[], weatherData: any, satelliteData?: any) {
   // Soil water retention capacity
   const soilRetention: any = {
     'Clay': { retention: 'high', drainageSpeed: 'slow', wateringFrequency: 'low' },
@@ -84,6 +84,25 @@ function generateIrrigationPlan(soilType: string, crops: string[], weatherData: 
   // Adjust for temperature
   if (avgTemp > 30) {
     dailyWaterAmount = dailyWaterAmount + 5;
+  }
+
+  // Adjust based on Satellite Soil Moisture
+  let satelliteAdjustment = '';
+  if (satelliteData && satelliteData.soil && satelliteData.soil.moisture !== undefined) {
+    const moisturePct = satelliteData.soil.moisture;
+    if (moisturePct > 80) {
+      dailyWaterAmount = Math.max(0, dailyWaterAmount - 15);
+      wateringSchedule = 'Hold - High Moisture';
+      satelliteAdjustment = 'Soil moisture is very high. Reducing watering significantly.';
+    } else if (moisturePct > 60) {
+      dailyWaterAmount = Math.max(0, dailyWaterAmount - 5);
+      wateringSchedule = 'Every 5 days';
+      satelliteAdjustment = 'Soil moisture is optimal. Increasing interval.';
+    } else if (moisturePct < 30) {
+      dailyWaterAmount = dailyWaterAmount + 10;
+      wateringSchedule = 'Daily';
+      satelliteAdjustment = 'Soil is extremely dry. Increased frequency and volume needed.';
+    }
   }
 
   // Calculate Weekly Total
@@ -137,14 +156,14 @@ function generateIrrigationPlan(soilType: string, crops: string[], weatherData: 
     amountPerIrrigation: dailyWaterAmount, // Explicit key for frontend
     method,
     weeklyTotal: parseFloat(weeklyTotal.toFixed(1)), // Send formatted number
-    rainAdjustment: totalRain > 50 ? 'Reduce watering by 30%' : 'Normal schedule',
+    rainAdjustment: totalRain > 50 ? 'Reduce watering by 30%' : (satelliteAdjustment || 'Normal schedule'),
     tips: generateIrrigationTips(soilType, totalRain),
     smartSchedule, // New Field
     steps // New Field
   };
 }
 
-function generateYieldForecast(soilType: string, crops: string[], weatherData: any, farmSize: number) {
+function generateYieldForecast(soilType: string, crops: string[], weatherData: any, farmSize: number, satelliteData?: any) {
   // Base yield per acre for different crops (kg)
   const baseYields: any = {
     'Rice': 2500,
@@ -175,15 +194,25 @@ function generateYieldForecast(soilType: string, crops: string[], weatherData: a
   if (totalRain > 100) weatherMultiplier -= 0.1;
   if (totalRain >= 20 && totalRain <= 80) weatherMultiplier += 0.05;
 
+  // Satellite NDVI adjustment
+  let satelliteMultiplier = 1.0;
+  if (satelliteData && satelliteData.ndvi && satelliteData.ndvi.mean) {
+    const ndvi = satelliteData.ndvi.mean;
+    if (ndvi > 0.6) satelliteMultiplier = 1.15; // Excellent health
+    else if (ndvi > 0.45) satelliteMultiplier = 1.05; // Good health
+    else if (ndvi < 0.3) satelliteMultiplier = 0.8; // Stress
+  }
+
   const cropForecasts = crops.map(crop => {
     const baseYield = baseYields[crop] || 2000;
     const soilMultiplier = soilMultipliers[soilType] || 0.9;
-    const estimatedYield = Math.round(baseYield * soilMultiplier * weatherMultiplier * farmSize);
+    const estimatedYield = Math.round(baseYield * soilMultiplier * weatherMultiplier * satelliteMultiplier * farmSize);
     // Potential Yield is the yield under optimal conditions (1.2x boost usually)
     const potentialYield = Math.round(baseYield * soilMultiplier * 1.2 * farmSize);
 
-    const trend = weatherMultiplier > 1.0 ? 'up' : weatherMultiplier < 0.95 ? 'down' : 'stable';
-    const changePercent = Math.round((weatherMultiplier - 1) * 100);
+    const adjustedMultiplier = weatherMultiplier * satelliteMultiplier;
+    const trend = adjustedMultiplier > 1.0 ? 'up' : adjustedMultiplier < 0.95 ? 'down' : 'stable';
+    const changePercent = Math.round((adjustedMultiplier - 1) * 100);
 
     // Generate Scenarios for "What-If" Simulator
     const scenarios = [
@@ -228,7 +257,7 @@ function generateYieldForecast(soilType: string, crops: string[], weatherData: a
   };
 }
 
-function calculateDiseaseRisk(crops: string[], weatherData: any) {
+function calculateDiseaseRisk(crops: string[], weatherData: any, satelliteData?: any) {
   const avgHumidity = weatherData?.forecast?.reduce((sum: number, day: any) => sum + day.humidity, 0) / 7 || 70;
   const avgTemp = weatherData?.forecast?.reduce((sum: number, day: any) => sum + day.temp, 0) / 7 || 25;
   const totalRain = weatherData?.forecast?.reduce((sum: number, day: any) => sum + day.rain, 0) || 0;
@@ -246,7 +275,15 @@ function calculateDiseaseRisk(crops: string[], weatherData: any) {
   // Rainfall impact
   if (totalRain > 80) riskScore += 2;
 
-  const riskLevel = riskScore >= 6 ? 'High' : riskScore >= 3 ? 'Medium' : 'Low';
+  // Satellite adjustment
+  if (satelliteData && satelliteData.soil && satelliteData.soil.moisture > 85) {
+    riskScore += 2; // Very wet soil = severe fungal risk
+  }
+  if (satelliteData && satelliteData.accumulated && satelliteData.accumulated.precipitation > 100) {
+    riskScore += 1; // Heavy recent accumulated rain
+  }
+
+  const riskLevel = riskScore >= 6 ? 'High' : riskScore >= 4 ? 'Medium' : 'Low';
   const riskPercent = Math.min(Math.round((riskScore / 7) * 100), 100);
 
   return {
@@ -317,7 +354,7 @@ function generateIrrigationTips(soilType: string, totalRain: number) {
   return tips;
 }
 
-function generateRecommendations(farmProfile: any, weatherData: any, irrigationPlan: any, yieldForecast: any) {
+function generateRecommendations(farmProfile: any, weatherData: any, irrigationPlan: any, yieldForecast: any, satelliteData?: any) {
   const recommendations = [];
   const { soilType, currentCrops, location } = farmProfile;
   const avgTemp = weatherData?.forecast?.reduce((sum: number, day: any) => sum + day.temp, 0) / 7 || 25;
@@ -381,6 +418,23 @@ function generateRecommendations(farmProfile: any, weatherData: any, irrigationP
     message: 'Price Stabilization Predicted',
     action: 'Hold non-perishable stock for 2 weeks. Market arrivals are peaking.',
   });
+
+  // 5. Satellite Specific Recommendations
+  if (satelliteData && satelliteData.ndvi && satelliteData.ndvi.mean < 0.4) {
+    recommendations.push({
+      category: 'Crop Health',
+      priority: 'critical',
+      message: 'Satellite detects severe vegetation stress.',
+      action: 'Conduct immediate field inspection for pests or nutrient deficiency.',
+    });
+  } else if (satelliteData && satelliteData.health && (satelliteData.health.status === 'Excellent' || satelliteData.health.status === 'Healthy')) {
+    recommendations.push({
+      category: 'Crop Health',
+      priority: 'low',
+      message: 'Satellite confirms optimal crop health.',
+      action: 'Maintain current fertigation and irrigation schedules.',
+    });
+  }
 
   return recommendations;
 }

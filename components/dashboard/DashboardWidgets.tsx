@@ -1,4 +1,4 @@
-import { FiDroplet, FiActivity, FiBarChart2, FiArrowRight } from 'react-icons/fi';
+import { FiDroplet, FiActivity, FiBarChart2, FiArrowRight, FiLayers } from 'react-icons/fi';
 
 const formatWater = (mm: number | any, totalArea: number = 1) => {
     if (typeof mm !== 'number') return mm || '---';
@@ -18,8 +18,15 @@ export const IrrigationWidget = ({ analysis, t, onOpen, totalArea = 1 }: any) =>
                 <div className="p-2.5 bg-blue-500/10 text-blue-500 rounded-lg">
                     <FiDroplet className="w-5 h-5" />
                 </div>
-                <div className="px-2 py-1 bg-zinc-950 rounded text-[10px] text-zinc-500 font-bold uppercase tracking-wider border border-zinc-800">
-                    {t('dashboard.reliability') || '98% RELIABLE'}
+                <div className="px-2 py-1 bg-zinc-950 rounded text-[10px] text-zinc-500 font-bold uppercase tracking-wider border border-zinc-800 flex items-center gap-1">
+                    {plan.rainAdjustment?.toLowerCase().includes('moisture') || plan.rainAdjustment?.toLowerCase().includes('soil') ? (
+                        <>
+                            <FiLayers className="text-blue-500" />
+                            <span className="text-blue-400">SAT-SYNCED</span>
+                        </>
+                    ) : (
+                        t('dashboard.reliability') || '98% RELIABLE'
+                    )}
                 </div>
             </div>
 
@@ -63,8 +70,9 @@ export const DiseaseWidget = ({ analysis, t, onOpen }: any) => {
                 <div className={`p-2.5 rounded-lg ${isHigh ? 'bg-red-500/10 text-red-500' : 'bg-green-500/10 text-green-500'}`}>
                     <FiActivity className="w-5 h-5" />
                 </div>
-                <div className="px-2 py-1 bg-zinc-950 rounded text-[10px] text-zinc-500 font-bold uppercase tracking-wider border border-zinc-800">
-                    {t('dashboard.expertSystem') || 'EXPERT SYSTEM'}
+                <div className="px-2 py-1 bg-zinc-950 rounded text-[10px] font-bold uppercase tracking-wider border border-zinc-800 flex items-center gap-1">
+                    <FiLayers className="text-emerald-500" />
+                    <span className="text-emerald-400">SAT-MONITOR</span>
                 </div>
             </div>
 
@@ -102,8 +110,9 @@ export const YieldWidget = ({ analysis, t, onOpen }: any) => {
                 <div className="p-2.5 bg-purple-500/10 text-purple-500 rounded-lg">
                     <FiBarChart2 className="w-5 h-5" />
                 </div>
-                <div className="px-2 py-1 bg-zinc-950 rounded text-[10px] text-zinc-500 font-bold uppercase tracking-wider border border-zinc-800">
-                    {t('dashboard.faoModel') || 'FAO-56 MODEL'}
+                <div className="px-2 py-1 bg-zinc-950 rounded text-[10px] font-bold uppercase tracking-wider border border-zinc-800 flex items-center gap-1">
+                    <FiLayers className="text-purple-500" />
+                    <span className="text-purple-400">NDVI SYNCED</span>
                 </div>
             </div>
 

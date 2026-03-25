@@ -242,51 +242,6 @@ export const satelliteService = {
   },
 
   /**
-   * Fetch Weather Forecast for a Polygon
-   */
-  async getWeatherForecast(polygonId: string) {
-    if (!AGRO_API_KEY || polygonId.startsWith('mock_')) return null;
-    try {
-      const response = await fetch(`${BASE_URL}/weather/forecast?polyid=${polygonId}&appid=${AGRO_API_KEY}`);
-      if (!response.ok) return null;
-      return await response.json();
-    } catch (error) {
-      console.error('Weather Forecast Error:', error);
-      return null;
-    }
-  },
-
-  /**
-   * Fetch Historical Soil Data
-   */
-  async getHistoricalSoil(polygonId: string, start: number, end: number) {
-    if (!AGRO_API_KEY || polygonId.startsWith('mock_')) return [];
-    try {
-      const response = await fetch(`${BASE_URL}/soil/history?polyid=${polygonId}&start=${start}&end=${end}&appid=${AGRO_API_KEY}`);
-      if (!response.ok) return [];
-      return await response.json();
-    } catch (error) {
-      console.error('Historical Soil Error:', error);
-      return [];
-    }
-  },
-
-  /**
-   * Fetch Historical Weather Data
-   */
-  async getHistoricalWeather(polygonId: string, start: number, end: number) {
-    if (!AGRO_API_KEY || polygonId.startsWith('mock_')) return [];
-    try {
-      const response = await fetch(`${BASE_URL}/weather/history?polyid=${polygonId}&start=${start}&end=${end}&appid=${AGRO_API_KEY}`);
-      if (!response.ok) return [];
-      return await response.json();
-    } catch (error) {
-      console.error('Historical Weather Error:', error);
-      return [];
-    }
-  },
-
-  /**
    * Interpret NDVI value into human-readable health status
    */
   getHealthStatus(meanNDVI: number) {

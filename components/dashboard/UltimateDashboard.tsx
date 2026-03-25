@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, memo, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { FiDroplet, FiActivity, FiBarChart2, FiTrendingUp, FiMapPin, FiCloudRain, FiCloudLightning, FiCloud, FiSun, FiCheckCircle, FiRefreshCw, FiAlertCircle, FiDollarSign } from 'react-icons/fi';
+import { FiDroplet, FiActivity, FiBarChart2, FiTrendingUp, FiMapPin, FiCloudRain, FiCloudLightning, FiCloud, FiSun, FiCheckCircle, FiRefreshCw, FiAlertCircle, FiDollarSign, FiLayers, FiImage } from 'react-icons/fi';
 import { useI18n } from '@/lib/i18n';
 import { storage } from '@/lib/storage';
 import { db } from '@/lib/db';
@@ -75,7 +75,7 @@ const ValuationHero = memo(({ valuation, marketData, analysis, t }: any) => (
     </motion.div>
 ));
 
-const WeatherCard = memo(({ weatherData, t }: any) => {
+const WeatherCard = memo(({ weatherData, satelliteData, t }: any) => {
     // Helper for weather icons
     const getWeatherIcon = (condition: string, isSmall = false) => {
         const text = condition?.toLowerCase() || '';
@@ -136,43 +136,110 @@ const WeatherCard = memo(({ weatherData, t }: any) => {
                         <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-[0.15em] flex items-center gap-2">
                             <FiActivity /> {t('climate.forecast')}
                         </h4>
-                        <span className="text-[10px] text-zinc-950 bg-white px-2 py-0.5 rounded font-bold">{weatherData?.isHyperLocal ? 'Satellite Grounded' : t('weather.liveUpdate')}</span>
+                        <span className="text-[10px] text-zinc-950 bg-white px-2 py-0.5 rounded font-bold">{t('weather.liveUpdate')}</span>
                     </div>
 
-                    <div className="grid grid-cols-5 md:grid-cols-7 gap-3 overflow-x-auto pb-2">
-                        {weatherData?.forecast?.map((day: any, i: number) => {
-                            const date = day.dt ? new Date(day.dt * 1000) : new Date(day.date);
-                            const temp = day.main?.temp || day.maxTemp || day.temperature || day.temp;
-                            const cond = day.weather?.[0]?.description || day.condition || '';
-                            const rain = day.rain?.['3h'] || day.rain || 0;
-
-                            return (
-                                <div key={i} className="group/day relative flex flex-col items-center justify-between bg-zinc-900 border border-zinc-800 rounded-xl p-3 hover:bg-zinc-800 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg cursor-default min-w-[60px] h-[110px]">
-                                    <span className="text-[10px] font-bold opacity-70 uppercase tracking-wide text-zinc-400">{date.toLocaleDateString('en-US', { weekday: 'short' })}</span>
-                                    <div className="my-1 transform transition-transform group-hover/day:scale-110 duration-300 text-white">
-                                        {getWeatherIcon(cond.includes('rain') || cond.includes('Rain') || cond.includes('drizzle') || rain > 0 ? 'rain' : temp < 15 ? 'cloud' : 'sun', true)}
-                                    </div>
-                                    <div className="flex flex-col items-center gap-0.5">
-                                        <span className="text-sm font-bold text-white">{Math.round(temp)}°</span>
-                                        {rain > 0 && <span className="text-[9px] text-blue-400 font-bold">{rain.toFixed(1)}mm</span>}
-                                    </div>
+                    <div className="grid grid-cols-7 gap-3">
+                        {weatherData?.forecast?.map((day: any, i: number) => (
+                            <div key={i} className="group/day relative flex flex-col items-center justify-between bg-zinc-900 border border-zinc-800 rounded-xl p-3 hover:bg-zinc-800 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg cursor-default h-[110px]">
+                                <span className="text-[10px] font-bold opacity-70 uppercase tracking-wide text-zinc-400">{day.date?.slice(0, 3)}</span>
+                                <div className="my-1 transform transition-transform group-hover/day:scale-110 duration-300 text-white">
+                                    {getWeatherIcon(day.rain > 30 ? 'rain' : day.temp < 15 ? 'cloud' : 'sun', true)}
                                 </div>
-                            );
-                        })}
+                                <div className="flex flex-col items-center gap-0.5">
+                                    <span className="text-sm font-bold text-white">{Math.round(day.temp)}°</span>
+                                    <span className="text-[9px] text-zinc-500">{Math.round(day.temp - 8)}°</span>
+                                </div>
+                            </div>
+                        ))}
                         {!weatherData?.forecast && [1, 2, 3, 4, 5, 6, 7].map(i => (
-                            <div key={i} className="min-w-[60px] h-[110px] bg-zinc-800 rounded-xl animate-pulse" />
+                            <div key={i} className="h-[110px] bg-zinc-800 rounded-xl animate-pulse" />
                         ))}
                     </div>
                 </div>
 
                 {/* Bottom Status - Adjusted Position */}
-                <div className="mt-4 flex items-center justify-between">
-                    <div className="w-2/3 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                        <div className="w-[98%] h-full bg-white rounded-full" />
+                <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="w-full sm:w-2/3 flex flex-col gap-1.5">
+                       <div className="flex justify-between items-center px-1">
+                         <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest flex items-center gap-1"><FiDroplet className="w-3 h-3 text-blue-400"/> Soil Moisture (Satellite)</span>
+                         <span className="text-[10px] text-white font-bold">{satelliteData?.soil?.moisture ? `${satelliteData.soil.moisture.toFixed(0)}%` : '65%'}</span>
+                       </div>
+                       <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                           <div className="h-full bg-blue-500 rounded-full" style={{ width: `${satelliteData?.soil?.moisture || 65}%` }}/>
+                       </div>
                     </div>
-                    <div className="text-[10px] bg-zinc-950 text-white px-3 py-1 rounded-lg border border-zinc-800 flex items-center gap-1.5 font-bold">
-                        <FiCheckCircle className="w-3.5 h-3.5" /> {t('weather.excellentConditions')}
+                    <div className="text-[10px] bg-zinc-950 text-white px-3 py-1.5 rounded-lg border border-zinc-800 flex items-center justify-center gap-1.5 font-bold whitespace-nowrap">
+                        <FiCheckCircle className="w-3.5 h-3.5 text-emerald-400" /> {t('weather.excellentConditions')}
                     </div>
+                </div>
+            </div>
+        </motion.div>
+    );
+});
+
+const SatellitePreviewCard = memo(({ satelliteData }: any) => {
+    const [satLayer, setSatLayer] = useState<'true' | 'ndvi'>('true');
+    
+    return (
+        <motion.div variants={{ hidden: { y: 20, opacity: 0 }, show: { y: 0, opacity: 1 } }} className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 flex flex-col h-full relative overflow-hidden group hover:border-zinc-700 transition-all duration-300">
+            <SatelliteBadge />
+            <div className="flex justify-between items-center mb-4 z-10 relative mt-2">
+                 <h3 className="text-white text-md font-bold flex items-center gap-2">
+                    <FiLayers className="text-blue-500" />
+                    Orbital Feed
+                 </h3>
+                 <div className="flex bg-zinc-950 rounded-lg p-1 border border-zinc-800">
+                     <button onClick={() => setSatLayer('true')} className={`px-2 py-1 text-[9px] font-bold rounded-md transition-all ${satLayer === 'true' ? 'bg-white text-black' : 'text-zinc-500 hover:text-white'}`}>VIS</button>
+                     <button onClick={() => setSatLayer('ndvi')} className={`px-2 py-1 text-[9px] font-bold rounded-md transition-all ${satLayer === 'ndvi' ? 'bg-emerald-500 text-black' : 'text-zinc-500 hover:text-emerald-400'}`}>NDVI</button>
+                 </div>
+            </div>
+
+            <div className="flex-1 w-full bg-black rounded-2xl border border-zinc-800/50 overflow-hidden relative shadow-inner group-hover:border-primary-500/30 transition-all duration-500 min-h-[160px]">
+                {satelliteData?.imagery ? (
+                    <>
+                        <img 
+                            src={satLayer === 'ndvi' ? satelliteData.imagery.image.ndvi : satelliteData.imagery.image.truecolor} 
+                            alt="Satellite View"
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        />
+                        {satelliteData.imagery.type === 'simulated' && (
+                            <div className="absolute top-2 left-2 z-20">
+                                <span className="px-2 py-0.5 bg-yellow-500 text-black text-[8px] font-black rounded-full flex items-center gap-1 uppercase tracking-wider shadow-md">
+                                    <FiAlertCircle className="w-2.5 h-2.5" /> Simulated
+                                </span>
+                            </div>
+                        )}
+                    </>
+                ) : (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950">
+                        <FiImage className="w-8 h-8 text-zinc-800 mb-2 animate-pulse" />
+                        <p className="text-zinc-600 text-[9px] font-bold uppercase tracking-widest text-center px-4">Awaiting<br/>Satellite Pass</p>
+                    </div>
+                )}
+                
+                {/* Spectral Overlay Info */}
+                <div className="absolute bottom-2 left-2 right-2 p-2 bg-black/60 backdrop-blur-md rounded-xl border border-white/5 flex items-center gap-2">
+                    <div className={`p-1.5 rounded-lg ${satLayer === 'ndvi' ? 'bg-emerald-500' : 'bg-blue-500'}`}>
+                        <FiLayers className="w-3 h-3 text-white" />
+                    </div>
+                    <div className="overflow-hidden">
+                      <p className="text-[8px] text-white font-black uppercase tracking-wider truncate">
+                          {satLayer === 'true' ? 'Visual Scan' : 'Vegetation Index'}
+                      </p>
+                      <p className="text-[7px] text-zinc-400 font-medium truncate">Updated: {satelliteData?.timestamp ? new Date(satelliteData.timestamp * 1000).toLocaleDateString() : 'Just Now'}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div className="mt-4 grid grid-cols-2 gap-3 z-10 relative">
+                <div className="p-3 bg-zinc-950 rounded-xl border border-zinc-800/80 group-hover:border-zinc-700 transition-colors">
+                    <p className="text-[8px] text-zinc-500 uppercase font-black tracking-widest mb-0.5">Health Index</p>
+                    <p className="text-lg text-emerald-400 font-black tracking-tight">{(satelliteData?.ndvi?.mean || 0.65).toFixed(2)}</p>
+                </div>
+                <div className="p-3 bg-zinc-950 rounded-xl border border-zinc-800/80 group-hover:border-zinc-700 transition-colors">
+                    <p className="text-[8px] text-zinc-500 uppercase font-black tracking-widest mb-0.5">Cloud Cover</p>
+                    <p className="text-lg text-white font-black tracking-tight">{satelliteData?.metadata?.cloudCover || 0}%</p>
                 </div>
             </div>
         </motion.div>
@@ -408,8 +475,8 @@ export default function UltimateDashboard({
     const [marketData, setMarketData] = useState<any>(null);
     const [analysis, setAnalysis] = useState<any>(null);
     const [valuation, setValuation] = useState<any>(null);
-    const [satelliteData, setSatelliteData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [satelliteData, setSatelliteData] = useState<any>(null);
 
     // Modals
     const [activeModal, setActiveModal] = useState<string | null>(null);
@@ -458,42 +525,37 @@ export default function UltimateDashboard({
                 }
             }
 
-            // 2. A. FETCH SATELLITE DATA FIRST (Primary Grounding)
-            let satData = null;
-            try {
-                if (profileData?.id || profileData?.agro_monitoring_id) {
+            // 2. Sequential Fetching (Analysis needs Weather)
+            const weatherRes = await fetch('/api/weather', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ location: locationQuery })
+            }).then(r => r.json());
+
+            setWeatherData(weatherRes);
+
+            // Fetch Satellite Data
+            let satelliteRes = null;
+            if (profileData) {
+                try {
                     const satResponse = await fetch('/api/satellite/ndvi', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            farmId: profileData.id,
+                            farmId: profileData.id || profileData.farmId || 'default-farm',
                             polygonId: profileData.agro_monitoring_id,
                             coords: profileData.polygon_coords,
-                            name: profileData.farmName || 'Farm Field'
+                            name: profileData.farm_name || 'My Field'
                         }),
                     });
-
                     if (satResponse.ok) {
-                        satData = await satResponse.json();
-                        setSatelliteData(satData);
+                        satelliteRes = await satResponse.json();
                     }
+                } catch (e) {
+                    console.warn('Dashboard satellite fetch failed:', e);
                 }
-            } catch (e) {
-                console.warn('Satellite fetch failed');
             }
-
-            // 2. B. Sequential Fetching (Analysis needs Weather)
-            let weatherRes = null;
-            try {
-                weatherRes = await fetch('/api/weather', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ location: locationQuery })
-                }).then(r => r.json());
-                setWeatherData(weatherRes);
-            } catch (e) {
-                console.warn('Weather fetch failed');
-            }
+            setSatelliteData(satelliteRes);
 
             // Parse Location for Market API
             let state = 'India';
@@ -520,21 +582,18 @@ export default function UltimateDashboard({
                     })
                 }).then(r => r.json()),
 
-                fetch('/api/analysis-pro', {
+                fetch('/api/analysis', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         farmProfile: {
-                            ...profileData, // Pass the whole profile dynamically
                             location: locationQuery,
                             currentCrops: [cropQuery],
-                            soilType: profileData?.soilType || 'Loamy',
-                            farmSize: profileData?.farmSize || 5,
-                            irrigationType: profileData?.irrigationType || 'Drip Irrigation'
+                            soilType: profileData?.soil_type || 'Loamy',
+                            farmSize: profileData?.total_area || 5
                         },
                         weatherData: weatherRes,
-                        satelliteData: satData, // CRITICAL: Pass satellite intelligence
-                        plantingDate: profileData?.plantingDate || new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                        satelliteData: satelliteRes
                     })
                 }).then(r => r.json())
             ]);
@@ -617,60 +676,16 @@ export default function UltimateDashboard({
         <div className="min-h-screen bg-black text-white p-4 md:p-8 pt-6 font-sans selection:bg-emerald-500/30">
             <div className="max-w-7xl mx-auto space-y-6">
 
-                {/* Row 1: Key Metrics & Weather */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Valuation / Satellite Overview */}
-                    <div className="lg:col-span-1 flex flex-col gap-6">
-                        <div className="h-[250px] lg:h-[300px]">
-                            <ValuationHero valuation={valuation} marketData={marketData} analysis={analysis} t={t} />
-                        </div>
-                        
-                        {/* Sentinel-2 Live Visual Scan Embedded */}
-                        {satelliteData?.imagery && (
-                            <div className="bg-zinc-950 rounded-3xl p-5 border border-zinc-800 shadow-xl relative overflow-hidden group">
-                                <div className="flex justify-between items-center mb-3 relative z-10">
-                                    <p className="text-xs text-zinc-400 uppercase font-bold tracking-wider flex items-center gap-2">
-                                        <FiMapPin /> Live Visual Scan
-                                    </p>
-                                    <span className="text-[9px] px-2 py-0.5 bg-green-500/10 text-green-500 rounded-full border border-green-500/20 font-bold uppercase">Sentinel-2</span>
-                                </div>
-                                <div className="aspect-[16/7] w-full rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900 relative">
-                                    <img 
-                                        src={satelliteData.imagery.image.truecolor} 
-                                        alt="Recent Satellite View" 
-                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                    />
-                                    <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/70 backdrop-blur-md rounded text-[9px] text-white/90 font-bold uppercase tracking-widest border border-white/10">
-                                        Active: {new Date(satelliteData.imagery.dt * 1000).toLocaleDateString()}
-                                    </div>
-                                </div>
-
-                                {/* GDD Progress Bar */}
-                                {satelliteData?.accumulated?.gdd && (
-                                    <div className="mt-4">
-                                        <div className="flex justify-between items-end mb-1.5">
-                                            <p className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Harvest Countdown</p>
-                                            <p className="text-xs font-bold text-white">{Math.min(100, Math.floor((satelliteData.accumulated.gdd / 2500) * 100))}%</p>
-                                        </div>
-                                        <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
-                                            <motion.div 
-                                                initial={{ width: 0 }}
-                                                animate={{ width: `${Math.min(100, (satelliteData.accumulated.gdd / 2500) * 100)}%` }}
-                                                className="h-full bg-gradient-to-r from-emerald-500 to-sky-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]"
-                                            />
-                                        </div>
-                                        <p className="text-[9px] text-zinc-500 mt-1.5 flex items-center gap-1 font-medium">
-                                            <FiTrendingUp className="w-3 h-3 text-emerald-500" />
-                                            {satelliteData.accumulated.gdd.toFixed(0)} Heat Units (GDD) accumulated.
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-                        )}
+                {/* Row 1: Key Metrics & Weather & Satellite */}
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    <div className="lg:col-span-1 h-[400px]">
+                        <ValuationHero valuation={valuation} marketData={marketData} analysis={analysis} t={t} />
                     </div>
-
-                    <div className="lg:col-span-2 h-[550px] lg:h-auto">
-                        <WeatherCard weatherData={satelliteData?.forecast ? { ...weatherData, forecast: satelliteData.forecast.slice(0, 7), isHyperLocal: true } : weatherData} t={t} />
+                    <div className="lg:col-span-2 h-[400px]">
+                        <WeatherCard weatherData={weatherData} satelliteData={satelliteData} t={t} />
+                    </div>
+                    <div className="lg:col-span-1 h-[400px]">
+                        <SatellitePreviewCard satelliteData={satelliteData} />
                     </div>
                 </div>
 

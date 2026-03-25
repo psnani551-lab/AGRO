@@ -31,13 +31,6 @@ export async function POST(request: NextRequest) {
     // 4. Fetch Latest Imagery Metadata
     const imagery = await satelliteService.getLatestImagery(activePolygonId);
 
-    // 5. Fetch Weather Forecast (Hyper-local)
-    const forecast = await satelliteService.getWeatherForecast(activePolygonId);
-
-    // 6. Fetch Historical Soil Trend (Last 30 days)
-    const thirtyDaysAgo = now - (30 * 24 * 60 * 60);
-    const historicalSoil = await satelliteService.getHistoricalSoil(activePolygonId, thirtyDaysAgo, now);
-
     const health = ndviData ? satelliteService.getHealthStatus(ndviData.stats.mean) : null;
 
     return NextResponse.json({
@@ -46,8 +39,6 @@ export async function POST(request: NextRequest) {
       ndvi: ndviData?.stats || null,
       health: health,
       imagery: imagery,
-      forecast: forecast,
-      historicalSoil: historicalSoil,
       soil: soilData ? {
         moisture: soilData.moisture * 100, // Convert to percentage
         temp_t10: soilData.t10,
