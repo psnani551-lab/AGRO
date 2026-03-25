@@ -178,73 +178,6 @@ const WeatherCard = memo(({ weatherData, satelliteData, t }: any) => {
     );
 });
 
-const SatellitePreviewCard = memo(({ satelliteData }: any) => {
-    const [satLayer, setSatLayer] = useState<'true' | 'ndvi'>('true');
-    
-    return (
-        <motion.div variants={{ hidden: { y: 20, opacity: 0 }, show: { y: 0, opacity: 1 } }} className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 flex flex-col h-full relative overflow-hidden group hover:border-zinc-700 transition-all duration-300">
-            <SatelliteBadge />
-            <div className="flex justify-between items-center mb-4 z-10 relative mt-2">
-                 <h3 className="text-white text-md font-bold flex items-center gap-2">
-                    <FiLayers className="text-blue-500" />
-                    Orbital Feed
-                 </h3>
-                 <div className="flex bg-zinc-950 rounded-lg p-1 border border-zinc-800">
-                     <button onClick={() => setSatLayer('true')} className={`px-2 py-1 text-[9px] font-bold rounded-md transition-all ${satLayer === 'true' ? 'bg-white text-black' : 'text-zinc-500 hover:text-white'}`}>VIS</button>
-                     <button onClick={() => setSatLayer('ndvi')} className={`px-2 py-1 text-[9px] font-bold rounded-md transition-all ${satLayer === 'ndvi' ? 'bg-emerald-500 text-black' : 'text-zinc-500 hover:text-emerald-400'}`}>NDVI</button>
-                 </div>
-            </div>
-
-            <div className="flex-1 w-full bg-black rounded-2xl border border-zinc-800/50 overflow-hidden relative shadow-inner group-hover:border-primary-500/30 transition-all duration-500 min-h-[160px]">
-                {satelliteData?.imagery ? (
-                    <>
-                        <img 
-                            src={satLayer === 'ndvi' ? satelliteData.imagery.image.ndvi : satelliteData.imagery.image.truecolor} 
-                            alt="Satellite View"
-                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                        />
-                        {satelliteData.imagery.type === 'simulated' && (
-                            <div className="absolute top-2 left-2 z-20">
-                                <span className="px-2 py-0.5 bg-yellow-500 text-black text-[8px] font-black rounded-full flex items-center gap-1 uppercase tracking-wider shadow-md">
-                                    <FiAlertCircle className="w-2.5 h-2.5" /> Simulated
-                                </span>
-                            </div>
-                        )}
-                    </>
-                ) : (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950">
-                        <FiImage className="w-8 h-8 text-zinc-800 mb-2 animate-pulse" />
-                        <p className="text-zinc-600 text-[9px] font-bold uppercase tracking-widest text-center px-4">Awaiting<br/>Satellite Pass</p>
-                    </div>
-                )}
-                
-                {/* Spectral Overlay Info */}
-                <div className="absolute bottom-2 left-2 right-2 p-2 bg-black/60 backdrop-blur-md rounded-xl border border-white/5 flex items-center gap-2">
-                    <div className={`p-1.5 rounded-lg ${satLayer === 'ndvi' ? 'bg-emerald-500' : 'bg-blue-500'}`}>
-                        <FiLayers className="w-3 h-3 text-white" />
-                    </div>
-                    <div className="overflow-hidden">
-                      <p className="text-[8px] text-white font-black uppercase tracking-wider truncate">
-                          {satLayer === 'true' ? 'Visual Scan' : 'Vegetation Index'}
-                      </p>
-                      <p className="text-[7px] text-zinc-400 font-medium truncate">Updated: {satelliteData?.timestamp ? new Date(satelliteData.timestamp * 1000).toLocaleDateString() : 'Just Now'}</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div className="mt-4 grid grid-cols-2 gap-3 z-10 relative">
-                <div className="p-3 bg-zinc-950 rounded-xl border border-zinc-800/80 group-hover:border-zinc-700 transition-colors">
-                    <p className="text-[8px] text-zinc-500 uppercase font-black tracking-widest mb-0.5">Health Index</p>
-                    <p className="text-lg text-emerald-400 font-black tracking-tight">{(satelliteData?.ndvi?.mean || 0.65).toFixed(2)}</p>
-                </div>
-                <div className="p-3 bg-zinc-950 rounded-xl border border-zinc-800/80 group-hover:border-zinc-700 transition-colors">
-                    <p className="text-[8px] text-zinc-500 uppercase font-black tracking-widest mb-0.5">Cloud Cover</p>
-                    <p className="text-lg text-white font-black tracking-tight">{satelliteData?.metadata?.cloudCover || 0}%</p>
-                </div>
-            </div>
-        </motion.div>
-    );
-});
 
 // Helper to normalize commodity names
 const normalizeCommodity = (name: string) => {
@@ -676,16 +609,13 @@ export default function UltimateDashboard({
         <div className="min-h-screen bg-black text-white p-4 md:p-8 pt-6 font-sans selection:bg-emerald-500/30">
             <div className="max-w-7xl mx-auto space-y-6">
 
-                {/* Row 1: Key Metrics & Weather & Satellite */}
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                {/* Row 1: Key Metrics & Weather */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-1 h-[400px]">
                         <ValuationHero valuation={valuation} marketData={marketData} analysis={analysis} t={t} />
                     </div>
                     <div className="lg:col-span-2 h-[400px]">
                         <WeatherCard weatherData={weatherData} satelliteData={satelliteData} t={t} />
-                    </div>
-                    <div className="lg:col-span-1 h-[400px]">
-                        <SatellitePreviewCard satelliteData={satelliteData} />
                     </div>
                 </div>
 
