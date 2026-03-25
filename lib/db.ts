@@ -36,26 +36,32 @@ export const db = {
     },
 
     saveFarmProfile: async (userId: string, profile: any) => {
-        // Check if exists
-        const existing = await db.getFarmProfile(userId);
+        try {
+            // Check if exists
+            const existing = await db.getFarmProfile(userId);
 
-        if (existing) {
-            const { data, error } = await supabase
-                .from('farm_profiles')
-                .update({ ...profile, updated_at: new Date() })
-                .eq('user_id', userId)
-                .select()
-                .single();
-            if (error) throw error;
-            return data;
-        } else {
-            const { data, error } = await supabase
-                .from('farm_profiles')
-                .insert([{ ...profile, user_id: userId }])
-                .select()
-                .single();
-            if (error) throw error;
-            return data;
+            if (existing) {
+                const { data, error } = await supabase
+                    .from('farm_profiles')
+                    .update({ ...profile, updated_at: new Date() })
+                    .eq('user_id', userId)
+                    .select()
+                    .single();
+                if (error) throw error;
+                return data;
+            } else {
+                const { data, error } = await supabase
+                    .from('farm_profiles')
+                    .insert([{ ...profile, user_id: userId }])
+                    .select()
+                    .single();
+                if (error) throw error;
+                return data;
+            }
+        } catch (error: any) {
+            console.warn("DB save failed, falling back to localStorage for guest:", error.message);
+            localStorage.setItem('farmProfile', JSON.stringify(profile));
+            return profile;
         }
     },
 
@@ -131,31 +137,42 @@ export const db = {
 
     // Chat History
     getChatHistory: async (userId: string, limit: number = 50) => {
-        const { data, error } = await supabase
-            .from('chat_history')
-            .select('*')
-            .eq('user_id', userId)
-            .order('created_at', { ascending: true }) // Oldest first for chat flow? Or fetch new desc and reverse? 
-            // Usually fetch desc limit 50, then reverse for display.
-            .order('created_at', { ascending: false })
-            .limit(limit);
+        try {
+            const { data, error } = await supabase
+                .from('chat_history')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(limit);
 
-        if (error) throw error;
-        return data ? data.reverse() : [];
+            if (error) throw error;
+            return data ? data.reverse() : [];
+        } catch (error: any) {
+            console.warn("DB chat fetch failed, falling back to localStorage:", error.message);
+            const localHistory = localStorage.getItem(`chat_history_${userId}`);
+            return localHistory ? JSON.parse(localHistory) : [];
+        }
     },
 
     saveChatMessage: async (userId: string, message: { role: 'user' | 'assistant', content: string }) => {
-        const { data, error } = await supabase
-            .from('chat_history')
-            .insert([{
-                user_id: userId,
-                role: message.role,
-                content: message.content,
-                created_at: new Date()
-            }])
-            .select()
-            .single();
-        if (error) throw error;
-        return data;
+        try {
+            const { data, error } = await supabase
+                .from('chat_history')
+                .insert([{
+                    user_id: userId,
+                    role: message.role,
+                    content: message.content,
+                    created_at: new Date()
+                }])
+                .select()
+                .single();
+            if (error) throw error;
+            return data;
+        } catch (error: any) {
+            console.warn("DB chat save failed, falling back to localStorage:", error.message);
+            const localHistory = JSON.parse(localStorage.getItem(`chat_history_${userId}`) || '[]');
+            const newMessage = { ...message, id: Date.now().toString(), created_at: new Date().toISOString() };
+            localStorage.setItem(`chat_history_${userId}`, JSON.stringify([...localHistory, newMessage]));
+            return newMessage;
+        }
     }
 };

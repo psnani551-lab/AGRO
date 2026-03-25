@@ -9,6 +9,7 @@ import SmartToolsPanel from '@/components/dashboard/SmartToolsPanel';
 import { supabase } from '@/lib/supabaseClient';
 import Link from 'next/link';
 import { FiArrowRight } from 'react-icons/fi';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function DashboardPage() {
   const { t } = useI18n();
@@ -20,11 +21,12 @@ export default function DashboardPage() {
   const [pumpStatus, setPumpStatus] = useState<{ success?: boolean; message?: string } | null>(null);
   const [visionAnalysis, setVisionAnalysis] = useState<any>(null);
   const [alertsCount, setAlertsCount] = useState(0);
+  const { guestId } = useAuth();
 
   useEffect(() => {
     const fetchProfile = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      const userId = user?.id || '00000000-0000-0000-0000-000000000000';
+      const userId = user?.id || guestId || '00000000-0000-0000-0000-000000000000';
 
       const { data } = await supabase
         .from('farm_profiles')

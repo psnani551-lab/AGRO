@@ -53,9 +53,9 @@ export default function LanguageSwitcher({ className = '' }: LanguageSwitcherPro
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Select language"
         aria-expanded={isOpen}
-        className="flex items-center gap-2 rounded-lg p-2 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
+        className="flex items-center gap-2 rounded-xl p-2.5 transition-all hover:bg-gray-100 dark:hover:bg-gray-800 border border-transparent hover:border-gray-200 dark:hover:border-gray-700 shadow-sm active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-500"
       >
-        <FiGlobe className="h-5 w-5" />
+        <FiGlobe className="h-5 w-5 text-primary-600 dark:text-primary-400" />
         <span className="text-sm font-medium">{currentLanguage.flag}</span>
         <FiChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>

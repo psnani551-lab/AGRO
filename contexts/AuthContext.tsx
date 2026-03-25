@@ -3,10 +3,12 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabaseClient';
+import { getGuestId } from '@/lib/guest-id';
 
 interface AuthContextType {
     session: Session | null;
     user: User | null;
+    guestId: string | null;
     loading: boolean;
     signIn: () => Promise<void>;
     signOut: () => Promise<void>;
@@ -15,6 +17,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
     session: null,
     user: null,
+    guestId: null,
     loading: true,
     signIn: async () => { },
     signOut: async () => { },
@@ -23,6 +26,7 @@ const AuthContext = createContext<AuthContextType>({
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [session, setSession] = useState<Session | null>(null);
     const [user, setUser] = useState<User | null>(null);
+    const [guestId, setGuestId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -39,6 +43,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setLoading(false);
         });
 
+        // Initialize Guest ID
+        getGuestId().then(setGuestId);
+
         return () => subscription.unsubscribe();
     }, []);
 
@@ -52,7 +59,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ session, user, loading, signIn, signOut }}>
+        <AuthContext.Provider value={{ session, user, guestId, loading, signIn, signOut }}>
             {children}
         </AuthContext.Provider>
     );

@@ -38,14 +38,15 @@ export default function FarmProfileForm() {
   const [saved, setSaved] = useState(false);
   const [locationDetected, setLocationDetected] = useState(false);
 
-  const { user } = useAuth();
+  const { user, guestId } = useAuth();
 
   // Load saved profile on mount
   useEffect(() => {
     const loadProfile = async () => {
-      if (user) {
+      const activeUserId = user?.id || guestId;
+      if (activeUserId) {
         try {
-          const dbProfile = await db.getFarmProfile(user.id);
+          const dbProfile = await db.getFarmProfile(activeUserId);
           if (dbProfile) {
             setFormData({
               farmName: dbProfile.farm_name,
@@ -70,7 +71,7 @@ export default function FarmProfileForm() {
       }
     };
     loadProfile();
-  }, [user]);
+  }, [user, guestId]);
 
   const handleLocationDetected = (location: { lat: number; lng: number }) => {
     setFormData(prev => ({
@@ -122,8 +123,9 @@ export default function FarmProfileForm() {
     setLoading(true);
 
     try {
-      if (user) {
-        await db.saveFarmProfile(user.id, {
+      const activeUserId = user?.id || guestId;
+      if (activeUserId) {
+        await db.saveFarmProfile(activeUserId, {
           farm_name: formData.farmName,
           location: formData.location.address,
           latitude: formData.location.latitude,

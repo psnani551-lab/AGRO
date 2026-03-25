@@ -38,13 +38,14 @@ export default function ChatWidget({ locale: propLocale, location }: ChatWidgetP
   const audioChunksRef = useRef<Blob[]>([]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { user } = useAuth();
+  const { user, guestId } = useAuth();
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Load History
   useEffect(() => {
-    if (user && isOpen && messages.length === 0) {
-      db.getChatHistory(user.id).then(data => {
+    const activeUserId = user?.id || guestId;
+    if (activeUserId && isOpen && messages.length === 0) {
+      db.getChatHistory(activeUserId).then(data => {
         if (data && data.length > 0) {
           const formatted: Message[] = data.map((m: any) => ({
             id: m.id,
@@ -185,8 +186,9 @@ export default function ChatWidget({ locale: propLocale, location }: ChatWidgetP
         msg.id === userVoiceMessage.id ? { ...msg, content: `🎙️ "${transcript}"` } : msg
       ));
 
-      if (user) {
-        db.saveChatMessage(user.id, { role: 'user', content: `🎙️ "${transcript}"` }).catch(console.error);
+      const activeUserId = user?.id || guestId;
+      if (activeUserId) {
+        db.saveChatMessage(activeUserId, { role: 'user', content: `🎙️ "${transcript}"` }).catch(console.error);
       }
 
       // 2. Ask Ceres AI with the Language Lock
@@ -277,8 +279,9 @@ export default function ChatWidget({ locale: propLocale, location }: ChatWidgetP
     setInput('');
     setIsTyping(true);
 
-    if (user) {
-      db.saveChatMessage(user.id, { role: 'user', content: input }).catch(console.error);
+    const activeUserId = user?.id || guestId;
+    if (activeUserId) {
+      db.saveChatMessage(activeUserId, { role: 'user', content: input }).catch(console.error);
     }
 
     try {

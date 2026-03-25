@@ -11,6 +11,7 @@ import { IconType } from 'react-icons';
 import { useI18n } from '@/lib/i18n';
 import ThemeToggle from '@/components/ThemeToggle';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import MobileNavBar from '@/components/MobileNavBar';
 
 
 
@@ -155,10 +156,10 @@ export default function Navigation() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden rounded-lg p-2 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+            className="md:hidden rounded-xl p-2.5 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 border border-transparent hover:border-gray-200 dark:hover:border-gray-700 transition-all active:scale-95"
             aria-label="Toggle menu"
           >
-            {isMobileMenuOpen ? <FiX className="h-5 w-5" /> : <FiMenu className="h-5 w-5" />}
+            {isMobileMenuOpen ? <FiX className="h-6 w-6" /> : <FiMenu className="h-6 w-6" />}
           </button>
         </div>
       </div>
@@ -257,6 +258,7 @@ export default function Navigation() {
           </div>
         </div>
       )}
+      <MobileNavBar />
     </nav>
   );
 }

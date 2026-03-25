@@ -132,7 +132,7 @@ export default function RootLayout({
         </a>
         <ClientProviders>
           <Navigation />
-          <main id="main-content">{children}</main>
+          <main id="main-content" className="pb-20 md:pb-0">{children}</main>
         </ClientProviders>
       </body>
     </html>

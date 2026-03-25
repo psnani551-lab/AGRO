@@ -53,7 +53,7 @@ export default function ThemeToggle({ className = '' }: ThemeToggleProps) {
     <button
       onClick={toggleTheme}
       aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
-      className={`rounded-lg p-2 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 ${className}`}
+      className={`rounded-xl p-2.5 transition-all hover:bg-gray-100 dark:hover:bg-gray-800 border border-transparent hover:border-gray-200 dark:hover:border-gray-700 shadow-sm active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-500 ${className}`}
     >
       <motion.div
         variants={themeToggleVariants}
@@ -61,9 +61,9 @@ export default function ThemeToggle({ className = '' }: ThemeToggleProps) {
         transition={{ duration: 0.3 }}
       >
         {theme === 'light' ? (
-          <FiSun className="h-6 w-6 text-yellow-500" />
+          <FiSun className="h-6 w-6 text-amber-500" />
         ) : (
-          <FiMoon className="h-6 w-6 text-blue-400" />
+          <FiMoon className="h-6 w-6 text-indigo-400" />
         )}
       </motion.div>
     </button>
