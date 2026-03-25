@@ -158,19 +158,28 @@ const WeatherCard = memo(({ weatherData, satelliteData, t }: any) => {
                     </div>
                 </div>
 
-                {/* Bottom Status - Adjusted Position */}
-                <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="w-full sm:w-2/3 flex flex-col gap-1.5">
+                {/* Bottom Status - Highlighting Soil Moisture */}
+                <div className="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6 bg-zinc-950/40 p-5 rounded-2xl border border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
+                    <div className="w-full sm:w-2/3 flex flex-col gap-2">
                        <div className="flex justify-between items-center px-1">
-                         <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest flex items-center gap-1"><FiDroplet className="w-3 h-3 text-blue-400"/> Soil Moisture (Satellite)</span>
-                         <span className="text-[10px] text-white font-bold">{satelliteData?.soil?.moisture ? `${satelliteData.soil.moisture.toFixed(0)}%` : '65%'}</span>
+                         <span className="text-xs text-blue-400 font-bold uppercase tracking-widest flex items-center gap-2">
+                             <FiDroplet className="w-4 h-4 text-blue-400 mb-0.5 animate-pulse"/> Soil Moisture (Satellite)
+                         </span>
+                         <span className="text-sm text-white font-black bg-blue-500/20 px-2 py-0.5 rounded-md text-blue-300">
+                             {satelliteData?.soil?.moisture ? `${satelliteData.soil.moisture.toFixed(0)}%` : '65%'}
+                         </span>
                        </div>
-                       <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                           <div className="h-full bg-blue-500 rounded-full" style={{ width: `${satelliteData?.soil?.moisture || 65}%` }}/>
+                       <div className="w-full h-2.5 bg-zinc-900 rounded-full overflow-hidden border border-zinc-800 shadow-inner">
+                           <div className="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-full relative" style={{ width: `${satelliteData?.soil?.moisture || 65}%` }}>
+                               <div className="absolute inset-0 bg-white/20 w-full h-full animate-pulse" />
+                           </div>
                        </div>
                     </div>
-                    <div className="text-[10px] bg-zinc-950 text-white px-3 py-1.5 rounded-lg border border-zinc-800 flex items-center justify-center gap-1.5 font-bold whitespace-nowrap">
-                        <FiCheckCircle className="w-3.5 h-3.5 text-emerald-400" /> {t('weather.excellentConditions')}
+                    <div className="flex flex-col items-center justify-center gap-1.5 bg-blue-500/10 px-4 py-2.5 rounded-xl border border-blue-500/30 whitespace-nowrap shrink-0">
+                        <span className="text-[10px] text-emerald-400 font-bold tracking-wide flex items-center gap-1.5">
+                            <FiCheckCircle className="w-3.5 h-3.5" /> {t('weather.excellentConditions')}
+                        </span>
+                        <span className="text-[9px] text-blue-400/80 font-black uppercase tracking-widest">Space Verified</span>
                     </div>
                 </div>
             </div>
