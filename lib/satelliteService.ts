@@ -30,6 +30,18 @@ export interface AccumulatedData {
   precipitation: number; // Total rainfall in period
 }
 
+export interface ImageryMetadata {
+  dt: number;
+  type: string;
+  dc: number;
+  cl: number;
+  sun: { azimuth: number; elevation: number };
+  image: { truecolor: string; falsecolor: string; ndvi: string; evi: string };
+  tile: { truecolor: string; falsecolor: string; ndvi: string; evi: string };
+  stats: { ndvi: string; evi: string };
+  data: { truecolor: string; falsecolor: string; ndvi: string; evi: string };
+}
+
 /**
  * Satellite Service for AgroMonitoring Integration
  * Handles polygon registration and agricultural data retrieval
@@ -71,6 +83,43 @@ export const satelliteService = {
     } catch (error) {
       console.error('Satellite Register Error:', error);
       throw error;
+    }
+  },
+
+  /**
+   * Fetch the latest imagery metadata for a polygon
+   */
+  async getLatestImagery(polygonId: string): Promise<ImageryMetadata | null> {
+    if (!AGRO_API_KEY || polygonId.startsWith('mock_')) {
+      // Mock result for dev
+      return {
+        dt: Date.now() / 1000,
+        type: 'sentinel-2',
+        dc: 1,
+        cl: 0,
+        sun: { azimuth: 120, elevation: 45 },
+        image: {
+          truecolor: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef', 
+          falsecolor: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b',
+          ndvi: 'https://images.unsplash.com/photo-1523348830342-d66214002d45',
+          evi: 'https://images.unsplash.com/photo-1523348830342-d66214002d45'
+        },
+        tile: { truecolor: '', falsecolor: '', ndvi: '', evi: '' },
+        stats: { ndvi: '', evi: '' },
+        data: { truecolor: '', falsecolor: '', ndvi: '', evi: '' }
+      };
+    }
+
+    try {
+      const end = Math.floor(Date.now() / 1000);
+      const start = end - 60 * 24 * 60 * 60; // Last 60 days
+      const response = await fetch(`${BASE_URL}/image/search?polyid=${polygonId}&start=${start}&end=${end}&appid=${AGRO_API_KEY}`);
+      if (!response.ok) return null;
+      const data = await response.json();
+      return data.length > 0 ? data[data.length - 1] : null;
+    } catch (error) {
+      console.error('Imagery Search Error:', error);
+      return null;
     }
   },
 
@@ -120,7 +169,7 @@ export const satelliteService = {
   },
 
   /**
-   * Fetch Accumulated Temperature (GDD) and Precipitation
+   * Fetch Accumulated Weather (GDD) and Precipitation
    */
   async getAccumulatedWeather(polygonId: string, start: number, end: number): Promise<AccumulatedData | null> {
     if (!AGRO_API_KEY || polygonId.startsWith('mock_')) {
@@ -145,9 +194,29 @@ export const satelliteService = {
    * Interpret NDVI value into human-readable health status
    */
   getHealthStatus(meanNDVI: number) {
-    if (meanNDVI > 0.6) return { status: 'Healthy', color: 'green', description: 'Excellent vegetation density.' };
-    if (meanNDVI > 0.4) return { status: 'Normal', color: 'yellow', description: 'Standard growth. Monitoring optimal.' };
-    if (meanNDVI > 0.2) return { status: 'Stressed', color: 'orange', description: 'Possible moisture or nutrient stress.' };
-    return { status: 'Critical', color: 'red', description: 'Sparse vegetation or significant crop failure.' };
+    if (meanNDVI > 0.6) return { 
+      status: 'Healthy', 
+      color: 'green', 
+      description: 'Excellent vegetation density. Everything is on track!',
+      icon: '😊'
+    };
+    if (meanNDVI > 0.4) return { 
+      status: 'Normal', 
+      color: 'yellow', 
+      description: 'Standard growth. Monitoring optimal.',
+      icon: '😐'
+    };
+    if (meanNDVI > 0.2) return { 
+      status: 'Stressed', 
+      color: 'orange', 
+      description: 'Plants are thirsty or hungry. Check water levels soon.',
+      icon: '😟'
+    };
+    return { 
+      status: 'Critical', 
+      color: 'red', 
+      description: 'Major issue! Plants are in trouble. Action needed NOW.',
+      icon: '😫'
+    };
   }
 };

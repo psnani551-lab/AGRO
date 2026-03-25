@@ -28,7 +28,10 @@ export async function POST(request: NextRequest) {
     const seasonStart = now - (90 * 24 * 60 * 60); // Default to last 90 days for GDD
     const accumulated = await satelliteService.getAccumulatedWeather(activePolygonId, seasonStart, now);
 
-    if (!ndviData && !soilData) {
+    // 4. Fetch Latest Imagery Metadata
+    const imagery = await satelliteService.getLatestImagery(activePolygonId);
+
+    if (!ndviData && !soilData && !imagery) {
       return NextResponse.json({ 
         message: 'No satellite data available for this period',
         status: 'pending' 
@@ -42,6 +45,7 @@ export async function POST(request: NextRequest) {
       timestamp: ndviData?.dt || soilData?.dt || now,
       ndvi: ndviData?.stats || null,
       health: health,
+      imagery: imagery,
       soil: soilData ? {
         moisture: soilData.moisture * 100, // Convert to percentage
         temp_t10: soilData.t10,

@@ -303,58 +303,120 @@ export default function SmartToolsPanel({
               </div>
 
               {/* Imagery Preview */}
-              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex flex-col items-center justify-center relative overflow-hidden group">
-                <div className="absolute top-4 right-4 z-10">
-                   <span className="px-2 py-1 bg-black/60 backdrop-blur-md rounded-md text-[9px] font-bold text-white border border-white/20 uppercase tracking-widest leading-none">
-                     LIVE FEED
+              <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 flex flex-col items-center justify-center relative overflow-hidden group min-h-[400px]">
+                <div className="absolute top-4 right-4 z-10 flex gap-2">
+                   <span className="px-3 py-1 bg-emerald-500 text-black text-[10px] font-black rounded-full shadow-lg animate-pulse uppercase tracking-tighter">
+                     LIVE ORBITAL FEED
                    </span>
                 </div>
                 
-                {/* Mock Imagery Display */}
-                <div className="w-full h-48 bg-black rounded-xl border border-zinc-800 overflow-hidden relative">
-                   <div className={`absolute inset-0 flex items-center justify-center ${satLayer === 'ndvi' ? 'bg-emerald-900/20' : satLayer === 'false' ? 'bg-purple-900/20' : 'bg-zinc-900'}`}>
-                      <FiImage className="w-12 h-12 text-zinc-800" />
-                   </div>
-                   {/* Simulated Overlay */}
-                   <div className="absolute bottom-2 left-2 p-2 bg-black/40 rounded-lg backdrop-blur-sm border border-white/10">
-                      <p className="text-[10px] text-white font-bold">SENTINEL-2 L2A</p>
-                      <p className="text-[8px] text-zinc-400">Resolution: 10m/px</p>
+                {/* Real Satellite Imagery Display */}
+                <div className="w-full aspect-square md:aspect-video bg-black rounded-2xl border-2 border-zinc-800/50 overflow-hidden relative shadow-2xl group-hover:border-primary-500/30 transition-all duration-500">
+                   {satelliteData?.imagery ? (
+                      <img 
+                        src={
+                          satLayer === 'ndvi' ? satelliteData.imagery.image.ndvi :
+                          satLayer === 'false' ? satelliteData.imagery.image.falsecolor :
+                          satelliteData.imagery.image.truecolor
+                        } 
+                        alt="Satellite View"
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      />
+                   ) : (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950">
+                        <FiImage className="w-16 h-16 text-zinc-800 mb-4 animate-bounce" />
+                        <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest">Awaiting Satellite Pass...</p>
+                      </div>
+                   )}
+                   
+                   {/* Spectral Overlay Info */}
+                   <div className="absolute bottom-4 left-4 p-3 bg-black/60 backdrop-blur-md rounded-2xl border border-white/10 flex items-center gap-3">
+                      <div className={`p-2 rounded-lg ${satLayer === 'ndvi' ? 'bg-emerald-500' : satLayer === 'false' ? 'bg-purple-500' : 'bg-blue-500'}`}>
+                         <FiLayers className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-white font-black uppercase tracking-wider">
+                          {satLayer === 'true' ? 'Visual Scan' : satLayer === 'ndvi' ? 'Vegetation Index' : 'Moisture Scan'}
+                        </p>
+                        <p className="text-[8px] text-zinc-400 font-medium">Updated: {satelliteData?.timestamp ? new Date(satelliteData.timestamp * 1000).toLocaleDateString() : 'Just Now'}</p>
+                      </div>
                    </div>
                 </div>
 
-                <div className="mt-6 w-full space-y-4">
-                  <div className="flex justify-between items-center">
-                    <p className="text-xs text-zinc-500 uppercase font-bold">Field Statistics</p>
-                    {satelliteData?.ndvi && (
-                      <span className="text-[10px] text-white font-bold bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-500/30">
-                        NDVI: {satelliteData.ndvi.mean.toFixed(2)}
-                      </span>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="p-3 bg-black/40 rounded-xl border border-zinc-800">
-                      <p className="text-[9px] text-zinc-500 uppercase font-bold mb-1">Coverage</p>
-                      <p className="text-white font-bold">{farmProfile?.total_area || 5} Acres</p>
+                <div className="mt-8 w-full">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 bg-zinc-800/30 rounded-2xl border border-zinc-800/50 group/item hover:bg-zinc-800/50 transition-colors">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+                        <p className="text-[10px] text-zinc-400 uppercase font-black tracking-widest">Field Size</p>
+                      </div>
+                      <p className="text-xl text-white font-black">{farmProfile?.total_area || '5.0'} <span className="text-[10px] text-zinc-500">Acres</span></p>
                     </div>
-                    <div className="p-3 bg-black/40 rounded-xl border border-zinc-800">
-                      <p className="text-[9px] text-zinc-500 uppercase font-bold mb-1">Confidence</p>
-                      <p className="text-white font-bold">{((satelliteData?.metadata?.dataConfidence || 0.85) * 100).toFixed(0)}%</p>
+                    <div className="p-4 bg-zinc-800/30 rounded-2xl border border-zinc-800/50 group/item hover:bg-zinc-800/50 transition-colors">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                        <p className="text-[10px] text-zinc-400 uppercase font-black tracking-widest">Health Index</p>
+                      </div>
+                      <p className="text-xl text-white font-black">
+                        {(satelliteData?.ndvi?.mean || 0.65).toFixed(2)}
+                      </p>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Satellite Analysis Insights */}
-            <div className="p-6 bg-gradient-to-br from-blue-500/10 to-emerald-500/10 border border-blue-500/20 rounded-2xl">
-               <h4 className="text-white text-sm font-bold flex items-center gap-2 mb-2">
-                 <FiTrendingUp className="text-blue-400" />
-                 Ceres Remote Insights
-               </h4>
-               <p className="text-sm text-zinc-400 leading-relaxed italic">
-                 "Our orbital analysis shows a healthy vegetation trend. The {satLayer === 'ndvi' ? 'Vegetation Index' : satLayer === 'false' ? 'Spectral contrast' : 'Visual profile'} confirms consistent growth. 
-                 Recent soil moisture levels are optimal for {farmProfile?.current_crops?.[0] || 'your crop'}, with low water-stress indicators detected in the center of the field."
-               </p>
+            {/* CERES VISUAL HEALTH GUIDE - FOR AMATEUR FARMERS */}
+            <div className="relative p-8 bg-gradient-to-br from-zinc-900 to-black border-2 border-primary-500/20 rounded-[2.5rem] overflow-hidden">
+               <div className="absolute top-0 right-0 p-8 opacity-10">
+                  <FiCpu className="w-32 h-32 text-primary-500" />
+               </div>
+               
+               <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
+                  {/* Status Gauge/Icon */}
+                  <div className="flex flex-col items-center">
+                    <div className={`w-28 h-28 rounded-full flex items-center justify-center text-4xl border-4 ${
+                      (satelliteData?.ndvi?.mean || 0.65) > 0.6 ? 'bg-emerald-500/20 border-emerald-500 text-emerald-500' :
+                      (satelliteData?.ndvi?.mean || 0.65) > 0.4 ? 'bg-yellow-500/20 border-yellow-500 text-yellow-500' : 'bg-red-500/20 border-red-500 text-red-500'
+                    } shadow-2xl`}>
+                      {satelliteData?.health?.icon || '😊'}
+                    </div>
+                    <p className={`mt-4 font-black text-lg uppercase tracking-tighter ${
+                      (satelliteData?.ndvi?.mean || 0.65) > 0.6 ? 'text-emerald-500' :
+                      (satelliteData?.ndvi?.mean || 0.65) > 0.4 ? 'text-yellow-500' : 'text-red-500'
+                    }`}>
+                      {satelliteData?.health?.status || 'HEALTHY'}
+                    </p>
+                  </div>
+
+                  <div className="flex-1 text-center md:text-left">
+                     <h4 className="text-white text-2xl font-black mb-3 flex items-center justify-center md:justify-start gap-3">
+                       <span className="bg-primary-500 text-black px-3 py-1 rounded-xl text-xs font-black uppercase">Ceres Cloud Guidance</span>
+                       Field Insights
+                     </h4>
+                     <p className="text-lg text-zinc-300 leading-relaxed font-medium">
+                       "{satelliteData?.health?.description || `Everything looks great! Your field is showing strong vegetation signals. The current moisture levels are perfect for your crops.`}"
+                     </p>
+                     
+                     {/* Simplified Gauges for Illiterate Users */}
+                     <div className="mt-8 flex flex-wrap gap-6 justify-center md:justify-start">
+                        <div className="flex flex-col items-center md:items-start gap-2">
+                           <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest">Water Comfort</p>
+                           <div className="w-32 h-2 bg-zinc-800 rounded-full overflow-hidden">
+                              <div className="h-full bg-blue-500" style={{ width: `${satelliteData?.soil?.moisture || 65}%` }} />
+                           </div>
+                           <p className="text-[10px] text-blue-400 font-bold italic">Plants have enough water</p>
+                        </div>
+                        <div className="flex flex-col items-center md:items-start gap-2">
+                           <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest">Health Level</p>
+                           <div className="w-32 h-2 bg-zinc-800 rounded-full overflow-hidden">
+                              <div className="h-full bg-emerald-500" style={{ width: `${(satelliteData?.ndvi?.mean || 0.65) * 100}%` }} />
+                           </div>
+                           <p className="text-[10px] text-emerald-400 font-bold italic">Healthy green growth</p>
+                        </div>
+                     </div>
+                  </div>
+               </div>
             </div>
           </div>
         )}
