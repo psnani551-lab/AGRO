@@ -10,15 +10,25 @@ interface Props {
 }
 
 export default function DashboardHeader({ farmProfile, alertsCount = 0 }: Props) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const router = useRouter();
-  const today = new Date().toLocaleDateString('en-IN', {
+  
+  // Use current locale for date formatting, mapping 'te' (Telugu) etc. correctly
+  const dateLocaleMap: Record<string, string> = {
+    en: 'en-IN',
+    hi: 'hi-IN',
+    te: 'te-IN',
+    mr: 'mr-IN',
+    ta: 'ta-IN'
+  };
+
+  const today = new Date().toLocaleDateString(dateLocaleMap[locale] || 'en-IN', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
   });
 
   // Handle Supabase snake_case vs legacy camelCase
   const name = farmProfile?.farm_name || farmProfile?.farmName || t('dashboard.title');
-  const location = farmProfile?.location_address || farmProfile?.location || 'Unknown Location';
+  const location = farmProfile?.location_address || farmProfile?.location || t('dashboard.unknownLocation');
   const size = farmProfile?.farm_size_acres || farmProfile?.farmSize || null;
 
   // Handle Crops Array safely

@@ -79,11 +79,11 @@ export const IrrigationModal = ({ isOpen, onClose, analysis, farmProfile, t, onS
                                     {hours > 0 ? `${hours}h ` : ''}{minutes}m
                                 </span>
                                 <span className="text-xs text-zinc-500 font-bold uppercase tracking-wider">
-                                    {method} Method
+                                    {t('form.' + method.toLowerCase()) || method} {t('dashboard.method')}
                                 </span>
                             </div>
                             <p className="text-xs text-zinc-400 mt-3 flex items-center gap-2">
-                                 Based on <span className="text-white font-bold">{pumpLph.toLocaleString()} LPH</span> pump on <span className="text-white font-bold">{areaAcres} acre(s)</span>.
+                                 {t('dashboard.basedOnPump')} <span className="text-white font-bold">{pumpLph.toLocaleString()} LPH</span> {t('dashboard.pumpOn')} <span className="text-white font-bold">{areaAcres} {t('dashboard.acres')}</span>.
                             </p>
                         </div>
                         
@@ -103,7 +103,7 @@ export const IrrigationModal = ({ isOpen, onClose, analysis, farmProfile, t, onS
                                 ) : (
                                     <FiDroplet className="w-5 h-5" />
                                 )}
-                                {isPumpLoading ? 'Connecting...' : pumpStatus?.success ? 'Pump Started' : 'START PUMP'}
+                                {isPumpLoading ? t('dashboard.connectingPump') : pumpStatus?.success ? t('dashboard.pumpStarted') : t('dashboard.startPump')}
                             </button>
                             <button
                                 onClick={() => {
@@ -111,7 +111,7 @@ export const IrrigationModal = ({ isOpen, onClose, analysis, farmProfile, t, onS
                                 }}
                                 className="text-[10px] text-zinc-500 hover:text-white font-bold uppercase tracking-widest flex items-center justify-center gap-1.5 transition-colors"
                             >
-                                <FiCpu className="w-3.5 h-3.5" /> Manage IoT Devices
+                                <FiCpu className="w-3.5 h-3.5" /> {t('dashboard.manageIoT')}
                             </button>
                             {pumpStatus && !isPumpLoading && (
                                 <p className={`text-[10px] font-bold text-center ${pumpStatus.success ? 'text-green-400' : 'text-red-400'}`}>
@@ -125,12 +125,12 @@ export const IrrigationModal = ({ isOpen, onClose, analysis, farmProfile, t, onS
                 <div className="grid grid-cols-1 gap-4">
                     <div className="p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-xl flex items-center justify-between">
                          <div>
-                            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider block mb-1">Watering Depth</span>
+                            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider block mb-1">{t('dashboard.wateringDepth')}</span>
                             <span className="text-xl font-bold text-zinc-900 dark:text-white">{amountMm.toFixed(1)} mm</span>
                          </div>
                          <div className="text-right">
-                            <span className="text-[10px] text-zinc-500 uppercase font-black block mb-1 italic">Scientific Metric</span>
-                            <span className="text-xs text-zinc-400">FAO-56 Standard</span>
+                            <span className="text-[10px] text-zinc-500 uppercase font-black block mb-1 italic">{t('dashboard.scientificMetric')}</span>
+                            <span className="text-xs text-zinc-400">{t('dashboard.faoStandard')}</span>
                          </div>
                     </div>
                 </div>
@@ -242,19 +242,19 @@ export const DiseaseModal = ({ isOpen, onClose, analysis, t }: any) => {
                 {/* 2. Contributing Factors (Grid) */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div className="p-3 border rounded-xl bg-zinc-50 dark:bg-zinc-800/50">
-                        <span className="text-xs text-zinc-500 block mb-1">Humidity Impact</span>
+                        <span className="text-xs text-zinc-500 block mb-1">{t('dashboard.humidityImpact')}</span>
                         <div className="font-semibold text-sm flex items-center gap-2">
                             <FiDroplet className="text-blue-500" /> {risk.factors?.humidity || 'Normal'}
                         </div>
                     </div>
                     <div className="p-3 border rounded-xl bg-zinc-50 dark:bg-zinc-800/50">
-                        <span className="text-xs text-zinc-500 block mb-1">Temp Impact</span>
+                        <span className="text-xs text-zinc-500 block mb-1">{t('dashboard.tempImpact')}</span>
                         <div className="font-semibold text-sm flex items-center gap-2">
                             <FiActivity className="text-red-400" /> {risk.factors?.temperature || 'Normal'}
                         </div>
                     </div>
                     <div className="p-3 border rounded-xl bg-zinc-50 dark:bg-zinc-800/50">
-                        <span className="text-xs text-zinc-500 block mb-1">Rain Impact</span>
+                        <span className="text-xs text-zinc-500 block mb-1">{t('dashboard.rainImpact')}</span>
                         <div className="font-semibold text-sm flex items-center gap-2">
                             <FiBarChart2 className="text-indigo-400" /> {risk.factors?.rainfall || 'Normal'}
                         </div>
@@ -264,7 +264,7 @@ export const DiseaseModal = ({ isOpen, onClose, analysis, t }: any) => {
                 {/* 3. AI Prevention Checklist */}
                 <div>
                     <h5 className="font-bold text-zinc-900 dark:text-white mb-3 flex items-center gap-2">
-                        <FiCheckCircle className="text-green-500" /> Prevention & Action Plan
+                        <FiCheckCircle className="text-green-500" /> {t('dashboard.preventionPlan')}
                     </h5>
                     <div className="space-y-2">
                         {risk.recommendations?.map((step: string, i: number) => (
@@ -280,7 +280,7 @@ export const DiseaseModal = ({ isOpen, onClose, analysis, t }: any) => {
 
                 {/* 4. Action Button */}
                 <div className="mt-8 pt-6 border-t border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
-                    <p className="text-xs text-zinc-500 font-medium">Need real-time verification?</p>
+                    <p className="text-xs text-zinc-500 font-medium">{t('dashboard.needVerification')}</p>
                     <button 
                         onClick={() => {
                             router.push('/tools/smart-tools');
@@ -288,7 +288,7 @@ export const DiseaseModal = ({ isOpen, onClose, analysis, t }: any) => {
                         className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-2 active:scale-95"
                     >
                         <FiCamera className="w-4 h-4" />
-                        Scan Crop Now
+                        {t('dashboard.scanCropNow')}
                     </button>
                 </div>
 
@@ -419,7 +419,7 @@ export const YieldModal = ({ isOpen, onClose, analysis, t }: any) => {
                                         </div>
                                         <div className="text-right">
                                             <span className="block font-bold text-green-600 text-sm">{scenario.impact}</span>
-                                            <span className="text-[10px] text-gray-400 uppercase tracking-wider">{scenario.cost} Cost</span>
+                                            <span className="text-[10px] text-gray-400 uppercase tracking-wider">{scenario.cost} {t('dashboard.cost')}</span>
                                         </div>
                                     </div>
                                 );

@@ -122,7 +122,7 @@ export default function SmartRotationCard({ farmProfile, weatherData, t }: Props
                                 }}
                                 className="text-[10px] px-2.5 py-1.5 rounded-lg font-bold uppercase tracking-wider transition-colors active:scale-95 bg-zinc-950 border border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800"
                             >
-                                {idx === 0 ? 'Update Profile' : 'Find Seeds'}
+                                {idx === 0 ? t('rotation.updateProfile') : t('rotation.findSeeds')}
                             </button>
                         </div>
 

@@ -33,11 +33,10 @@ export default function ConnectSensor({ farmId }: ConnectSensorProps) {
         body: JSON.stringify({ farm_id: farmId, status: type })
       });
       
-      // Poll for the result every 2 seconds
       const poll = setInterval(async () => {
         const response = await fetch(`/api/iot/calibrate/status?farm_id=${farmId}`);
         const data = await response.json();
-        if (data.status === null) { // Server sets status back to null when value is captured
+        if (data.status === null) {
           setCalibratingType(null);
           if (data.dry) setDryValue(data.dry);
           if (data.wet) setWetValue(data.wet);
@@ -63,11 +62,9 @@ void sendData() {
     http.begin(serverUrl);
     http.addHeader("Content-Type", "application/json");
     
-    // Simply read the raw voltage (0-4095)
-    // The AGRO server handles the math automatically!
     int rawMoisture = analogRead(34);
     
-    String jsonPayload = "{\\"farm_id\\":\\"${farmId}\\",\\"sensor_id\\":\\"FIELD_01\\",\\"raw_moisture\\":" + String(rawMoisture) + "}";
+    String jsonPayload = "{\\\\"farm_id\\\\":\\\\"${farmId}\\\\",\\\\"sensor_id\\\\":\\\\"FIELD_01\\\\",\\\\"raw_moisture\\\\":" + String(rawMoisture) + "}";
     
     int httpResponseCode = http.POST(jsonPayload);
     http.end();
@@ -82,8 +79,8 @@ void sendData() {
           <FiCpu className="h-6 w-6" />
         </div>
         <div>
-          <h3 className="text-xl font-bold text-white tracking-tight">Smart Sensor Setup</h3>
-          <p className="text-xs text-zinc-500 font-medium">Automatic Calibration · No Coding Required</p>
+          <h3 className="text-xl font-bold text-white tracking-tight">{t('smartTools.sensor.title')}</h3>
+          <p className="text-xs text-zinc-500 font-medium">{t('smartTools.sensor.subtitle')}</p>
         </div>
       </div>
 
@@ -91,7 +88,7 @@ void sendData() {
         {/* Device Token */}
         <div className="p-5 bg-zinc-950 rounded-2xl border border-zinc-800 group transition-all hover:border-zinc-700">
           <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] mb-3 block">
-            Step 1: Your Unique Sensor Key
+            {t('smartTools.sensor.step1')}
           </label>
           <div className="flex items-center gap-3">
             <code className="flex-1 bg-zinc-900 px-4 py-3 rounded-xl border border-zinc-800 text-sm font-mono text-emerald-400 truncate">
@@ -105,7 +102,7 @@ void sendData() {
             </button>
           </div>
           <p className="text-[10px] text-zinc-600 mt-3 flex items-center gap-1.5 font-medium italic">
-            <FiInfo className="opacity-50" /> Copy this into your sensor code to link it to your farm.
+            <FiInfo className="opacity-50" /> {t('smartTools.sensor.copyHint')}
           </p>
         </div>
 
@@ -113,19 +110,19 @@ void sendData() {
         <div className="p-6 bg-gradient-to-br from-zinc-950 to-zinc-900 rounded-3xl border border-zinc-800 shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 right-0 p-4">
              {calibrated ? (
-              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-400/10 px-3 py-1 rounded-full border border-emerald-400/20">READY</span>
+              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-400/10 px-3 py-1 rounded-full border border-emerald-400/20">{t('smartTools.sensor.ready')}</span>
             ) : (
-              <span className="text-[10px] font-bold text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20">SETUP NEEDED</span>
+              <span className="text-[10px] font-bold text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20">{t('smartTools.sensor.setupNeeded')}</span>
             )}
           </div>
 
           <div className="mb-6">
             <h4 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
               <span className="w-6 h-6 flex items-center justify-center bg-white text-black rounded-lg text-xs font-black">2</span> 
-              Precision Auto-Calibration
+              {t('smartTools.sensor.step2')}
             </h4>
             <p className="text-xs text-zinc-500 mt-2 leading-relaxed">
-              No manual typing needed. Just click the captures while the sensor is in the air or water.
+              {t('smartTools.sensor.step2Desc')}
             </p>
           </div>
 
@@ -135,14 +132,14 @@ void sendData() {
               calibratingType === 'dry' ? 'bg-red-500/10 border-red-500/50 scale-[1.02]' : 'bg-zinc-900 border-zinc-800'
             }`}>
               <div className="flex justify-between items-start mb-4">
-                <span className="text-[10px] font-bold text-zinc-500 uppercase">Step A: Level "0"</span>
+                <span className="text-[10px] font-bold text-zinc-500 uppercase">{t('smartTools.sensor.stepA')}</span>
                 {dryValue !== 4095 && <span className="text-xs font-mono text-zinc-300 font-bold">{dryValue}</span>}
               </div>
               <div className="flex flex-col items-center gap-4 text-center">
                 <div className="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center border border-zinc-700 shadow-lg">
                    <FiCheckCircle className={`w-8 h-8 transition-colors ${dryValue !== 4095 ? 'text-emerald-400' : 'text-zinc-600'}`} />
                 </div>
-                <h5 className="text-sm font-bold text-white">Hold Sensor In Air</h5>
+                <h5 className="text-sm font-bold text-white">{t('smartTools.sensor.holdAir')}</h5>
                 <button
                   onClick={() => handleStartCapture('dry')}
                   disabled={!!calibratingType}
@@ -151,7 +148,7 @@ void sendData() {
                     dryValue !== 4095 ? 'bg-zinc-800 text-zinc-400 border border-zinc-700' : 'bg-white text-black hover:bg-zinc-200'
                   }`}
                 >
-                  {calibratingType === 'dry' ? 'LISTENING...' : dryValue !== 4095 ? 'RE-CAPTURE AIR' : 'CAPTURE AIR'}
+                  {calibratingType === 'dry' ? t('smartTools.sensor.listening') : dryValue !== 4095 ? t('smartTools.sensor.recaptureAir') : t('smartTools.sensor.captureAir')}
                 </button>
               </div>
             </div>
@@ -161,14 +158,14 @@ void sendData() {
               calibratingType === 'wet' ? 'bg-blue-500/10 border-blue-500/50 scale-[1.02]' : 'bg-zinc-900 border-zinc-800'
             }`}>
               <div className="flex justify-between items-start mb-4">
-                <span className="text-[10px] font-bold text-zinc-500 uppercase">Step B: Level "100"</span>
+                <span className="text-[10px] font-bold text-zinc-500 uppercase">{t('smartTools.sensor.stepB')}</span>
                 {wetValue !== 1500 && <span className="text-xs font-mono text-zinc-300 font-bold">{wetValue}</span>}
               </div>
               <div className="flex flex-col items-center gap-4 text-center">
                 <div className="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center border border-zinc-700 shadow-lg">
                    <FiCheckCircle className={`w-8 h-8 transition-colors ${wetValue !== 1500 ? 'text-blue-400' : 'text-zinc-600'}`} />
                 </div>
-                <h5 className="text-sm font-bold text-white">Dip Sensor In Water</h5>
+                <h5 className="text-sm font-bold text-white">{t('smartTools.sensor.dipWater')}</h5>
                 <button
                   onClick={() => handleStartCapture('wet')}
                   disabled={!!calibratingType}
@@ -177,7 +174,7 @@ void sendData() {
                     wetValue !== 1500 ? 'bg-zinc-800 text-zinc-400 border border-zinc-700' : 'bg-white text-black hover:bg-zinc-200'
                   }`}
                 >
-                  {calibratingType === 'wet' ? 'LISTENING...' : wetValue !== 1500 ? 'RE-CAPTURE WATER' : 'CAPTURE WATER'}
+                  {calibratingType === 'wet' ? t('smartTools.sensor.listening') : wetValue !== 1500 ? t('smartTools.sensor.recaptureWater') : t('smartTools.sensor.captureWater')}
                 </button>
               </div>
             </div>
@@ -189,9 +186,9 @@ void sendData() {
            <div className="flex items-center justify-between">
               <h4 className="font-bold text-white text-sm flex items-center gap-2 tracking-wide uppercase">
                 <span className="w-6 h-6 flex items-center justify-center bg-zinc-800 text-zinc-400 rounded-lg text-xs font-black">3</span> 
-                Universal Farm Firmware
+                {t('smartTools.sensor.step3')}
               </h4>
-              <span className="text-[10px] font-bold text-zinc-500">WORKS FOR ANY SENSOR</span>
+              <span className="text-[10px] font-bold text-zinc-500">{t('smartTools.sensor.worksForAny')}</span>
            </div>
           
           <div className="relative group">
@@ -207,15 +204,15 @@ void sendData() {
              <div className="p-4 bg-zinc-950 border border-zinc-800 rounded-2xl flex items-center gap-3">
                 <div className="p-2 bg-emerald-500/10 rounded-xl"><FiCheckCircle className="text-emerald-400 w-4 h-4" /></div>
                 <div>
-                   <p className="text-xs font-bold text-white leading-none">Auto-Sync</p>
-                   <p className="text-[10px] text-zinc-500 mt-1">Calibration saved in cloud</p>
+                   <p className="text-xs font-bold text-white leading-none">{t('smartTools.sensor.autoSync')}</p>
+                   <p className="text-[10px] text-zinc-500 mt-1">{t('smartTools.sensor.autoSyncDesc')}</p>
                 </div>
              </div>
              <div className="p-4 bg-zinc-950 border border-zinc-800 rounded-2xl flex items-center gap-3">
                 <div className="p-2 bg-blue-500/10 rounded-xl"><FiCheckCircle className="text-blue-500 w-4 h-4" /></div>
                 <div>
-                   <p className="text-xs font-bold text-white leading-none">Server Math</p>
-                   <p className="text-[10px] text-zinc-500 mt-1">No manual code changes</p>
+                   <p className="text-xs font-bold text-white leading-none">{t('smartTools.sensor.serverMath')}</p>
+                   <p className="text-[10px] text-zinc-500 mt-1">{t('smartTools.sensor.serverMathDesc')}</p>
                 </div>
              </div>
           </div>
@@ -224,4 +221,3 @@ void sendData() {
     </div>
   );
 }
-

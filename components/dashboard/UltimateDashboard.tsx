@@ -15,17 +15,17 @@ import { IrrigationWidget, DiseaseWidget, YieldWidget, RecommendationsWidget } f
 
 // --- Sub-Components ---
 
-const SatelliteBadge = memo(() => (
+const SatelliteBadge = memo(({ label }: { label?: string }) => (
     <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-full backdrop-blur-md">
         <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest flex items-center gap-1">
-            🛰️ Space Data
+            🛰️ {label || 'Space Data'}
         </span>
     </div>
 ));
 
 const ValuationHero = memo(({ valuation, marketData, analysis, t }: any) => (
     <motion.div variants={{ hidden: { y: 20, opacity: 0 }, show: { y: 0, opacity: 1 } }} className="relative overflow-hidden rounded-3xl bg-zinc-950 text-white shadow-2xl p-8 h-full flex flex-col justify-between border border-zinc-800 hover:border-zinc-600 transition-all duration-300">
-        <SatelliteBadge />
+        <SatelliteBadge label={t('dashboard.spaceData')} />
         {/* Background Decorative Elements */}
         <div className="absolute -right-12 -top-12 opacity-5 rotate-12">
             <FiDollarSign className="w-64 h-64 text-white" />
@@ -89,7 +89,7 @@ const WeatherCard = memo(({ weatherData, satelliteData, t }: any) => {
 
     return (
         <motion.div variants={{ hidden: { y: 20, opacity: 0 }, show: { y: 0, opacity: 1 } }} className="lg:col-span-2 rounded-3xl bg-zinc-900 text-white shadow-2xl p-8 relative overflow-hidden group border border-zinc-800 h-full flex flex-col hover:border-zinc-600 transition-all duration-300">
-            <SatelliteBadge />
+            <SatelliteBadge label={t('dashboard.spaceData')} />
             {/* Background Ambience */}
             <div className="absolute -right-20 -top-20 text-white/5 transition-transform duration-[20s] ease-in-out group-hover:rotate-45">
                 <FiSun className="w-[500px] h-[500px]" />
@@ -163,7 +163,7 @@ const WeatherCard = memo(({ weatherData, satelliteData, t }: any) => {
                     <div className="w-full sm:w-2/3 flex flex-col gap-2">
                        <div className="flex justify-between items-center px-1">
                          <span className="text-xs text-blue-400 font-bold uppercase tracking-widest flex items-center gap-2">
-                             <FiDroplet className="w-4 h-4 text-blue-400 mb-0.5 animate-pulse"/> Soil Moisture (Satellite)
+                             <FiDroplet className="w-4 h-4 text-blue-400 mb-0.5 animate-pulse"/> {t('dashboard.soilMoistureSat')}
                          </span>
                          <span className="text-sm text-white font-black bg-blue-500/20 px-2 py-0.5 rounded-md text-blue-300">
                              {satelliteData?.soil?.moisture ? `${satelliteData.soil.moisture.toFixed(0)}%` : '65%'}
@@ -179,7 +179,7 @@ const WeatherCard = memo(({ weatherData, satelliteData, t }: any) => {
                         <span className="text-[10px] text-emerald-400 font-bold tracking-wide flex items-center gap-1.5">
                             <FiCheckCircle className="w-3.5 h-3.5" /> {t('weather.excellentConditions')}
                         </span>
-                        <span className="text-[9px] text-blue-400/80 font-black uppercase tracking-widest">Space Verified</span>
+                        <span className="text-[9px] text-blue-400/80 font-black uppercase tracking-widest">{t('dashboard.spaceVerified')}</span>
                     </div>
                 </div>
             </div>
@@ -264,7 +264,7 @@ const MarketAnalysisTable = memo(({ marketData, t }: any) => {
                         {t('market.regionalMarketTitle')}
                     </h3>
                     <p className="text-sm text-zinc-500 mt-1">
-                        {t('market.realTimePricesFrom')} <span className="font-semibold text-zinc-900 dark:text-zinc-300">{marketData.location || 'Your Region'}</span>
+                        {t('market.realTimePricesFrom')} <span className="font-semibold text-zinc-900 dark:text-zinc-300">{marketData.location || t('dashboard.unknownLocation')}</span>
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -331,7 +331,7 @@ const MarketAnalysisTable = memo(({ marketData, t }: any) => {
                                             </p>
                                             <p className="text-sm">
                                                 {unit === 'piece'
-                                                    ? 'Try switching to /Kg or /Qt to view all commodities.'
+                                                    ? (t('market.switchUnit') || 'Try switching to /Kg or /Qt to view all commodities.')
                                                     : (t('market.checkBackLater') || "We couldn't fetch live prices for your region at this moment.")}
                                             </p>
                                         </td>

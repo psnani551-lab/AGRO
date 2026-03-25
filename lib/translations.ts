@@ -11,6 +11,63 @@ export const translations = {
       soil: 'Soil Analysis',
       rotation: 'Smart Rotation'
     },
+    smartTools: {
+      pageTitle: 'Smart Farm Tools',
+      pageSubtitle: 'Dedicated workspace for IoT, Vision, and Hardware setups.',
+      setupPrompt: 'Please set up your farm profile to use Smart Farm Tools.',
+      getStarted: 'Get Started',
+      header: 'Smart Farm Tools',
+      headerSub: 'IoT Control · AI Vision · Data Export · Sensor Setup',
+      tabs: { overview: '⚡ Overview', sensor: '📡 Soil Node', pump: '💧 Pump Node', vision: '✨ AI Vision', export: '📦 Export' },
+      overview: {
+        pumpTitle: 'Pump Control', pumpDesc: 'IoT irrigation trigger',
+        connecting: 'Connecting...', startPump: 'Start Pump',
+        visionTitle: 'Ceres Vision', visionDesc: 'AI crop & soil check',
+        analyzing: 'Analyzing...', uploadPhoto: 'Upload Photo',
+        sensorTitle: 'Connect Sensor', sensorDesc: 'ESP32 calibration tool', openWizard: 'Open Wizard',
+        exportTitle: 'B2B Export', exportDesc: 'CSV / JSON data portal', openPortal: 'Open Portal',
+        groundReality: 'Ceres AI Ground Reality', visualCheck: 'Visual Reality Check',
+        soilHealth: 'Soil Health', cropHealth: 'Crop Health',
+        yieldSuggestions: 'Suggestions to Improve Yield', impact: 'Impact'
+      },
+      vision: {
+        title: 'Ceres Vision Analysis',
+        desc: 'Take a photo of your soil or crop — Gemini AI will verify its condition against your sensor data.',
+        uploadField: 'Upload Field Photo', analyzingAI: 'Analyzing with AI...',
+        groundAnalysis: 'Ground Reality Analysis', soilCondition: 'Soil Condition', cropState: 'Crop State',
+        yieldRoadmap: 'Yield Improvement Roadmap'
+      },
+      sensor: {
+        title: 'Smart Sensor Setup', subtitle: 'Automatic Calibration · No Coding Required',
+        step1: 'Step 1: Your Unique Sensor Key', copyHint: 'Copy this into your sensor code to link it to your farm.',
+        step2: 'Precision Auto-Calibration', step2Desc: 'No manual typing needed. Just click the captures while the sensor is in the air or water.',
+        ready: 'READY', setupNeeded: 'SETUP NEEDED',
+        stepA: 'Step A: Level "0"', holdAir: 'Hold Sensor In Air',
+        captureAir: 'CAPTURE AIR', recaptureAir: 'RE-CAPTURE AIR', listening: 'LISTENING...',
+        stepB: 'Step B: Level "100"', dipWater: 'Dip Sensor In Water',
+        captureWater: 'CAPTURE WATER', recaptureWater: 'RE-CAPTURE WATER',
+        step3: 'Universal Farm Firmware', worksForAny: 'WORKS FOR ANY SENSOR',
+        autoSync: 'Auto-Sync', autoSyncDesc: 'Calibration saved in cloud',
+        serverMath: 'Server Math', serverMathDesc: 'No manual code changes'
+      },
+      pump: {
+        title: 'Smart Pump Setup', subtitle: 'The "Smart Finger" Relay Hack',
+        step1: 'Step 1: Your Pump Device ID',
+        step2: 'Hardware Wiring', step2Desc: 'Wire a 5V Relay in parallel with your Starter\'s Green "ON" Button.',
+        vcc: '5V Power (VCC)', vccDesc: 'Connect ESP32 5V (or VIN) to Relay VCC.',
+        gnd: 'Ground (GND)', gndDesc: 'Connect ESP32 GND to Relay GND.',
+        signal: 'Signal (IN)', signalDesc: 'Connect ESP32 GPIO Pin 26 to Relay IN pin.',
+        step3: 'Flash Firmware'
+      },
+      export: {
+        title: 'B2B Export Center', subtitle: 'Professional Data Portability for Auditing',
+        enterprise: 'ENTERPRISE READY',
+        selectDatasets: 'Select Datasets', exportFormat: 'Export Format',
+        sensors: 'Sensors', machinery: 'Machinery', satellite: 'Satellite',
+        generating: 'GENERATING EXPORT...', downloaded: 'EXPORT DOWNLOADED', download: 'DOWNLOAD BULK DATA',
+        limitNote: '* Exports are limited to 1,000 rows per request. For bulk enterprise API access, contact support.'
+      }
+    },
     form: {
       farmName: 'Farm Name',
       farmNamePlaceholder: 'Enter your farm name',
@@ -83,7 +140,36 @@ export const translations = {
       soilHealth: 'Soil Health Impact',
       waterStress: 'Water Stress',
       noScenarios: 'No improvement scenarios available for current conditions.',
-      riskScore: 'Risk Probability'
+      riskScore: 'Risk Probability',
+      spaceData: 'Space Data',
+      litres: 'Litres',
+      spaceVerified: 'Space Verified',
+      soilMoistureSat: 'Soil Moisture (Satellite)',
+      satSynced: 'SAT-SYNCED',
+      satMonitor: 'SAT-MONITOR',
+      ndviSynced: 'NDVI SYNCED',
+      pumpOpTime: 'PUMP OPERATION TIME',
+      wateringDepth: 'Watering Depth',
+      scientificMetric: 'Scientific Metric',
+      faoStandard: 'FAO-56 Standard',
+      connectingPump: 'Connecting...',
+      pumpStarted: 'Pump Started',
+      startPump: 'START PUMP',
+      manageIoT: 'Manage IoT Devices',
+      humidityImpact: 'Humidity Impact',
+      tempImpact: 'Temp Impact',
+      rainImpact: 'Rain Impact',
+      preventionPlan: 'Prevention & Action Plan',
+      needVerification: 'Need real-time verification?',
+      scanCropNow: 'Scan Crop Now',
+      readyToSell: 'Ready to sell your expected yield?',
+      postOnMarketplace: 'Post on Marketplace',
+      basedOnPump: 'Based on',
+      pumpOn: 'pump on',
+      acres: 'acre(s)',
+      method: 'Method',
+      cost: 'Cost',
+      unknownLocation: 'Unknown Location'
     },
     yield: {
       estimatedTotalYield: 'Estimated Total Yield',
@@ -139,7 +225,9 @@ export const translations = {
         improveStructure: 'Improves Structure',
         economicStability: 'Economic Stability',
         maintainBalance: 'Maintains Balance'
-      }
+      },
+      findSeeds: 'Find Seeds',
+      updateProfile: 'Update Profile'
     },
     market: {
       title: 'Machinery Marketplace',
@@ -322,6 +410,63 @@ export const translations = {
       soil: 'मिट्टी विश्लेषण',
       rotation: 'स्मार्ट रोटेशन'
     },
+    smartTools: {
+      pageTitle: 'स्मार्ट फार्म टूल्स',
+      pageSubtitle: 'IoT, विजन और हार्डवेयर सेटअप के लिए समर्पित कार्यक्षेत्र.',
+      setupPrompt: 'कृपया स्मार्ट फार्म टूल्स का उपयोग करने के लिए अपनी फार्म प्रोफाइल सेट करें.',
+      getStarted: 'शुरू करें',
+      header: 'स्मार्ट फार्म टूल्स',
+      headerSub: 'IoT नियंत्रण · AI विजन · डेटा एक्सपोर्ट · सेंसर सेटअप',
+      tabs: { overview: '⚡ सारांश', sensor: '📡 मिट्टी नोड', pump: '💧 पंप नोड', vision: '✨ AI विजन', export: '📦 एक्सपोर्ट' },
+      overview: {
+        pumpTitle: 'पंप नियंत्रण', pumpDesc: 'IoT सिंचाई ट्रिगर',
+        connecting: 'कनेक्ट हो रहा है...', startPump: 'पंप शुरू करें',
+        visionTitle: 'सीरिस विजन', visionDesc: 'AI फसल और मिट्टी जांच',
+        analyzing: 'विश्लेषण हो रहा है...', uploadPhoto: 'फोटो अपलोड करें',
+        sensorTitle: 'सेंसर जोड़ें', sensorDesc: 'ESP32 कैलिब्रेशन टूल', openWizard: 'विज़ार्ड खोलें',
+        exportTitle: 'B2B एक्सपोर्ट', exportDesc: 'CSV / JSON डेटा पोर्टल', openPortal: 'पोर्टल खोलें',
+        groundReality: 'सीरिस AI भूमि वास्तविकता', visualCheck: 'दृश्य वास्तविकता जांच',
+        soilHealth: 'मिट्टी स्वास्थ्य', cropHealth: 'फसल स्वास्थ्य',
+        yieldSuggestions: 'उपज बढ़ाने के सुझाव', impact: 'प्रभाव'
+      },
+      vision: {
+        title: 'सीरिस विजन विश्लेषण',
+        desc: 'अपनी मिट्टी या फसल की फोटो लें — Gemini AI आपके सेंसर डेटा के खिलाफ इसकी स्थिति सत्यापित करेगा.',
+        uploadField: 'फील्ड फोटो अपलोड करें', analyzingAI: 'AI से विश्लेषण हो रहा है...',
+        groundAnalysis: 'भूमि वास्तविकता विश्लेषण', soilCondition: 'मिट्टी की स्थिति', cropState: 'फसल की स्थिति',
+        yieldRoadmap: 'उपज सुधार रोडमैप'
+      },
+      sensor: {
+        title: 'स्मार्ट सेंसर सेटअप', subtitle: 'स्वचालित कैलिब्रेशन · कोडिंग नहीं चाहिए',
+        step1: 'चरण 1: आपकी अद्वितीय सेंसर कुंजी', copyHint: 'इसे अपने सेंसर कोड में कॉपी करें.',
+        step2: 'प्रिसिजन ऑटो-कैलिब्रेशन', step2Desc: 'मैन्युअल टाइपिंग नहीं चाहिए. बस कैप्चर बटन क्लिक करें.',
+        ready: 'तैयार', setupNeeded: 'सेटअप ज़रूरी',
+        stepA: 'चरण A: स्तर "0"', holdAir: 'सेंसर हवा में रखें',
+        captureAir: 'हवा कैप्चर', recaptureAir: 'फिर से कैप्चर', listening: 'सुन रहे हैं...',
+        stepB: 'चरण B: स्तर "100"', dipWater: 'सेंसर पानी में डुबोएं',
+        captureWater: 'पानी कैप्चर', recaptureWater: 'फिर से कैप्चर',
+        step3: 'यूनिवर्सल फार्म फर्मवेयर', worksForAny: 'किसी भी सेंसर के लिए',
+        autoSync: 'ऑटो-सिंक', autoSyncDesc: 'कैलिब्रेशन क्लाउड में सेव',
+        serverMath: 'सर्वर गणित', serverMathDesc: 'कोड बदलने की ज़रूरत नहीं'
+      },
+      pump: {
+        title: 'स्मार्ट पंप सेटअप', subtitle: '"स्मार्ट फिंगर" रिले हैक',
+        step1: 'चरण 1: आपकी पंप डिवाइस ID',
+        step2: 'हार्डवेयर वायरिंग', step2Desc: 'अपने स्टार्टर के हरे "ON" बटन के समानांतर 5V रिले लगाएं.',
+        vcc: '5V पावर (VCC)', vccDesc: 'ESP32 का 5V रिले VCC से कनेक्ट करें.',
+        gnd: 'ग्राउंड (GND)', gndDesc: 'ESP32 का GND रिले GND से कनेक्ट करें.',
+        signal: 'सिग्नल (IN)', signalDesc: 'ESP32 GPIO पिन 26 को रिले IN पिन से कनेक्ट करें.',
+        step3: 'फर्मवेयर फ्लैश करें'
+      },
+      export: {
+        title: 'B2B एक्सपोर्ट सेंटर', subtitle: 'ऑडिटिंग के लिए पेशेवर डेटा पोर्टेबिलिटी',
+        enterprise: 'एंटरप्राइज तैयार',
+        selectDatasets: 'डेटासेट चुनें', exportFormat: 'एक्सपोर्ट फ़ॉर्मेट',
+        sensors: 'सेंसर', machinery: 'मशीनरी', satellite: 'सैटेलाइट',
+        generating: 'एक्सपोर्ट बन रहा है...', downloaded: 'एक्सपोर्ट डाउनलोड हुआ', download: 'बल्क डेटा डाउनलोड करें',
+        limitNote: '* एक्सपोर्ट 1,000 पंक्तियों तक सीमित है. बल्क API एक्सेस के लिए सपोर्ट से संपर्क करें.'
+      }
+    },
     form: {
       farmName: 'खेत का नाम',
       farmNamePlaceholder: 'खेत का नाम दर्ज करें',
@@ -394,7 +539,36 @@ export const translations = {
       soilHealth: 'मृदा स्वास्थ्य प्रभाव',
       waterStress: 'जल तनाव',
       noScenarios: 'वर्तमान परिस्थितियों के लिए कोई सुधार परिदृश्य उपलब्ध नहीं हैं।',
-      riskScore: 'जोखिम संभावना'
+      riskScore: 'जोखिम संभावना',
+      spaceData: 'अंतरिक्ष डेटा',
+      litres: 'लीटर',
+      spaceVerified: 'अंतरिक्ष सत्यापित',
+      soilMoistureSat: 'मिट्टी नमी (उपग्रह)',
+      satSynced: 'उपग्रह-संकलित',
+      satMonitor: 'उपग्रह-निगरानी',
+      ndviSynced: 'NDVI संकलित',
+      pumpOpTime: 'पंप संचालन समय',
+      wateringDepth: 'सिंचाई गहराई',
+      scientificMetric: 'वैज्ञानिक माप',
+      faoStandard: 'FAO-56 मानक',
+      connectingPump: 'कनेक्ट हो रहा है...',
+      pumpStarted: 'पंप शुरू हुआ',
+      startPump: 'पंप शुरू करें',
+      manageIoT: 'IoT उपकरण प्रबंधित करें',
+      humidityImpact: 'नमी प्रभाव',
+      tempImpact: 'तापमान प्रभाव',
+      rainImpact: 'बारिश प्रभाव',
+      preventionPlan: 'रोकथाम और कार्य योजना',
+      needVerification: 'वास्तविक समय सत्यापन चाहिए?',
+      scanCropNow: 'अभी फसल स्कैन करें',
+      readyToSell: 'अपनी अनुमानित उपज बेचने के लिए तैयार?',
+      postOnMarketplace: 'बाजार में पोस्ट करें',
+      basedOnPump: 'आधारित',
+      pumpOn: 'पंप चालू',
+      acres: 'एकड़',
+      method: 'विधि',
+      cost: 'लागत',
+      unknownLocation: 'अज्ञात स्थान'
     },
     yield: {
       estimatedTotalYield: 'अनुमानित कुल उपज',
@@ -450,7 +624,9 @@ export const translations = {
         improveStructure: 'संरचना में सुधार',
         economicStability: 'आर्थिक स्थिरता',
         maintainBalance: 'संतुलन बनाए रखता है'
-      }
+      },
+      findSeeds: 'बीज खोजें',
+      updateProfile: 'प्रोफ़ाइल अपडेट करें'
     },
     market: {
       title: 'मशीनरी मार्केटप्लेस',
@@ -633,6 +809,63 @@ export const translations = {
       soil: 'మట్టి విశ్లేషణ',
       rotation: 'పంట మార్పిడి'
     },
+    smartTools: {
+      pageTitle: 'స్మార్ట్ ఫార్మ్ టూల్స్',
+      pageSubtitle: 'IoT, విజన్ మరియు హార్డ్‌వేర్ సెటప్‌ల కోసం ప్రత్యేక వర్క్‌స్పేస్.',
+      setupPrompt: 'స్మార్ట్ ఫార్మ్ టూల్స్ ఉపయోగించడానికి మీ ఫార్మ్ ప్రొఫైల్ సెటప్ చేయండి.',
+      getStarted: 'ప్రారంభించండి',
+      header: 'స్మార్ట్ ఫార్మ్ టూల్స్',
+      headerSub: 'IoT నియంత్రణ · AI విజన్ · డేటా ఎక్స్‌పోర్ట్ · సెన్సార్ సెటప్',
+      tabs: { overview: '⚡ సారాంశం', sensor: '📡 మట్టి నోడ్', pump: '💧 పంప్ నోడ్', vision: '✨ AI విజన్', export: '📦 ఎక్స్‌పోర్ట్' },
+      overview: {
+        pumpTitle: 'పంప్ నియంత్రణ', pumpDesc: 'IoT నీటిపారుదల ట్రిగ్గర్',
+        connecting: 'కనెక్ట్ అవుతోంది...', startPump: 'పంప్ ప్రారంభించండి',
+        visionTitle: 'సీరిస్ విజన్', visionDesc: 'AI పంట & మట్టి తనిఖీ',
+        analyzing: 'విశ్లేషిస్తోంది...', uploadPhoto: 'ఫోటో అప్‌లోడ్ చేయండి',
+        sensorTitle: 'సెన్సార్ జోడించండి', sensorDesc: 'ESP32 కాలిబ్రేషన్ టూల్', openWizard: 'విజార్డ్ తెరవండి',
+        exportTitle: 'B2B ఎక్స్‌పోర్ట్', exportDesc: 'CSV / JSON డేటా పోర్టల్', openPortal: 'పోర్టల్ తెరవండి',
+        groundReality: 'సీరిస్ AI భూమి వాస్తవికత', visualCheck: 'దృశ్య వాస్తవికత తనిఖీ',
+        soilHealth: 'మట్టి ఆరోగ్యం', cropHealth: 'పంట ఆరోగ్యం',
+        yieldSuggestions: 'దిగుబడి పెంచడానికి సూచనలు', impact: 'ప్రభావం'
+      },
+      vision: {
+        title: 'సీరిస్ విజన్ విశ్లేషణ',
+        desc: 'మీ మట్టి లేదా పంట ఫోటో తీయండి — Gemini AI మీ సెన్సార్ డేటాతో దాని స్థితిని ధృవీకరిస్తుంది.',
+        uploadField: 'ఫీల్డ్ ఫోటో అప్‌లోడ్', analyzingAI: 'AI తో విశ్లేషిస్తోంది...',
+        groundAnalysis: 'భూమి వాస్తవికత విశ్లేషణ', soilCondition: 'మట్టి స్థితి', cropState: 'పంట స్థితి',
+        yieldRoadmap: 'దిగుబడి మెరుగుదల రోడ్‌మ్యాప్'
+      },
+      sensor: {
+        title: 'స్మార్ట్ సెన్సార్ సెటప్', subtitle: 'ఆటోమేటిక్ కాలిబ్రేషన్ · కోడింగ్ అవసరం లేదు',
+        step1: 'దశ 1: మీ ప్రత్యేక సెన్సార్ కీ', copyHint: 'మీ సెన్సార్ కోడ్‌లో కాపీ చేయండి.',
+        step2: 'ప్రిసిషన్ ఆటో-కాలిబ్రేషన్', step2Desc: 'మాన్యువల్ టైపింగ్ అవసరం లేదు. కేవలం కాప్చర్ బటన్ క్లిక్ చేయండి.',
+        ready: 'సిద్ధం', setupNeeded: 'సెటప్ అవసరం',
+        stepA: 'దశ A: స్థాయి "0"', holdAir: 'సెన్సార్ గాలిలో పట్టుకోండి',
+        captureAir: 'గాలి కాప్చర్', recaptureAir: 'మళ్లీ కాప్చర్', listening: 'వినడం...',
+        stepB: 'దశ B: స్థాయి "100"', dipWater: 'సెన్సార్ నీటిలో ముంచండి',
+        captureWater: 'నీటి కాప్చర్', recaptureWater: 'మళ్లీ కాప్చర్',
+        step3: 'యూనివర్సల్ ఫార్మ్ ఫర్మ్‌వేర్', worksForAny: 'ఏ సెన్సార్‌కైనా',
+        autoSync: 'ఆటో-సింక్', autoSyncDesc: 'కాలిబ్రేషన్ క్లౌడ్‌లో సేవ్',
+        serverMath: 'సర్వర్ గణితం', serverMathDesc: 'కోడ్ మార్పులు అవసరం లేదు'
+      },
+      pump: {
+        title: 'స్మార్ట్ పంప్ సెటప్', subtitle: '"స్మార్ట్ ఫింగర్" రిలే హ్యాక్',
+        step1: 'దశ 1: మీ పంప్ డివైస్ ID',
+        step2: 'హార్డ్‌వేర్ వైరింగ్', step2Desc: 'మీ స్టార్టర్ గ్రీన్ "ON" బటన్‌తో సమాంతరంగా 5V రిలే అనుసంధానించండి.',
+        vcc: '5V పవర్ (VCC)', vccDesc: 'ESP32 5V ని రిలే VCC కి కనెక్ట్ చేయండి.',
+        gnd: 'గ్రౌండ్ (GND)', gndDesc: 'ESP32 GND ని రిలే GND కి కనెక్ట్ చేయండి.',
+        signal: 'సిగ్నల్ (IN)', signalDesc: 'ESP32 GPIO పిన్ 26 ని రిలే IN పిన్ కి కనెక్ట్ చేయండి.',
+        step3: 'ఫర్మ్‌వేర్ ఫ్లాష్ చేయండి'
+      },
+      export: {
+        title: 'B2B ఎక్స్‌పోర్ట్ సెంటర్', subtitle: 'ఆడిటింగ్ కోసం ప్రొఫెషనల్ డేటా పోర్టబిలిటీ',
+        enterprise: 'ఎంటర్‌ప్రైజ్ రెడీ',
+        selectDatasets: 'డేటాసెట్‌లు ఎంచుకోండి', exportFormat: 'ఎక్స్‌పోర్ట్ ఫార్మాట్',
+        sensors: 'సెన్సార్లు', machinery: 'యంత్రాలు', satellite: 'ఉపగ్రహం',
+        generating: 'ఎక్స్‌పోర్ట్ తయారవుతోంది...', downloaded: 'ఎక్స్‌పోర్ట్ డౌన్‌లోడ్ అయింది', download: 'బల్క్ డేటా డౌన్‌లోడ్ చేయండి',
+        limitNote: '* ఎక్స్‌పోర్ట్ ప్రతి అభ్యర్థనకు 1,000 వరుసలకు పరిమితం. బల్క్ API యాక్సెస్ కోసం సపోర్ట్‌ని సంప్రదించండి.'
+      }
+    },
     form: {
       farmName: 'పొలం పేరు',
       farmNamePlaceholder: 'మీ పొలం పేరు నమోదు చేయండి',
@@ -705,7 +938,36 @@ export const translations = {
       soilHealth: 'నేల ఆరోగ్యంపై ప్రభావం',
       waterStress: 'నీటి ఒత్తిడి',
       noScenarios: 'ప్రస్తుత పరిస్థితులకు మెరుగుదల దృశ్యాలు అందుబాటులో లేవు.',
-      riskScore: 'ప్రమాద సంభావ్యత'
+      riskScore: 'ప్రమాద సంభావ్యత',
+      spaceData: 'అంతరిక్ష డేటా',
+      litres: 'లీటర్లు',
+      spaceVerified: 'అంతరిక్ష ధృవీకరించబడినది',
+      soilMoistureSat: 'మట్టి తేమ (ఉపగ్రహం)',
+      satSynced: 'ఉపగ్రహ-సమకాలీకరణ',
+      satMonitor: 'ఉపగ్రహ-పర్యవేక్షణ',
+      ndviSynced: 'NDVI సమకాలీకరణ',
+      pumpOpTime: 'పంప్ నిర్వహణ సమయం',
+      wateringDepth: 'నీటిపారుదల లోతు',
+      scientificMetric: 'శాస్త్రీయ కొలమానం',
+      faoStandard: 'FAO-56 ప్రమాణం',
+      connectingPump: 'కనెక్ట్ అవుతోంది...',
+      pumpStarted: 'పంప్ ప్రారంభమైంది',
+      startPump: 'పంప్ ప్రారంభించండి',
+      manageIoT: 'IoT పరికరాలను నిర్వహించండి',
+      humidityImpact: 'ఆర్ద్రత ప్రభావం',
+      tempImpact: 'ఉష్ణోగ్రత ప్రభావం',
+      rainImpact: 'వర్షం ప్రభావం',
+      preventionPlan: 'నివారణ & చర్య ప్రణాళిక',
+      needVerification: 'వాస్తవ-సమయ ధృవీకరణ కావాలా?',
+      scanCropNow: 'ఇప్పుడు పంట స్కాన్ చేయండి',
+      readyToSell: 'అంచనా దిగుబడి అమ్మడానికి సిద్ధమా?',
+      postOnMarketplace: 'మార్కెట్‌లో పోస్ట్ చేయండి',
+      basedOnPump: 'ఆధారంగా',
+      pumpOn: 'పంప్ ఆన్',
+      acres: 'ఎకరాలు',
+      method: 'పద్ధతి',
+      cost: 'ఖర్చు',
+      unknownLocation: 'తెలియని ప్రదేశం'
     },
     yield: {
       estimatedTotalYield: 'అంచనా వేసిన మొత్తం దిగుబడి',
@@ -761,7 +1023,9 @@ export const translations = {
         improveStructure: 'నేల ఆకృతి మెరుగుదల',
         economicStability: 'ఆర్ధిక స్థిరత్వం',
         maintainBalance: 'సమతుల్యత'
-      }
+      },
+      findSeeds: 'విత్తనాలను కనుగొనండి',
+      updateProfile: 'ప్రొఫైల్‌ను అప్‌డేట్ చేయండి'
     },
     market: {
       title: 'యంత్రాల మార్కెట్‌',
@@ -944,6 +1208,63 @@ export const translations = {
       soil: 'माती विश्लेषण',
       rotation: 'पीक फेरपालट'
     },
+    smartTools: {
+      pageTitle: 'स्मार्ट फार्म टूल्स',
+      pageSubtitle: 'IoT, व्हिजन आणि हार्डवेअर सेटअपसाठी समर्पित कार्यक्षेत्र.',
+      setupPrompt: 'कृपया स्मार्ट फार्म टूल्स वापरण्यासाठी तुमचे शेत प्रोफाइल सेट करा.',
+      getStarted: 'सुरू करा',
+      header: 'स्मार्ट फार्म टूल्स',
+      headerSub: 'IoT नियंत्रण · AI व्हिजन · डेटा एक्सपोर्ट · सेन्सर सेटअप',
+      tabs: { overview: '⚡ सारांश', sensor: '📡 माती नोड', pump: '💧 पंप नोड', vision: '✨ AI व्हिजन', export: '📦 एक्सपोर्ट' },
+      overview: {
+        pumpTitle: 'पंप नियंत्रण', pumpDesc: 'IoT सिंचन ट्रिगर',
+        connecting: 'कनेक्ट होत आहे...', startPump: 'पंप सुरू करा',
+        visionTitle: 'सीरिस व्हिजन', visionDesc: 'AI पीक आणि माती तपासणी',
+        analyzing: 'विश्लेषण होत आहे...', uploadPhoto: 'फोटो अपलोड करा',
+        sensorTitle: 'सेन्सर जोडा', sensorDesc: 'ESP32 कॅलिब्रेशन टूल', openWizard: 'विझार्ड उघडा',
+        exportTitle: 'B2B एक्सपोर्ट', exportDesc: 'CSV / JSON डेटा पोर्टल', openPortal: 'पोर्टल उघडा',
+        groundReality: 'सीरिस AI भूमी वास्तवता', visualCheck: 'दृश्य वास्तवता तपासणी',
+        soilHealth: 'माती आरोग्य', cropHealth: 'पीक आरोग्य',
+        yieldSuggestions: 'उत्पादन वाढवण्याचे सुझाव', impact: 'प्रभाव'
+      },
+      vision: {
+        title: 'सीरिस व्हिजन विश्लेषण',
+        desc: 'तुमच्या मातीचा किंवा पिकाचा फोटो काढा — Gemini AI तुमच्या सेन्सर डेटाशी त्याची स्थिती पडताळेल.',
+        uploadField: 'फील्ड फोटो अपलोड', analyzingAI: 'AI ने विश्लेषण होत आहे...',
+        groundAnalysis: 'भूमी वास्तवता विश्लेषण', soilCondition: 'मातीची स्थिती', cropState: 'पिकाची स्थिती',
+        yieldRoadmap: 'उत्पादन सुधारणा रोडमॅप'
+      },
+      sensor: {
+        title: 'स्मार्ट सेन्सर सेटअप', subtitle: 'स्वयंचलित कॅलिब्रेशन · कोडिंग आवश्यक नाही',
+        step1: 'पायरी 1: तुमची अद्वितीय सेन्सर की', copyHint: 'तुमच्या सेन्सर कोडमध्ये कॉपी करा.',
+        step2: 'प्रिसिजन ऑटो-कॅलिब्रेशन', step2Desc: 'मॅन्युअल टायपिंग नको. फक्त कॅप्चर बटण क्लिक करा.',
+        ready: 'तयार', setupNeeded: 'सेटअप आवश्यक',
+        stepA: 'पायरी A: पातळी "0"', holdAir: 'सेन्सर हवेत धरा',
+        captureAir: 'हवा कॅप्चर', recaptureAir: 'पुन्हा कॅप्चर', listening: 'ऐकत आहे...',
+        stepB: 'पायरी B: पातळी "100"', dipWater: 'सेन्सर पाण्यात बुडवा',
+        captureWater: 'पाणी कॅप्चर', recaptureWater: 'पुन्हा कॅप्चर',
+        step3: 'युनिव्हर्सल फार्म फर्मवेअर', worksForAny: 'कोणत्याही सेन्सरसाठी',
+        autoSync: 'ऑटो-सिंक', autoSyncDesc: 'कॅलिब्रेशन क्लाउडमध्ये सेव्ह',
+        serverMath: 'सर्व्हर गणित', serverMathDesc: 'कोड बदलांची गरज नाही'
+      },
+      pump: {
+        title: 'स्मार्ट पंप सेटअप', subtitle: '"स्मार्ट फिंगर" रिले हॅक',
+        step1: 'पायरी 1: तुमची पंप डिव्हाइस ID',
+        step2: 'हार्डवेअर वायरिंग', step2Desc: 'तुमच्या स्टार्टरच्या हिरव्या "ON" बटणासोबत 5V रिले जोडा.',
+        vcc: '5V पॉवर (VCC)', vccDesc: 'ESP32 5V ला रिले VCC ला कनेक्ट करा.',
+        gnd: 'ग्राउंड (GND)', gndDesc: 'ESP32 GND ला रिले GND शी कनेक्ट करा.',
+        signal: 'सिग्नल (IN)', signalDesc: 'ESP32 GPIO पिन 26 ला रिले IN पिनशी कनेक्ट करा.',
+        step3: 'फर्मवेअर फ्लॅश करा'
+      },
+      export: {
+        title: 'B2B एक्सपोर्ट सेंटर', subtitle: 'ऑडिटिंगसाठी व्यावसायिक डेटा पोर्टेबिलिटी',
+        enterprise: 'एंटरप्राइज तयार',
+        selectDatasets: 'डेटासेट निवडा', exportFormat: 'एक्सपोर्ट फॉरमॅट',
+        sensors: 'सेन्सर', machinery: 'यंत्रसामग्री', satellite: 'सॅटेलाइट',
+        generating: 'एक्सपोर्ट तयार होत आहे...', downloaded: 'एक्सपोर्ट डाउनलोड झाले', download: 'बल्क डेटा डाउनलोड करा',
+        limitNote: '* एक्सपोर्ट प्रति विनंती 1,000 रांगांपर्यंत मर्यादित आहे.'
+      }
+    },
     form: {
       farmName: 'शेताचे नाव',
       farmNamePlaceholder: 'शेताचे नाव प्रविष्ठ करा',
@@ -1014,7 +1335,36 @@ export const translations = {
       soilHealth: 'माती आरोग्य प्रभाव',
       waterStress: 'पाण्याचा ताण',
       noScenarios: 'सध्याच्या परिस्थितीसाठी कोणतेही सुधारणा परिदृश्य उपलब्ध नाहीत.',
-      riskScore: 'जोखीम संभाव्यता'
+      riskScore: 'जोखीम संभाव्यता',
+      spaceData: 'अंतराळ डेटा',
+      litres: 'लिटर',
+      spaceVerified: 'अंतराळ सत्यापित',
+      soilMoistureSat: 'माती ओलावा (उपग्रह)',
+      satSynced: 'उपग्रह-समकालित',
+      satMonitor: 'उपग्रह-देखरेख',
+      ndviSynced: 'NDVI समकालित',
+      pumpOpTime: 'पंप चालू वेळ',
+      wateringDepth: 'सिंचन खोली',
+      scientificMetric: 'वैज्ञानिक मापन',
+      faoStandard: 'FAO-56 मानक',
+      connectingPump: 'कनेक्ट होत आहे...',
+      pumpStarted: 'पंप सुरू झाला',
+      startPump: 'पंप सुरू करा',
+      manageIoT: 'IoT उपकरणे व्यवस्थापित करा',
+      humidityImpact: 'आर्द्रता प्रभाव',
+      tempImpact: 'तापमान प्रभाव',
+      rainImpact: 'पाऊस प्रभाव',
+      preventionPlan: 'प्रतिबंध आणि कृती योजना',
+      needVerification: 'रिअल-टाइम सत्यापन हवे?',
+      scanCropNow: 'आता पीक स्कॅन करा',
+      readyToSell: 'तुमची अंदाजित उत्पन्न विकायला तयार?',
+      postOnMarketplace: 'बाजारात पोस्ट करा',
+      basedOnPump: 'आधारित',
+      pumpOn: 'पंप चालू',
+      acres: 'एकर',
+      method: 'पद्धत',
+      cost: 'खर्च',
+      unknownLocation: 'अज्ञात स्थान'
     },
     yield: {
       estimatedTotalYield: 'अंदाजित एकूण उत्पन्न',
@@ -1070,7 +1420,9 @@ export const translations = {
         improveStructure: 'जमिनीची रचना सुधारते',
         economicStability: 'आर्थिक स्थिरता',
         maintainBalance: 'समतोल राखते'
-      }
+      },
+      findSeeds: 'बियाणे शोधा',
+      updateProfile: 'प्रोफाइल अपडेट करा'
     },
     market: {
       title: 'यंत्रसामग्री बाजार',
@@ -1253,6 +1605,63 @@ export const translations = {
       soil: 'மண் ஆய்வு',
       rotation: 'பயிர் சுழற்சி'
     },
+    smartTools: {
+      pageTitle: 'ஸ்மார்ட் பண்ணை கருவிகள்',
+      pageSubtitle: 'IoT, விஷன் மற்றும் ஹார்டுவேர் அமைப்புகளுக்கான பிரத்யேக பணியிடம்.',
+      setupPrompt: 'ஸ்மார்ட் பண்ணை கருவிகள் பயன்படுத்த உங்கள் பண்ணை சுயவிவரத்தை அமைக்கவும்.',
+      getStarted: 'தொடங்குங்கள்',
+      header: 'ஸ்மார்ட் பண்ணை கருவிகள்',
+      headerSub: 'IoT கட்டுப்பாடு · AI விஷன் · தரவு ஏற்றுமதி · சென்சார் அமைப்பு',
+      tabs: { overview: '⚡ சுருக்கம்', sensor: '📡 மண் நோட்', pump: '💧 பம்ப் நோட்', vision: '✨ AI விஷன்', export: '📦 ஏற்றுமதி' },
+      overview: {
+        pumpTitle: 'பம்ப் கட்டுப்பாடு', pumpDesc: 'IoT நீர்ப்பாசன தூண்டுதல்',
+        connecting: 'இணைக்கிறது...', startPump: 'பம்ப் தொடங்கு',
+        visionTitle: 'சீரிஸ் விஷன்', visionDesc: 'AI பயிர் & மண் சோதனை',
+        analyzing: 'பகுப்பாய்வு செய்கிறது...', uploadPhoto: 'புகைப்படம் பதிவேற்று',
+        sensorTitle: 'சென்சார் இணை', sensorDesc: 'ESP32 அளவுத்திருத்த கருவி', openWizard: 'வழிகாட்டி திற',
+        exportTitle: 'B2B ஏற்றுமதி', exportDesc: 'CSV / JSON தரவு போர்டல்', openPortal: 'போர்டல் திற',
+        groundReality: 'சீரிஸ் AI நில உண்மை', visualCheck: 'காட்சி உண்மை சரிபார்ப்பு',
+        soilHealth: 'மண் ஆரோக்கியம்', cropHealth: 'பயிர் ஆரோக்கியம்',
+        yieldSuggestions: 'மகசூல் அதிகரிக்க பரிந்துரைகள்', impact: 'தாக்கம்'
+      },
+      vision: {
+        title: 'சீரிஸ் விஷன் பகுப்பாய்வு',
+        desc: 'உங்கள் மண் அல்லது பயிர் புகைப்படம் எடுங்கள் — Gemini AI உங்கள் சென்சார் தரவுடன் ஒப்பிட்டு சரிபார்க்கும்.',
+        uploadField: 'வயல் புகைப்படம் பதிவேற்று', analyzingAI: 'AI யால் பகுப்பாய்வு...',
+        groundAnalysis: 'நில உண்மை பகுப்பாய்வு', soilCondition: 'மண் நிலை', cropState: 'பயிர் நிலை',
+        yieldRoadmap: 'மகசூல் மேம்பாட்டு வழிகாட்டி'
+      },
+      sensor: {
+        title: 'ஸ்மார்ட் சென்சார் அமைப்பு', subtitle: 'தானியங்கி அளவுத்திருத்தம் · குறியீடு தேவையில்லை',
+        step1: 'படி 1: உங்கள் தனித்துவ சென்சார் விசை', copyHint: 'உங்கள் சென்சார் குறியீட்டில் நகலெடுக்கவும்.',
+        step2: 'துல்லிய ஆட்டோ-கேலிபிரேஷன்', step2Desc: 'கைமுறை தட்டச்சு தேவையில்லை. கேப்சர் பொத்தானை கிளிக் செய்யவும்.',
+        ready: 'தயார்', setupNeeded: 'அமைப்பு தேவை',
+        stepA: 'படி A: நிலை "0"', holdAir: 'சென்சாரை காற்றில் பிடிக்கவும்',
+        captureAir: 'காற்று கேப்சர்', recaptureAir: 'மீண்டும் கேப்சர்', listening: 'கேட்கிறது...',
+        stepB: 'படி B: நிலை "100"', dipWater: 'சென்சாரை நீரில் முழுக்கவும்',
+        captureWater: 'நீர் கேப்சர்', recaptureWater: 'மீண்டும் கேப்சர்',
+        step3: 'யுனிவர்சல் பண்ணை ஃபர்ம்வேர்', worksForAny: 'எந்த சென்சாருக்கும்',
+        autoSync: 'ஆட்டோ-சிங்க்', autoSyncDesc: 'அளவுத்திருத்தம் கிளவுடில் சேமிப்பு',
+        serverMath: 'சர்வர் கணிதம்', serverMathDesc: 'குறியீடு மாற்றங்கள் தேவையில்லை'
+      },
+      pump: {
+        title: 'ஸ்மார்ட் பம்ப் அமைப்பு', subtitle: '"ஸ்மார்ட் ஃபிங்கர்" ரிலே ஹேக்',
+        step1: 'படி 1: உங்கள் பம்ப் சாதன ID',
+        step2: 'வன்பொருள் வயரிங்', step2Desc: 'உங்கள் ஸ்டார்ட்டரின் பச்சை "ON" பொத்தானுடன் 5V ரிலே இணைக்கவும்.',
+        vcc: '5V பவர் (VCC)', vccDesc: 'ESP32 5V ஐ ரிலே VCC க்கு இணைக்கவும்.',
+        gnd: 'கிரவுண்ட் (GND)', gndDesc: 'ESP32 GND ஐ ரிலே GND உடன் இணைக்கவும்.',
+        signal: 'சிக்னல் (IN)', signalDesc: 'ESP32 GPIO பின் 26 ஐ ரிலே IN பின் உடன் இணைக்கவும்.',
+        step3: 'ஃபர்ம்வேர் ஃபிளாஷ்'
+      },
+      export: {
+        title: 'B2B ஏற்றுமதி மையம்', subtitle: 'தணிக்கைக்கான தொழில்முறை தரவு எடுத்துச்செல்லல்',
+        enterprise: 'நிறுவன தயார்',
+        selectDatasets: 'தரவுத்தொகுதிகள் தேர்ந்தெடுக்கவும்', exportFormat: 'ஏற்றுமதி வடிவம்',
+        sensors: 'சென்சார்கள்', machinery: 'இயந்திரங்கள்', satellite: 'செயற்கைக்கோள்',
+        generating: 'ஏற்றுமதி தயாராகிறது...', downloaded: 'ஏற்றுமதி பதிவிறக்கம் ஆனது', download: 'மொத்த தரவு பதிவிறக்கவும்',
+        limitNote: '* ஏற்றுமதி ஒரு கோரிக்கைக்கு 1,000 வரிசைகளுக்கு மட்டுமே.'
+      }
+    },
     form: {
       farmName: 'பண்ணை பெயர்',
       farmNamePlaceholder: 'பெயரை உள்ளிடவும்',
@@ -1323,7 +1732,36 @@ export const translations = {
       soilHealth: 'மண் ஆரோக்கிய விளைவு',
       waterStress: 'நீர் அழுத்தம்',
       noScenarios: 'தற்போதைய நிலைமைகளுக்கு மேம்பாட்டு காட்சிகள் எதுவும் இல்லை.',
-      riskScore: 'ஆபத்து நிகழ்தகவு'
+      riskScore: 'ஆபத்து நிகழ்தகவு',
+      spaceData: 'விண்வெளி தரவு',
+      litres: 'லிட்டர்',
+      spaceVerified: 'விண்வெளி சரிபார்க்கப்பட்டது',
+      soilMoistureSat: 'மண் ஈரப்பதம் (செயற்கைக்கோள்)',
+      satSynced: 'செயற்கைக்கோள்-ஒத்திசைவு',
+      satMonitor: 'செயற்கைக்கோள்-கண்காணிப்பு',
+      ndviSynced: 'NDVI ஒத்திசைவு',
+      pumpOpTime: 'பம்ப் இயங்கும் நேரம்',
+      wateringDepth: 'நீர்ப்பாசன ஆழம்',
+      scientificMetric: 'அறிவியல் அளவீடு',
+      faoStandard: 'FAO-56 தரநிலை',
+      connectingPump: 'இணைக்கிறது...',
+      pumpStarted: 'பம்ப் தொடங்கியது',
+      startPump: 'பம்ப் தொடங்கு',
+      manageIoT: 'IoT சாதனங்களை நிர்வகி',
+      humidityImpact: 'ஈரப்பத தாக்கம்',
+      tempImpact: 'வெப்பநிலை தாக்கம்',
+      rainImpact: 'மழை தாக்கம்',
+      preventionPlan: 'தடுப்பு & செயல் திட்டம்',
+      needVerification: 'நிகழ்நேர சரிபார்ப்பு தேவையா?',
+      scanCropNow: 'இப்போது பயிரை ஸ்கேன் செய்',
+      readyToSell: 'எதிர்பார்க்கும் மகசூலை விற்க தயாரா?',
+      postOnMarketplace: 'சந்தையில் பதிவிடு',
+      basedOnPump: 'அடிப்படையில்',
+      pumpOn: 'பம்ப் ஆன்',
+      acres: 'ஏக்கர்',
+      method: 'முறை',
+      cost: 'செலவு',
+      unknownLocation: 'அறியப்படாத இடம்'
     },
     rotation: {
       soilOptimized: 'மண் உகந்தது',
@@ -1340,7 +1778,9 @@ export const translations = {
         improveStructure: 'மண் கட்டமைப்பை மேம்படுத்துகிறது',
         economicStability: 'பொருளாதார ஸ்திரத்தன்மை',
         maintainBalance: 'சமநிலையை பராமரிக்கிறது'
-      }
+      },
+      findSeeds: 'விதைகளைக் கண்டறிக',
+      updateProfile: 'சுயவிவரத்தைப் புதுப்பிக்கவும்'
     },
     yield: {
       estimatedTotalYield: 'மதிப்பிடப்பட்ட மகசூல்',

@@ -64,11 +64,11 @@ export default function SmartToolsPanel({
   };
 
   const tabs = [
-    { id: 'overview', label: '⚡ Overview', icon: FiZap },
-    { id: 'sensor', label: '📡 Soil Node', icon: FiCpu },
-    { id: 'pump', label: '💧 Pump Node', icon: FiLayers },
-    { id: 'vision', label: '✨ AI Vision', icon: FiCamera },
-    { id: 'export', label: '📦 Export', icon: FiDownload },
+    { id: 'overview', label: t('smartTools.tabs.overview'), icon: FiZap },
+    { id: 'sensor', label: t('smartTools.tabs.sensor'), icon: FiCpu },
+    { id: 'pump', label: t('smartTools.tabs.pump'), icon: FiLayers },
+    { id: 'vision', label: t('smartTools.tabs.vision'), icon: FiCamera },
+    { id: 'export', label: t('smartTools.tabs.export'), icon: FiDownload },
   ] as const;
 
 
@@ -78,9 +78,9 @@ export default function SmartToolsPanel({
       <div className="px-6 pt-6 pb-4 border-b border-zinc-800">
         <h2 className="text-white text-lg font-bold tracking-tight flex items-center gap-2">
           <span className="p-1.5 bg-zinc-800 rounded-lg"><FiZap className="text-white w-4 h-4" /></span>
-          Smart Farm Tools
+          {t('smartTools.header')}
         </h2>
-        <p className="text-zinc-500 text-xs mt-1">IoT Control · AI Vision · Data Export · Sensor Setup</p>
+        <p className="text-zinc-500 text-xs mt-1">{t('smartTools.headerSub')}</p>
       </div>
 
       {/* Tabs */}
@@ -113,15 +113,15 @@ export default function SmartToolsPanel({
                     <FiLayers className="text-blue-400 w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-white font-bold text-sm">Pump Control</h3>
-                    <p className="text-zinc-500 text-xs mt-0.5">IoT irrigation trigger</p>
+                    <h3 className="text-white font-bold text-sm">{t('smartTools.overview.pumpTitle')}</h3>
+                    <p className="text-zinc-500 text-xs mt-0.5">{t('smartTools.overview.pumpDesc')}</p>
                   </div>
                   <button
                     onClick={() => onStartPump()}
                     disabled={isPumpLoading}
                     className="mt-auto w-full py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all disabled:opacity-50"
                   >
-                    {isPumpLoading ? 'Connecting...' : 'Start Pump'}
+                    {isPumpLoading ? t('smartTools.overview.connecting') : t('smartTools.overview.startPump')}
                   </button>
                   {pumpStatus && (
                     <p className={`text-[10px] font-bold text-center ${pumpStatus.success ? 'text-green-400' : 'text-red-400'}`}>
@@ -136,11 +136,11 @@ export default function SmartToolsPanel({
                     <FiCamera className="text-purple-400 w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-white font-bold text-sm">Ceres Vision</h3>
-                    <p className="text-zinc-500 text-xs mt-0.5">AI crop & soil check</p>
+                    <h3 className="text-white font-bold text-sm">{t('smartTools.overview.visionTitle')}</h3>
+                    <p className="text-zinc-500 text-xs mt-0.5">{t('smartTools.overview.visionDesc')}</p>
                   </div>
                   <label className="mt-auto w-full py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all text-center cursor-pointer block">
-                    {isVisionLoading ? 'Analyzing...' : 'Upload Photo'}
+                    {isVisionLoading ? t('smartTools.overview.analyzing') : t('smartTools.overview.uploadPhoto')}
                     <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoUpload} disabled={isVisionLoading} />
                   </label>
                 </div>
@@ -151,14 +151,14 @@ export default function SmartToolsPanel({
                     <FiCpu className="text-green-400 w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-white font-bold text-sm">Connect Sensor</h3>
-                    <p className="text-zinc-500 text-xs mt-0.5">ESP32 calibration tool</p>
+                    <h3 className="text-white font-bold text-sm">{t('smartTools.overview.sensorTitle')}</h3>
+                    <p className="text-zinc-500 text-xs mt-0.5">{t('smartTools.overview.sensorDesc')}</p>
                   </div>
                   <button
                     onClick={() => setActiveTab('sensor')}
                     className="mt-auto w-full py-2 rounded-xl bg-green-600 hover:bg-green-500 text-white text-xs font-bold transition-all"
                   >
-                    Open Wizard
+                    {t('smartTools.overview.openWizard')}
                   </button>
                 </div>
 
@@ -168,14 +168,14 @@ export default function SmartToolsPanel({
                     <FiDownload className="text-amber-400 w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-white font-bold text-sm">B2B Export</h3>
-                    <p className="text-zinc-500 text-xs mt-0.5">CSV / JSON data portal</p>
+                    <h3 className="text-white font-bold text-sm">{t('smartTools.overview.exportTitle')}</h3>
+                    <p className="text-zinc-500 text-xs mt-0.5">{t('smartTools.overview.exportDesc')}</p>
                   </div>
                   <button
                     onClick={() => setActiveTab('export')}
                     className="mt-auto w-full py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition-all"
                   >
-                    Open Portal
+                    {t('smartTools.overview.openPortal')}
                   </button>
                 </div>
               </div>
@@ -190,7 +190,7 @@ export default function SmartToolsPanel({
                     <div className="flex items-center justify-between p-4 border-b border-zinc-800 bg-zinc-900/50">
                       <div className="flex items-center gap-2">
                         <span className="text-lg">✨</span>
-                        <h4 className="text-xs font-bold text-white uppercase tracking-wider">Ceres AI Ground Reality</h4>
+                        <h4 className="text-xs font-bold text-white uppercase tracking-wider">{t('smartTools.overview.groundReality')}</h4>
                         <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
                           visionAnalysis.visualStatus === 'Excellent' || visionAnalysis.visualStatus === 'Good' ? 'bg-green-500/20 text-green-400' :
                           visionAnalysis.visualStatus === 'Stable' ? 'bg-blue-500/20 text-blue-400' :
@@ -208,7 +208,7 @@ export default function SmartToolsPanel({
                       {/* Farmer Friendly Insights */}
                       <div className="bg-zinc-800/50 p-4 rounded-xl border border-zinc-700/50">
                         <h5 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                          <FiCheckCircle className="text-zinc-400" /> Visual Reality Check
+                          <FiCheckCircle className="text-zinc-400" /> {t('smartTools.overview.visualCheck')}
                         </h5>
                         <p className="text-sm text-zinc-200 leading-relaxed font-medium capitalize-first">
                           {visionAnalysis.farmerFriendlyInsights || visionAnalysis.reasoning}
@@ -218,11 +218,11 @@ export default function SmartToolsPanel({
                       {/* Soil & Crop Health Pills */}
                       <div className="grid grid-cols-2 gap-3">
                         <div className="bg-zinc-800/30 p-3 rounded-lg border border-zinc-700/30">
-                          <p className="text-[9px] font-bold text-zinc-500 uppercase mb-1">Soil Health</p>
+                          <p className="text-[9px] font-bold text-zinc-500 uppercase mb-1">{t('smartTools.overview.soilHealth')}</p>
                           <p className="text-xs font-bold text-zinc-300">{visionAnalysis.soilHealth || 'Stable'}</p>
                         </div>
                         <div className="bg-zinc-800/30 p-3 rounded-lg border border-zinc-700/30">
-                          <p className="text-[9px] font-bold text-zinc-500 uppercase mb-1">Crop Health</p>
+                          <p className="text-[9px] font-bold text-zinc-500 uppercase mb-1">{t('smartTools.overview.cropHealth')}</p>
                           <p className="text-xs font-bold text-zinc-300">{visionAnalysis.cropHealth || 'Good'}</p>
                         </div>
                       </div>
@@ -231,7 +231,7 @@ export default function SmartToolsPanel({
                       {visionAnalysis.yieldSuggestions && (
                         <div className="space-y-3">
                           <h5 className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest flex items-center gap-1.5">
-                            <FiTrendingUp className="text-emerald-500" /> Suggestions to Improve Yield
+                            <FiTrendingUp className="text-emerald-500" /> {t('smartTools.overview.yieldSuggestions')}
                           </h5>
                           <div className="grid gap-2">
                             {visionAnalysis.yieldSuggestions.map((sug: any, i: number) => (
@@ -245,7 +245,7 @@ export default function SmartToolsPanel({
                                   <p className="text-[11px] text-zinc-400 leading-snug">{sug.action}</p>
                                 </div>
                                 <span className="ml-auto text-[8px] font-bold text-zinc-500 uppercase tracking-tighter opacity-70">
-                                  {sug.impact} Impact
+                                  {sug.impact} {t('smartTools.overview.impact')}
                                 </span>
                               </div>
                             ))}
@@ -273,16 +273,16 @@ export default function SmartToolsPanel({
             </motion.div>
           )}
 
-          {/* Removed Imagery Tab - Now integrated in Dashboard */}
+          {/* Vision Tab */}
           {activeTab === 'vision' && (
             <motion.div key="vision" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <div className="max-w-lg mx-auto text-center py-8">
                 <div className="text-5xl mb-4">✨</div>
-                <h3 className="text-white font-bold text-xl mb-2">Ceres Vision Analysis</h3>
-                <p className="text-zinc-400 text-sm mb-6">Take a photo of your soil or crop — Gemini AI will verify its condition against your sensor data.</p>
+                <h3 className="text-white font-bold text-xl mb-2">{t('smartTools.vision.title')}</h3>
+                <p className="text-zinc-400 text-sm mb-6">{t('smartTools.vision.desc')}</p>
                 <label className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold cursor-pointer transition-all">
                   <FiCamera className="w-5 h-5" />
-                  {isVisionLoading ? 'Analyzing with AI...' : 'Upload Field Photo'}
+                  {isVisionLoading ? t('smartTools.vision.analyzingAI') : t('smartTools.vision.uploadField')}
                   <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoUpload} disabled={isVisionLoading} />
                 </label>
                 <AnimatePresence>
@@ -294,7 +294,7 @@ export default function SmartToolsPanel({
                       <div className="flex items-center justify-between p-4 border-b border-zinc-800 bg-zinc-900/50">
                         <div className="flex items-center gap-2">
                           <span className="text-lg">✨</span>
-                          <h4 className="text-xs font-bold text-white uppercase tracking-wider">Ground Reality Analysis</h4>
+                          <h4 className="text-xs font-bold text-white uppercase tracking-wider">{t('smartTools.vision.groundAnalysis')}</h4>
                           <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
                             visionAnalysis.visualStatus === 'Excellent' || visionAnalysis.visualStatus === 'Good' ? 'bg-green-500/20 text-green-400' :
                             visionAnalysis.visualStatus === 'Stable' ? 'bg-blue-500/20 text-blue-400' :
@@ -306,33 +306,30 @@ export default function SmartToolsPanel({
                       </div>
                       
                       <div className="p-5 space-y-5">
-                        {/* Farmer Friendly Insights */}
                         <div className="bg-zinc-800/50 p-4 rounded-xl border border-zinc-700/50">
                           <h5 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                            <FiCheckCircle className="text-zinc-400" /> Visual Reality Check
+                            <FiCheckCircle className="text-zinc-400" /> {t('smartTools.overview.visualCheck')}
                           </h5>
                           <p className="text-sm text-zinc-200 leading-relaxed font-medium capitalize-first">
                             {visionAnalysis.farmerFriendlyInsights || visionAnalysis.reasoning}
                           </p>
                         </div>
 
-                        {/* Soil & Crop Health Pills */}
                         <div className="grid grid-cols-2 gap-3">
                           <div className="bg-zinc-800/30 p-3 rounded-lg border border-zinc-700/30">
-                            <p className="text-[9px] font-bold text-zinc-500 uppercase mb-1">Soil Condition</p>
+                            <p className="text-[9px] font-bold text-zinc-500 uppercase mb-1">{t('smartTools.vision.soilCondition')}</p>
                             <p className="text-xs font-bold text-zinc-300">{visionAnalysis.soilHealth || 'Stable'}</p>
                           </div>
                           <div className="bg-zinc-800/30 p-3 rounded-lg border border-zinc-700/30">
-                            <p className="text-[9px] font-bold text-zinc-500 uppercase mb-1">Crop State</p>
+                            <p className="text-[9px] font-bold text-zinc-500 uppercase mb-1">{t('smartTools.vision.cropState')}</p>
                             <p className="text-xs font-bold text-zinc-300">{visionAnalysis.cropHealth || 'Good'}</p>
                           </div>
                         </div>
 
-                        {/* Yield Suggestions */}
                         {visionAnalysis.yieldSuggestions && (
                           <div className="space-y-3 pt-2">
                             <h5 className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest flex items-center gap-1.5">
-                              <FiTrendingUp className="text-emerald-500" /> Yield Improvement Roadmap
+                              <FiTrendingUp className="text-emerald-500" /> {t('smartTools.vision.yieldRoadmap')}
                             </h5>
                             <div className="grid gap-3">
                               {visionAnalysis.yieldSuggestions.map((sug: any, i: number) => (
@@ -345,7 +342,7 @@ export default function SmartToolsPanel({
                                     <div className="flex items-center justify-between mb-1">
                                       <p className="text-xs font-bold text-white">{sug.title}</p>
                                       <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-tighter">
-                                        {sug.impact} Impact
+                                        {sug.impact} {t('smartTools.overview.impact')}
                                       </span>
                                     </div>
                                     <p className="text-xs text-zinc-400 leading-relaxed">{sug.action}</p>

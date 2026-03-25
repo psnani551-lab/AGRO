@@ -49,17 +49,14 @@ void loop() {
     
     if(httpCode == 200) {
       String payload = http.getString();
-      // If we got a command, trigger the relay
       if(payload.indexOf("START") > 0) {
         Serial.println("Command Received: START PUMP");
         
-        // "Smart Finger" execution: Pulse the relay for 1 second
         digitalWrite(RELAY_PIN, HIGH);
         delay(1000); 
         digitalWrite(RELAY_PIN, LOW);
         
-        // Acknowledge execution back to the server
-        String commandId = extractCommandId(payload); // Implement JSON parsing
+        String commandId = extractCommandId(payload);
         acknowledge(commandId, "EXECUTED");
       }
     }
@@ -72,7 +69,7 @@ void acknowledge(String id, String status) {
   HTTPClient http;
   http.begin(ackUrl);
   http.addHeader("Content-Type", "application/json");
-  String payload = "{\\"commandId\\":\\"" + id + "\\",\\"status\\":\\"" + status + "\\"}";
+  String payload = "{\\\\"commandId\\\\":\\\\"" + id + "\\\\",\\\\"status\\\\":\\\\"" + status + "\\\\"}";
   http.POST(payload);
   http.end();
 }
@@ -85,8 +82,8 @@ void acknowledge(String id, String status) {
           <FiLayers className="h-6 w-6 text-blue-400" />
         </div>
         <div>
-          <h3 className="text-xl font-bold text-white tracking-tight">Smart Pump Setup</h3>
-          <p className="text-xs text-zinc-500 font-medium">The "Smart Finger" Relay Hack</p>
+          <h3 className="text-xl font-bold text-white tracking-tight">{t('smartTools.pump.title')}</h3>
+          <p className="text-xs text-zinc-500 font-medium">{t('smartTools.pump.subtitle')}</p>
         </div>
       </div>
 
@@ -94,7 +91,7 @@ void acknowledge(String id, String status) {
         {/* Device Token */}
         <div className="p-5 bg-zinc-950 rounded-2xl border border-zinc-800 group transition-all hover:border-zinc-700">
           <label className="text-[10px] font-bold text-blue-500 uppercase tracking-[0.2em] mb-3 block">
-            Step 1: Your Pump Device ID
+            {t('smartTools.pump.step1')}
           </label>
           <div className="flex items-center gap-3">
             <code className="flex-1 bg-zinc-900 px-4 py-3 rounded-xl border border-zinc-800 text-sm font-mono text-blue-400 truncate">
@@ -114,11 +111,11 @@ void acknowledge(String id, String status) {
           <div className="mb-6">
             <h4 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
               <span className="w-6 h-6 flex items-center justify-center bg-blue-500 text-white rounded-lg text-xs font-black">2</span> 
-              Hardware Wiring
+              {t('smartTools.pump.step2')}
             </h4>
             <p className="text-xs text-zinc-500 mt-2 leading-relaxed flex items-center gap-2">
               <FiInfo className="text-amber-500 flex-shrink-0" />
-              Wire a 5V Relay in parallel with your Starter's Green "ON" Button.
+              {t('smartTools.pump.step2Desc')}
             </p>
           </div>
 
@@ -126,22 +123,22 @@ void acknowledge(String id, String status) {
             <div className="p-4 bg-zinc-900 rounded-2xl border border-zinc-800 flex items-start gap-4">
                <div className="mt-1 w-3 h-3 rounded-full bg-red-500 flex-shrink-0" />
                <div>
-                  <h5 className="text-xs font-bold text-white mb-1">5V Power (VCC)</h5>
-                  <p className="text-[10px] text-zinc-500">Connect ESP32 5V (or VIN) to Relay VCC.</p>
+                  <h5 className="text-xs font-bold text-white mb-1">{t('smartTools.pump.vcc')}</h5>
+                  <p className="text-[10px] text-zinc-500">{t('smartTools.pump.vccDesc')}</p>
                </div>
             </div>
             <div className="p-4 bg-zinc-900 rounded-2xl border border-zinc-800 flex items-start gap-4">
                <div className="mt-1 w-3 h-3 rounded-full bg-zinc-500 flex-shrink-0" />
                <div>
-                  <h5 className="text-xs font-bold text-white mb-1">Ground (GND)</h5>
-                  <p className="text-[10px] text-zinc-500">Connect ESP32 GND to Relay GND.</p>
+                  <h5 className="text-xs font-bold text-white mb-1">{t('smartTools.pump.gnd')}</h5>
+                  <p className="text-[10px] text-zinc-500">{t('smartTools.pump.gndDesc')}</p>
                </div>
             </div>
             <div className="p-4 bg-zinc-900 rounded-2xl border border-zinc-800 flex items-start gap-4 md:col-span-2">
                <div className="mt-1 w-3 h-3 rounded-full bg-blue-500 flex-shrink-0" />
                <div>
-                  <h5 className="text-xs font-bold text-white mb-1">Signal (IN)</h5>
-                  <p className="text-[10px] text-zinc-500">Connect ESP32 GPIO Pin 26 to Relay IN pin.</p>
+                  <h5 className="text-xs font-bold text-white mb-1">{t('smartTools.pump.signal')}</h5>
+                  <p className="text-[10px] text-zinc-500">{t('smartTools.pump.signalDesc')}</p>
                </div>
             </div>
           </div>
@@ -152,7 +149,7 @@ void acknowledge(String id, String status) {
            <div className="flex items-center justify-between">
               <h4 className="font-bold text-white text-sm flex items-center gap-2 tracking-wide uppercase">
                 <span className="w-6 h-6 flex items-center justify-center bg-zinc-800 text-zinc-400 rounded-lg text-xs font-black">3</span> 
-                Flash Firmware
+                {t('smartTools.pump.step3')}
               </h4>
            </div>
           

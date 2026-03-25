@@ -12,7 +12,7 @@ interface ExportPortalProps {
 }
 
 export const ExportPortal: React.FC<ExportPortalProps> = ({ farmId, farmProfile, analysis }) => {
-  const { language } = useI18n();
+  const { language, t } = useI18n();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [dataTypes, setDataTypes] = useState<string[]>(['sensors']);
@@ -34,7 +34,7 @@ export const ExportPortal: React.FC<ExportPortalProps> = ({ farmId, farmProfile,
           farmProfile,
           analysis,
           dateRange: {
-            start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), // Last 30 days
+            start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
             end: new Date().toISOString()
           }
         }),
@@ -64,24 +64,30 @@ export const ExportPortal: React.FC<ExportPortalProps> = ({ farmId, farmProfile,
     );
   };
 
+  const datasetLabels: Record<string, string> = {
+    sensors: t('smartTools.export.sensors'),
+    machinery: t('smartTools.export.machinery'),
+    satellite: t('smartTools.export.satellite')
+  };
+
   return (
     <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-sm">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-xl font-bold flex items-center gap-2">
-            <FiFileText className="text-blue-400" /> B2B Export Center
+            <FiFileText className="text-blue-400" /> {t('smartTools.export.title')}
           </h3>
-          <p className="text-xs text-white/60 mt-1 italic">Professional Data Portability for Auditing</p>
+          <p className="text-xs text-white/60 mt-1 italic">{t('smartTools.export.subtitle')}</p>
         </div>
         <div className="bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20">
-          <span className="text-[10px] font-bold text-blue-400">ENTERPRISE READY</span>
+          <span className="text-[10px] font-bold text-blue-400">{t('smartTools.export.enterprise')}</span>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div>
           <label className="text-[10px] uppercase font-bold text-white/40 block mb-3 flex items-center gap-1">
-            <FiFilter className="h-3 w-3" /> Select Datasets
+            <FiFilter className="h-3 w-3" /> {t('smartTools.export.selectDatasets')}
           </label>
           <div className="flex flex-wrap gap-2">
             {['sensors', 'machinery', 'satellite'].map(type => (
@@ -94,7 +100,7 @@ export const ExportPortal: React.FC<ExportPortalProps> = ({ farmId, farmProfile,
                     : 'bg-white/5 text-white/60 hover:bg-white/10'
                 }`}
               >
-                {type.charAt(0).toUpperCase() + type.slice(1)}
+                {datasetLabels[type] || type}
               </button>
             ))}
           </div>
@@ -102,7 +108,7 @@ export const ExportPortal: React.FC<ExportPortalProps> = ({ farmId, farmProfile,
 
         <div>
           <label className="text-[10px] uppercase font-bold text-white/40 block mb-3 flex items-center gap-1">
-            <FiCalendar className="h-3 w-3" /> Export Format
+            <FiCalendar className="h-3 w-3" /> {t('smartTools.export.exportFormat')}
           </label>
           <div className="flex gap-2">
             {(['csv', 'json'] as const).map(f => (
@@ -132,20 +138,20 @@ export const ExportPortal: React.FC<ExportPortalProps> = ({ farmId, farmProfile,
         }`}
       >
         {loading ? (
-          'GENERATING EXPORT...'
+          t('smartTools.export.generating')
         ) : success ? (
           <>
-            <FiCheckCircle className="h-5 w-5" /> EXPORT DOWNLOADED
+            <FiCheckCircle className="h-5 w-5" /> {t('smartTools.export.downloaded')}
           </>
         ) : (
           <>
-            <FiDownload className="h-5 w-5" /> DOWNLOAD BULK DATA
+            <FiDownload className="h-5 w-5" /> {t('smartTools.export.download')}
           </>
         )}
       </button>
 
       <p className="text-[10px] text-center text-white/30 mt-4 italic">
-        * Exports are limited to 1,000 rows per request. For bulk enterprise API access, contact support.
+        {t('smartTools.export.limitNote')}
       </p>
     </div>
   );

@@ -78,10 +78,10 @@ export default function SmartToolsPage() {
         <div className="text-center max-w-md">
           <h1 className="text-3xl font-bold text-white mb-4">{t('dashboard.setupProfile')}</h1>
           <p className="text-zinc-400 mb-8">
-            Please set up your farm profile to use Smart Farm Tools.
+            {t('smartTools.setupPrompt')}
           </p>
           <Link href="/tools/farm-profile" className="inline-flex items-center px-6 py-3 bg-white text-black font-bold rounded-xl hover:bg-zinc-200 transition-all shadow-lg">
-            Get Started <FiArrowRight className="ml-2" />
+            {t('smartTools.getStarted')} <FiArrowRight className="ml-2" />
           </Link>
         </div>
       </div>
@@ -96,8 +96,8 @@ export default function SmartToolsPage() {
              <FiArrowLeft className="w-5 h-5" />
            </Link>
            <div>
-             <h1 className="text-3xl font-bold text-white tracking-tight">Smart Farm Tools</h1>
-             <p className="text-zinc-500 text-sm mt-1">Dedicated workspace for IoT, Vision, and Hardware setups.</p>
+             <h1 className="text-3xl font-bold text-white tracking-tight">{t('smartTools.pageTitle')}</h1>
+             <p className="text-zinc-500 text-sm mt-1">{t('smartTools.pageSubtitle')}</p>
            </div>
         </div>
 

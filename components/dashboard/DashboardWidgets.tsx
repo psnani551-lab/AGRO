@@ -1,13 +1,14 @@
 import { FiDroplet, FiActivity, FiBarChart2, FiArrowRight, FiLayers } from 'react-icons/fi';
 
-const formatWater = (mm: number | any, totalArea: number = 1) => {
+const formatWater = (mm: number | any, t: any, totalArea: number = 1) => {
     if (typeof mm !== 'number') return mm || '---';
     // 1mm of water over 1 Acre is ~4047 Litres
     const totalLitres = mm * 4047 * totalArea;
+    const unit = t('dashboard.litres') || 'Litres';
     
-    if (totalLitres >= 1000000) return `${(totalLitres / 1000000).toFixed(1)}M Litres`;
-    if (totalLitres >= 1000) return `${(totalLitres / 1000).toFixed(1)}k Litres`;
-    return `${Math.round(totalLitres)} Litres`;
+    if (totalLitres >= 1000000) return `${(totalLitres / 1000000).toFixed(1)}M ${unit}`;
+    if (totalLitres >= 1000) return `${(totalLitres / 1000).toFixed(1)}k ${unit}`;
+    return `${Math.round(totalLitres)} ${unit}`;
 };
 
 export const IrrigationWidget = ({ analysis, t, onOpen, totalArea = 1 }: any) => {
@@ -22,7 +23,7 @@ export const IrrigationWidget = ({ analysis, t, onOpen, totalArea = 1 }: any) =>
                     {plan.rainAdjustment?.toLowerCase().includes('moisture') || plan.rainAdjustment?.toLowerCase().includes('soil') ? (
                         <>
                             <FiLayers className="text-blue-500" />
-                            <span className="text-blue-400">SAT-SYNCED</span>
+                            <span className="text-blue-400">{t('dashboard.satSynced')}</span>
                         </>
                     ) : (
                         t('dashboard.reliability') || '98% RELIABLE'
@@ -38,13 +39,13 @@ export const IrrigationWidget = ({ analysis, t, onOpen, totalArea = 1 }: any) =>
                     <div className="flex justify-between items-center text-sm border-b border-zinc-800 pb-2">
                         <span className="text-zinc-500">{t('dashboard.amount') || 'Amount'}</span>
                         <span className="font-mono text-zinc-300">
-                            {formatWater(plan.amountPerIrrigation, totalArea)}
+                            {formatWater(plan.amountPerIrrigation, t, totalArea)}
                         </span>
                     </div>
                     <div className="flex justify-between items-center text-sm border-b border-zinc-800 pb-2">
                         <span className="text-zinc-500">{t('dashboard.weekly') || 'Weekly'}</span>
                         <span className="font-mono text-zinc-300">
-                            {formatWater(plan.weeklyTotal, totalArea)}
+                            {formatWater(plan.weeklyTotal, t, totalArea)}
                         </span>
                     </div>
                 </div>
@@ -72,7 +73,7 @@ export const DiseaseWidget = ({ analysis, t, onOpen }: any) => {
                 </div>
                 <div className="px-2 py-1 bg-zinc-950 rounded text-[10px] font-bold uppercase tracking-wider border border-zinc-800 flex items-center gap-1">
                     <FiLayers className="text-emerald-500" />
-                    <span className="text-emerald-400">SAT-MONITOR</span>
+                    <span className="text-emerald-400">{t('dashboard.satMonitor')}</span>
                 </div>
             </div>
 
@@ -112,7 +113,7 @@ export const YieldWidget = ({ analysis, t, onOpen }: any) => {
                 </div>
                 <div className="px-2 py-1 bg-zinc-950 rounded text-[10px] font-bold uppercase tracking-wider border border-zinc-800 flex items-center gap-1">
                     <FiLayers className="text-purple-500" />
-                    <span className="text-purple-400">NDVI SYNCED</span>
+                    <span className="text-purple-400">{t('dashboard.ndviSynced')}</span>
                 </div>
             </div>
 
