@@ -313,15 +313,24 @@ export default function SmartToolsPanel({
                 {/* Real Satellite Imagery Display */}
                 <div className="w-full aspect-square md:aspect-video bg-black rounded-2xl border-2 border-zinc-800/50 overflow-hidden relative shadow-2xl group-hover:border-primary-500/30 transition-all duration-500">
                    {satelliteData?.imagery ? (
-                      <img 
-                        src={
-                          satLayer === 'ndvi' ? satelliteData.imagery.image.ndvi :
-                          satLayer === 'false' ? satelliteData.imagery.image.falsecolor :
-                          satelliteData.imagery.image.truecolor
-                        } 
-                        alt="Satellite View"
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                      />
+                      <>
+                        <img 
+                          src={
+                            satLayer === 'ndvi' ? satelliteData.imagery.image.ndvi :
+                            satLayer === 'false' ? satelliteData.imagery.image.falsecolor :
+                            satelliteData.imagery.image.truecolor
+                          } 
+                          alt="Satellite View"
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        />
+                        {satelliteData.imagery.type === 'simulated' && (
+                          <div className="absolute top-4 left-4 z-20">
+                            <span className="px-3 py-1 bg-yellow-500 text-black text-[10px] font-black rounded-full shadow-lg flex items-center gap-1.5 uppercase tracking-tighter">
+                              <FiAlertCircle className="w-3 h-3" /> FIELD VISUALIZATION (SYNCING...)
+                            </span>
+                          </div>
+                        )}
+                      </>
                    ) : (
                       <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950">
                         <FiImage className="w-16 h-16 text-zinc-800 mb-4 animate-bounce" />

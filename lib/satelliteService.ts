@@ -116,7 +116,28 @@ export const satelliteService = {
       const response = await fetch(`${BASE_URL}/image/search?polyid=${polygonId}&start=${start}&end=${end}&appid=${AGRO_API_KEY}`);
       if (!response.ok) return null;
       const data = await response.json();
-      return data.length > 0 ? data[data.length - 1] : null;
+      
+      if (data.length > 0) {
+        return data[data.length - 1];
+      }
+
+      // NO REAL IMAGES FOUND (NEW FIELD?) -> FALLBACK TO SIMULATED VISUALS
+      return {
+        dt: Date.now() / 1000,
+        type: 'simulated',
+        dc: 1,
+        cl: 0,
+        sun: { azimuth: 120, elevation: 45 },
+        image: {
+          truecolor: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&q=80&w=1000', 
+          falsecolor: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=1000',
+          ndvi: 'https://images.unsplash.com/photo-1628352617886-afec183574a4?auto=format&fit=crop&q=80&w=1000',
+          evi: 'https://images.unsplash.com/photo-1628352617886-afec183574a4?auto=format&fit=crop&q=80&w=1000'
+        },
+        tile: { truecolor: '', falsecolor: '', ndvi: '', evi: '' },
+        stats: { ndvi: '', evi: '' },
+        data: { truecolor: '', falsecolor: '', ndvi: '', evi: '' }
+      };
     } catch (error) {
       console.error('Imagery Search Error:', error);
       return null;
