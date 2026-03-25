@@ -534,26 +534,26 @@ export default function UltimateDashboard({
 
             setWeatherData(weatherRes);
 
-            // Fetch Satellite Data
+            // Fetch Satellite Data (with Virtual Sensing fallback)
             let satelliteRes = null;
-            if (profileData) {
-                try {
-                    const satResponse = await fetch('/api/satellite/ndvi', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            farmId: profileData.id || profileData.farmId || 'default-farm',
-                            polygonId: profileData.agro_monitoring_id,
-                            coords: profileData.polygon_coords,
-                            name: profileData.farm_name || 'My Field'
-                        }),
-                    });
-                    if (satResponse.ok) {
-                        satelliteRes = await satResponse.json();
-                    }
-                } catch (e) {
-                    console.warn('Dashboard satellite fetch failed:', e);
+            try {
+                const satResponse = await fetch('/api/satellite/ndvi', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        farmId: profileData?.id || profileData?.farmId || 'default-farm',
+                        polygonId: profileData?.agro_monitoring_id || 'mock_poly_default',
+                        coords: profileData?.polygon_coords || [],
+                        name: profileData?.farm_name || 'My Field'
+                    }),
+                });
+                if (satResponse.ok) {
+                    satelliteRes = await satResponse.json();
+                } else {
+                    console.warn('Dashboard satellite fetch returned non-200. Check API Route.');
                 }
+            } catch (e) {
+                console.warn('Dashboard satellite fetch failed:', e);
             }
             setSatelliteData(satelliteRes);
 
