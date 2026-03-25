@@ -1,6 +1,6 @@
 'use client';
 import { motion } from 'framer-motion';
-import { FiMonitor, FiShoppingCart, FiCpu, FiSun, FiDatabase, FiCloudLightning, FiShield } from 'react-icons/fi';
+import { FiMonitor, FiShoppingCart, FiCpu, FiSun, FiDatabase, FiCloudLightning, FiShield, FiMic, FiEye, FiZap, FiMessageSquare } from 'react-icons/fi';
 import Link from 'next/link';
 import { useI18n } from '@/lib/i18n';
 
@@ -132,8 +132,98 @@ export default function AboutPage() {
                         </span>
                     </motion.div>
                 </div>
-
-                {/* RELIABILITY HIGHLIGHTS */}
+ 
+                 {/* ACCESSIBILITY & INCLUSIVITY SECTION */}
+                 <motion.div
+                     initial={{ opacity: 0, y: 30 }}
+                     whileInView={{ opacity: 1, y: 0 }}
+                     viewport={{ once: true }}
+                     transition={{ duration: 0.7 }}
+                     className="py-16 bg-emerald-500/5 rounded-[3rem] px-8 border border-emerald-500/10 relative overflow-hidden"
+                 >
+                     {/* Decorative background element */}
+                     <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-emerald-500/10 rounded-full blur-[80px] pointer-events-none" />
+                     
+                     <div className="text-center mb-16 relative z-10">
+                         <div className="inline-block mb-4 px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold uppercase tracking-widest">
+                             {t('about.accessibility.tag')}
+                         </div>
+                         <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4 tracking-tight">
+                             {t('about.accessibility.title')}
+                         </h2>
+                         <p className="text-lg text-gray-600 dark:text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+                             {t('about.accessibility.subtitle')}
+                         </p>
+                     </div>
+ 
+                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
+                         {/* Voice Card */}
+                         <motion.div 
+                             whileHover={{ y: -5 }}
+                             className="bg-white dark:bg-zinc-950 p-8 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-xl dark:shadow-none transition-all group"
+                         >
+                             <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-500 mb-6 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300">
+                                 <FiMic size={24} />
+                             </div>
+                             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 tracking-tight">
+                                 {t('about.accessibility.cards.voice.title')}
+                             </h3>
+                             <p className="text-gray-600 dark:text-zinc-400 text-sm leading-relaxed">
+                                 {t('about.accessibility.cards.voice.desc')}
+                             </p>
+                         </motion.div>
+ 
+                         {/* Visual Card */}
+                         <motion.div 
+                             whileHover={{ y: -5 }}
+                             className="bg-white dark:bg-zinc-950 p-8 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-xl dark:shadow-none transition-all group"
+                         >
+                             <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-500 mb-6 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300">
+                                 <FiEye size={24} />
+                             </div>
+                             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 tracking-tight">
+                                 {t('about.accessibility.cards.visual.title')}
+                             </h3>
+                             <p className="text-gray-600 dark:text-zinc-400 text-sm leading-relaxed">
+                                 {t('about.accessibility.cards.visual.desc')}
+                             </p>
+                         </motion.div>
+ 
+                         {/* Hardware Card */}
+                         <motion.div 
+                             whileHover={{ y: -5 }}
+                             className="bg-white dark:bg-zinc-950 p-8 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-xl dark:shadow-none transition-all group"
+                         >
+                             <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-500 mb-6 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300">
+                                 <FiZap size={24} />
+                             </div>
+                             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 tracking-tight">
+                                 {t('about.accessibility.cards.hardware.title')}
+                             </h3>
+                             <p className="text-gray-600 dark:text-zinc-400 text-sm leading-relaxed">
+                                 {t('about.accessibility.cards.hardware.desc')}
+                             </p>
+                         </motion.div>
+ 
+                         {/* Simple AI Advice Card */}
+                         <motion.div 
+                             whileHover={{ y: -5 }}
+                             className="bg-white dark:bg-zinc-950 p-8 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-xl dark:shadow-none transition-all group"
+                         >
+                             <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-500 mb-6 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300">
+                                 <FiMessageSquare size={24} />
+                             </div>
+                             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 tracking-tight">
+                                 {t('about.accessibility.cards.advice.title')}
+                             </h3>
+                             <p className="text-gray-600 dark:text-zinc-400 text-sm leading-relaxed">
+                                 {t('about.accessibility.cards.advice.desc')}
+                             </p>
+                         </motion.div>
+                     </div>
+                 </motion.div>
+ 
+                 {/* RELIABILITY HIGHLIGHTS */}
                 <motion.div
                     initial={{ opacity: 0 }}
                     whileInView={{ opacity: 1 }}

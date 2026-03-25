@@ -140,7 +140,7 @@ export function calculateAveragePrices(prices: AgmarknetPrice[]): {
   const minPrices = prices.map(p => p.minPrice).filter(p => p > 0);
   const maxPrices = prices.map(p => p.maxPrice).filter(p => p > 0);
   const modalPrices = prices.map(p => p.modalPrice).filter(p => p > 0);
-  const markets = [...new Set(prices.map(p => `${p.market} (${p.state})`))];
+  const markets = Array.from(new Set(prices.map(p => `${p.market} (${p.state})`)));
 
   return {
     min: minPrices.length > 0 ? Math.min(...minPrices) : 0,

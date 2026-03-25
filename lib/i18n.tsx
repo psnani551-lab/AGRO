@@ -3,6 +3,9 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
 import { translations } from './translations';
 
+export type Language = keyof typeof translations;
+export type TranslationKey = string; // Simplified for now to support nested keys
+
 export type Locale = Language; // Alias for backward compatibility
 
 interface I18nContextType {
