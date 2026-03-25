@@ -31,13 +31,6 @@ export async function POST(request: NextRequest) {
     // 4. Fetch Latest Imagery Metadata
     const imagery = await satelliteService.getLatestImagery(activePolygonId);
 
-    if (!ndviData && !soilData && !imagery) {
-      return NextResponse.json({ 
-        message: 'No satellite data available for this period',
-        status: 'pending' 
-      });
-    }
-
     const health = ndviData ? satelliteService.getHealthStatus(ndviData.stats.mean) : null;
 
     return NextResponse.json({

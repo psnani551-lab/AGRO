@@ -48,12 +48,42 @@ export interface ImageryMetadata {
  */
 export const satelliteService = {
   /**
+   * Fetch all polygons for the account
+   */
+  async getPolygons() {
+    if (!AGRO_API_KEY) return [];
+    try {
+      const response = await fetch(`${BASE_URL}/polygons?appid=${AGRO_API_KEY}`);
+      if (!response.ok) return [];
+      return await response.json();
+    } catch (error) {
+      console.error('Fetch Polygons Error:', error);
+      return [];
+    }
+  },
+
+  /**
    * Register a farm polygon with AgroMonitoring
    */
   async registerPolygon(farmId: string, name: string, coords: [number, number][]) {
     if (!AGRO_API_KEY) return { mockId: `mock_poly_${farmId}`, id: `mock_poly_${farmId}` };
 
     try {
+      // 1. Check if a polygon with this name already exists (Polygon Discovery)
+      const existingPolygons = await this.getPolygons();
+      const duplicate = existingPolygons.find((p: any) => p.name === name);
+      
+      if (duplicate) {
+        console.log(`Found existing polygon for ${name}: ${duplicate.id}`);
+        // Save existing ID to Supabase
+        await supabase
+          .from('farm_profiles')
+          .update({ agro_monitoring_id: duplicate.id })
+          .eq('id', farmId);
+        return duplicate;
+      }
+
+      // 2. Otherwise create new
       const response = await fetch(`${BASE_URL}/polygons?appid=${AGRO_API_KEY}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
