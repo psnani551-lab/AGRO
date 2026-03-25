@@ -30,7 +30,8 @@ export default function Navigation() {
   };
 
   return (
-    <nav className="sticky top-0 z-30 border-b border-gray-200/50 bg-white/80 backdrop-blur-md dark:border-gray-700/50 dark:bg-gray-900/80">
+    <>
+      <nav className="sticky top-0 z-30 border-b border-gray-200/50 bg-white/80 backdrop-blur-md dark:border-gray-700/50 dark:bg-gray-900/80">
       <div className="container mx-auto flex items-center justify-between px-4 py-4">
         {/* Logo */}
         <div className="flex items-center gap-8">
@@ -258,7 +259,8 @@ export default function Navigation() {
           </div>
         </div>
       )}
-      <MobileNavBar />
     </nav>
+    <MobileNavBar />
+    </>
   );
 }
