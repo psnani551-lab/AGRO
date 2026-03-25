@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useI18n } from '@/lib/i18n';
 import { FarmProfile } from '@/lib/farmTypes';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import UltimateDashboard from '@/components/dashboard/UltimateDashboard';
+import ProfessionalDashboard from '@/components/dashboard/ProfessionalDashboard';
 import SmartToolsPanel from '@/components/dashboard/SmartToolsPanel';
 import { supabase } from '@/lib/supabaseClient';
 import Link from 'next/link';
@@ -92,16 +92,11 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen pb-12">
+    <div className="min-h-screen pb-12 bg-zinc-950">
       <DashboardHeader farmProfile={farmProfile} />
-      {/* Original Rich Dashboard — weather, yield, market prices, etc. */}
-      <UltimateDashboard 
+      {/* 🏛️ The Best of the Best: Unified Professional Intelligence Engine */}
+      <ProfessionalDashboard 
         farmProfile={farmProfile} 
-        onStartPump={handleStartPump}
-        isPumpLoading={isPumpLoading}
-        pumpStatus={pumpStatus}
-        visionAnalysis={visionAnalysis}
-        setVisionAnalysis={setVisionAnalysis}
       />
     </div>
   );

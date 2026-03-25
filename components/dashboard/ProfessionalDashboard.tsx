@@ -10,7 +10,58 @@ import { storage } from '@/lib/storage';
 import ConnectSensor from './ConnectSensor';
 import { ExportPortal } from './ExportPortal';
 
-export default function ProfessionalDashboard({ farmProfile: farmProfileProp }: { farmProfile?: any }) {
+// --- PREMIUM UI COMPONENTS ---
+const SatelliteBadge = ({ label = 'Space Data' }: { label?: string }) => (
+  <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-full backdrop-blur-md">
+    <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest flex items-center gap-1">
+      🛰️ {label}
+    </span>
+  </div>
+);
+
+const ValuationHero = ({ analysis, marketData, t }: any) => {
+  const estimatedYield = analysis?.yieldForecast?.crops?.[0]?.estimatedYield || 0;
+  const modalPrice = marketData?.data?.currentPrice?.modal || 2050; // Fallback
+  const revenue = (estimatedYield / 100) * modalPrice;
+  const formattedRevenue = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(revenue);
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative overflow-hidden rounded-3xl bg-zinc-950 text-white shadow-2xl p-8 h-full flex flex-col justify-between border border-zinc-800 hover:border-zinc-600 transition-all duration-300">
+      <SatelliteBadge label="Space-Derived Analysis" />
+      <div className="absolute -right-12 -top-12 opacity-5 rotate-12">
+        <FiTrendingUp className="w-64 h-64 text-white" />
+      </div>
+      <div className="relative z-10">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="p-2 bg-zinc-900 rounded-lg border border-zinc-800">
+            <FiTrendingUp className="w-5 h-5 text-white" />
+          </div>
+          <h2 className="text-zinc-400 text-xs font-bold uppercase tracking-[0.2em]">{t('yield.estimatedTotalYield')}</h2>
+        </div>
+        <div className="mt-2">
+          <h1 className="text-4xl lg:text-5xl font-bold tracking-tight text-white">{formattedRevenue}</h1>
+          <p className="text-lg text-zinc-400 font-medium mt-2 flex items-center gap-2">
+            Potential Revenue <span className="text-xs bg-white text-black px-2 py-0.5 rounded-full font-bold">FY 2025-26</span>
+          </p>
+        </div>
+      </div>
+      <div className="relative z-10 my-6 pl-4 border-l-4 border-zinc-700">
+        <p className="text-sm text-zinc-400 leading-relaxed font-medium max-w-xs">
+          Based on <span className="text-white font-bold">{estimatedYield.toLocaleString()} kg</span> yield at <span className="text-white font-bold">₹{(modalPrice/100).toFixed(2)}/kg</span> market price.
+        </p>
+      </div>
+      <div className="relative z-10 flex flex-wrap gap-3">
+        <div className="flex items-center gap-2 bg-zinc-900 border border-zinc-700 px-4 py-2 rounded-xl text-zinc-300 font-bold text-sm">
+          <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+          {marketData?.data?.economics?.profitMargin || '0'}% Profit Margin
+        </div>
+        <div className="flex items-center gap-2 bg-zinc-900 border border-zinc-700 px-4 py-2 rounded-xl text-zinc-300 font-bold text-sm uppercase text-[10px]">
+          {analysis?.yieldForecast?.crops?.[0]?.confidence || 85}% Confidence
+        </div>
+      </div>
+    </motion.div>
+  );
+};
   const { t, locale } = useI18n();
   const currentProfile = farmProfileProp || storage.getFarmProfile();
   const [loading, setLoading] = useState(true);
@@ -337,7 +388,85 @@ export default function ProfessionalDashboard({ farmProfile: farmProfileProp }: 
   }
 
   return (
-    <div className="space-y-6">
+    <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 ${locale === 'te' ? 'font-telugu' : ''} space-y-8`}>
+      {/* 🏛️ TOP SECTION: VALUATION & WEATHER */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-1">
+          <ValuationHero analysis={analysis} marketData={marketData} t={t} />
+        </div>
+        <div className="lg:col-span-2">
+          {/* Unified Weather Forecast Widget (Satellite Powered) */}
+          {(satelliteData?.forecast || weatherData?.forecast) && (
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="h-full rounded-3xl bg-zinc-900 text-white shadow-2xl p-8 relative overflow-hidden group border border-zinc-800 flex flex-col hover:border-zinc-600 transition-all duration-300"
+            >
+              <SatelliteBadge />
+              <div className="absolute -right-20 -top-20 text-white/5 group-hover:rotate-45 transition-transform duration-[20s]">
+                <FiCloudRain className="w-[500px] h-[500px]" />
+              </div>
+              
+              <div className="relative z-10 flex flex-col h-full justify-between">
+                <div className="flex justify-between items-start">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-zinc-300 bg-zinc-950 w-fit px-4 py-1.5 rounded-full text-sm font-medium border border-zinc-800">
+                      <FiMapPin className="text-white" /> {weatherData?.location || currentProfile?.location?.address || currentProfile?.location || 'Your Region'}
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-5xl lg:text-6xl font-bold tracking-tighter text-white">
+                        {satelliteData?.forecast?.[0]?.main?.temp ? `${Math.round(satelliteData.forecast[0].main.temp)}°` : (weatherData?.current?.temp_c ? `${Math.round(weatherData.current.temp_c)}°` : '--')}
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-white font-semibold text-lg capitalize">
+                          {satelliteData?.forecast?.[0]?.weather?.[0]?.description || weatherData?.current?.condition?.text || 'Clear Sky'}
+                        </span>
+                        <span className="text-sm text-zinc-400">Feels like {Math.round((satelliteData?.forecast?.[0]?.main?.temp || weatherData?.current?.temp_c || 25) + 2)}°</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-zinc-950 p-4 rounded-2xl border border-zinc-800">
+                    <div className="text-right space-y-3">
+                      <div className="flex items-center justify-end gap-3">
+                        <span className="text-xs text-zinc-400 uppercase tracking-widest font-bold">Humidity</span>
+                        <span className="text-xl font-bold text-white">{satelliteData?.forecast?.[0]?.main?.humidity || weatherData?.current?.humidity || '--'}%</span>
+                      </div>
+                      <div className="w-full h-px bg-zinc-800" />
+                      <div className="flex items-center justify-end gap-3">
+                        <span className="text-xs text-zinc-400 uppercase tracking-widest font-bold">Wind</span>
+                        <span className="text-xl font-bold text-white">{satelliteData?.forecast?.[0]?.wind?.speed || weatherData?.current?.wind_kph || '--'} kph</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-8 bg-zinc-950 rounded-2xl p-4 border border-zinc-800">
+                  <div className="flex justify-between items-center mb-4">
+                    <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-[0.15em] flex items-center gap-2">
+                       Hyper-local Forecast
+                    </h4>
+                    <span className="text-[10px] text-zinc-950 bg-white px-2 py-0.5 rounded font-bold uppercase">Satellite Grounded</span>
+                  </div>
+                  <div className="grid grid-cols-5 gap-3">
+                    {(satelliteData?.forecast || weatherData.forecast).slice(0, 5).map((day: any, i: number) => (
+                      <div key={i} className="flex flex-col items-center justify-center bg-zinc-900 border border-zinc-800 rounded-xl p-3 hover:bg-zinc-800 transition-all">
+                        <span className="text-[10px] font-bold text-zinc-500 uppercase">{day.dt ? new Date(day.dt * 1000).toLocaleDateString('en-US', { weekday: 'short' }) : (day.date ? new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' }) : 'Day')}</span>
+                        <span className="text-xl my-1">
+                          {(day.weather?.[0]?.description?.includes('rain') || day.condition?.includes('rain')) ? '🌧️' : '☀️'}
+                        </span>
+                        <span className="text-sm font-bold text-white">{Math.round(day.main?.temp || day.maxTemp || 25)}°</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {/* Header with Sensor Toggle */}
       <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
