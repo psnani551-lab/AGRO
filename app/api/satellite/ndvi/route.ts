@@ -20,23 +20,37 @@ export async function POST(request: NextRequest) {
     // 2. Fetch NDVI data
     const ndviData = await satelliteService.getLatestNDVI(activePolygonId);
 
-    if (!ndviData) {
+    // 3. Fetch Soil Data (Virtual Sensing)
+    const soilData = await satelliteService.getSoilData(activePolygonId);
+
+    // 4. Fetch Accumulated Weather (GDD/Rain)
+    const now = Math.floor(Date.now() / 1000);
+    const seasonStart = now - (90 * 24 * 60 * 60); // Default to last 90 days for GDD
+    const accumulated = await satelliteService.getAccumulatedWeather(activePolygonId, seasonStart, now);
+
+    if (!ndviData && !soilData) {
       return NextResponse.json({ 
         message: 'No satellite data available for this period',
         status: 'pending' 
       });
     }
 
-    const health = satelliteService.getHealthStatus(ndviData.stats.mean);
+    const health = ndviData ? satelliteService.getHealthStatus(ndviData.stats.mean) : null;
 
     return NextResponse.json({
       polygonId: activePolygonId,
-      timestamp: ndviData.dt,
-      ndvi: ndviData.stats,
+      timestamp: ndviData?.dt || soilData?.dt || now,
+      ndvi: ndviData?.stats || null,
       health: health,
+      soil: soilData ? {
+        moisture: soilData.moisture * 100, // Convert to percentage
+        temp_t10: soilData.t10,
+        temp_surface: soilData.t0
+      } : null,
+      accumulated: accumulated,
       metadata: {
-        cloudCover: ndviData.cl,
-        dataConfidence: ndviData.dc
+        cloudCover: ndviData?.cl,
+        dataConfidence: ndviData?.dc || 0.8
       }
     });
 

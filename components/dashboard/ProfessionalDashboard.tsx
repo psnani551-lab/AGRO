@@ -423,6 +423,66 @@ export default function ProfessionalDashboard({ farmProfile: farmProfileProp }: 
             <p className="text-xs text-green-700 dark:text-green-300 mt-1">
               {weatherData?.location || 'Cached Location'} • {analysis?.irrigationPlan?.cropName} • {analysis?.irrigationPlan?.calculation} • {analysis?.irrigationPlan?.reliability}% {t('dashboard.reliability')}
             </p>
+            {/* HYBRID SENSOR DISPLAY: Physical IoT vs Virtual Satellite */}
+            {(analysis?.irrigationPlan?.liveSensor || satelliteData?.soil) && (
+              <div className="mt-4 bg-zinc-900/50 border border-zinc-800 rounded-2xl p-4">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h4 className="text-white text-sm font-bold flex items-center gap-2">
+                       <FiCpu className="text-zinc-400" />
+                       {analysis?.irrigationPlan?.liveSensor ? 'IoT Soil Node' : 'Virtual Satellite Sensor'}
+                    </h4>
+                    <p className="text-[10px] text-zinc-500">
+                      {analysis?.irrigationPlan?.liveSensor ? 'Live Hardware Data' : 'Estimated via Satellite Analytics'}
+                    </p>
+                  </div>
+                  {analysis?.irrigationPlan?.liveSensor ? (
+                    <span className="px-2 py-0.5 bg-green-500/10 text-green-500 text-[10px] font-bold rounded-full border border-green-500/20">LIVE</span>
+                  ) : (
+                    <span className="px-2 py-0.5 bg-blue-500/10 text-blue-500 text-[10px] font-bold rounded-full border border-blue-500/20">VIRTUAL</span>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                   <div className="p-3 bg-zinc-950 rounded-xl border border-zinc-800/50">
+                     <p className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider mb-1">Moisture</p>
+                     <p className="text-2xl font-bold text-white">
+                        {analysis?.irrigationPlan?.liveSensor?.moisture || satelliteData?.soil?.moisture?.toFixed(1) || 'N/A'}%
+                     </p>
+                   </div>
+                   <div className="p-3 bg-zinc-950 rounded-xl border border-zinc-800/50">
+                     <p className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider mb-1">Soil Temp (10cm)</p>
+                     <p className="text-2xl font-bold text-white">
+                        {analysis?.irrigationPlan?.liveSensor?.temp || satelliteData?.soil?.temp_t10?.toFixed(1) || 'N/A'}°C
+                     </p>
+                   </div>
+                </div>
+
+                {/* Growth Stage Progress (GDD) */}
+                {satelliteData?.accumulated?.gdd && (
+                  <div className="mt-4 pt-4 border-t border-zinc-800/50">
+                    <div className="flex justify-between items-end mb-2">
+                      <div>
+                        <p className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Harvest Countdown</p>
+                        <p className="text-xs text-white font-medium">Stage: {analysis?.irrigationPlan?.growthStage || 'Vegetative'}</p>
+                      </div>
+                      <p className="text-xs font-bold text-white">{Math.min(100, Math.floor((satelliteData.accumulated.gdd / 2500) * 100))}%</p>
+                    </div>
+                    <div className="h-2 w-full bg-zinc-800 rounded-full overflow-hidden">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${Math.min(100, (satelliteData.accumulated.gdd / 2500) * 100)}%` }}
+                        className="h-full bg-gradient-to-r from-emerald-500 to-sky-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]"
+                      />
+                    </div>
+                    <p className="text-[9px] text-zinc-500 mt-2 flex items-center gap-1">
+                      <FiTrendingUp className="w-3 h-3" />
+                      {satelliteData.accumulated.gdd.toFixed(0)} Heat Units (GDD) accumulated this season.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
             {analysis?.irrigationPlan?.liveSensor && (
               <div className="mt-2 flex flex-wrap items-center gap-4">
                 <div className="flex items-center gap-1.5 px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-[10px] font-bold dark:bg-blue-900/40 dark:text-blue-300 uppercase">

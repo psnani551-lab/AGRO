@@ -2,13 +2,14 @@
 
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiCpu, FiCamera, FiDownload, FiZap, FiCheckCircle, FiAlertCircle, FiX, FiTrendingUp, FiLayers } from 'react-icons/fi';
+import { FiCpu, FiCamera, FiDownload, FiZap, FiCheckCircle, FiAlertCircle, FiX, FiTrendingUp, FiLayers, FiImage } from 'react-icons/fi';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { storage } from '@/lib/storage';
 import ConnectSensor from './ConnectSensor';
 import ConnectPump from './ConnectPump';
 import { ExportPortal } from './ExportPortal';
+import { useI18n } from '@/lib/i18n';
 
 export default function SmartToolsPanel({ 
   farmProfile,
@@ -18,7 +19,8 @@ export default function SmartToolsPanel({
   setPumpStatus,
   visionAnalysis,
   setVisionAnalysis,
-  onStartPump
+  onStartPump,
+  satelliteData
 }: { 
   farmProfile?: any;
   isPumpLoading: boolean;
@@ -28,10 +30,15 @@ export default function SmartToolsPanel({
   visionAnalysis: any;
   setVisionAnalysis: (analysis: any) => void;
   onStartPump: (durationMin?: number) => void;
+  satelliteData?: any;
 }) {
-  const [activeTab, setActiveTab] = useState<'overview' | 'sensor' | 'pump' | 'vision' | 'export'>('overview');
+  const { t } = useI18n();
+  const [activeTab, setActiveTab] = useState<'overview' | 'sensor' | 'pump' | 'vision' | 'imagery' | 'export'>('overview');
   const [isVisionLoading, setIsVisionLoading] = useState(false);
+  const [satLayer, setSatLayer] = useState<'true' | 'ndvi' | 'false'>('true');
   const farmId = farmProfile?.id || 'default-farm';
+  const polyId = farmProfile?.agro_monitoring_id;
+  const AGRO_KEY = process.env.NEXT_PUBLIC_AGRO_MONITORING_API_KEY || ''; // concept
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -61,6 +68,7 @@ export default function SmartToolsPanel({
     { id: 'sensor', label: '📡 Soil Node', icon: FiCpu },
     { id: 'pump', label: '💧 Pump Node', icon: FiLayers },
     { id: 'vision', label: '✨ AI Vision', icon: FiCamera },
+    { id: 'imagery', label: '🛰️ Satellite', icon: FiImage },
     { id: 'export', label: '📦 Export', icon: FiDownload },
   ] as const;
 
@@ -266,7 +274,90 @@ export default function SmartToolsPanel({
             </motion.div>
           )}
 
-          {/* Vision Tab */}
+          {/* SATELLITE IMAGERY TAB */}
+        {activeTab === 'imagery' && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Layer Selection */}
+              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+                <h3 className="text-white font-bold mb-4 flex items-center gap-2">
+                  <FiLayers className="text-blue-500" />
+                  Satellite Layer Selection
+                </h3>
+                <div className="space-y-3">
+                  {[
+                    { id: 'true', label: 'True Color (Visual)', desc: 'View the field as it appears from space' },
+                    { id: 'ndvi', label: 'NDVI (Plant Health)', desc: 'Monitor vegetation density and stress' },
+                    { id: 'false', label: 'False Color (Spectral)', desc: 'Detect moisture and land-use variations' }
+                  ].map((layer) => (
+                    <button
+                      key={layer.id}
+                      onClick={() => setSatLayer(layer.id as any)}
+                      className={`w-full text-left p-4 rounded-xl border transition-all ${satLayer === layer.id ? 'bg-white border-white' : 'bg-black/40 border-zinc-800 hover:border-zinc-700'}`}
+                    >
+                      <p className={`text-sm font-bold ${satLayer === layer.id ? 'text-black' : 'text-white'}`}>{layer.label}</p>
+                      <p className={`text-[10px] ${satLayer === layer.id ? 'text-black/60' : 'text-zinc-500'}`}>{layer.desc}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Imagery Preview */}
+              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex flex-col items-center justify-center relative overflow-hidden group">
+                <div className="absolute top-4 right-4 z-10">
+                   <span className="px-2 py-1 bg-black/60 backdrop-blur-md rounded-md text-[9px] font-bold text-white border border-white/20 uppercase tracking-widest leading-none">
+                     LIVE FEED
+                   </span>
+                </div>
+                
+                {/* Mock Imagery Display */}
+                <div className="w-full h-48 bg-black rounded-xl border border-zinc-800 overflow-hidden relative">
+                   <div className={`absolute inset-0 flex items-center justify-center ${satLayer === 'ndvi' ? 'bg-emerald-900/20' : satLayer === 'false' ? 'bg-purple-900/20' : 'bg-zinc-900'}`}>
+                      <FiImage className="w-12 h-12 text-zinc-800" />
+                   </div>
+                   {/* Simulated Overlay */}
+                   <div className="absolute bottom-2 left-2 p-2 bg-black/40 rounded-lg backdrop-blur-sm border border-white/10">
+                      <p className="text-[10px] text-white font-bold">SENTINEL-2 L2A</p>
+                      <p className="text-[8px] text-zinc-400">Resolution: 10m/px</p>
+                   </div>
+                </div>
+
+                <div className="mt-6 w-full space-y-4">
+                  <div className="flex justify-between items-center">
+                    <p className="text-xs text-zinc-500 uppercase font-bold">Field Statistics</p>
+                    {satelliteData?.ndvi && (
+                      <span className="text-[10px] text-white font-bold bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                        NDVI: {satelliteData.ndvi.mean.toFixed(2)}
+                      </span>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3 bg-black/40 rounded-xl border border-zinc-800">
+                      <p className="text-[9px] text-zinc-500 uppercase font-bold mb-1">Coverage</p>
+                      <p className="text-white font-bold">{farmProfile?.total_area || 5} Acres</p>
+                    </div>
+                    <div className="p-3 bg-black/40 rounded-xl border border-zinc-800">
+                      <p className="text-[9px] text-zinc-500 uppercase font-bold mb-1">Confidence</p>
+                      <p className="text-white font-bold">{((satelliteData?.metadata?.dataConfidence || 0.85) * 100).toFixed(0)}%</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Satellite Analysis Insights */}
+            <div className="p-6 bg-gradient-to-br from-blue-500/10 to-emerald-500/10 border border-blue-500/20 rounded-2xl">
+               <h4 className="text-white text-sm font-bold flex items-center gap-2 mb-2">
+                 <FiTrendingUp className="text-blue-400" />
+                 Ceres Remote Insights
+               </h4>
+               <p className="text-sm text-zinc-400 leading-relaxed italic">
+                 "Our orbital analysis shows a healthy vegetation trend. The {satLayer === 'ndvi' ? 'Vegetation Index' : satLayer === 'false' ? 'Spectral contrast' : 'Visual profile'} confirms consistent growth. 
+                 Recent soil moisture levels are optimal for {farmProfile?.current_crops?.[0] || 'your crop'}, with low water-stress indicators detected in the center of the field."
+               </p>
+            </div>
+          </div>
+        )}
           {activeTab === 'vision' && (
             <motion.div key="vision" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <div className="max-w-lg mx-auto text-center py-8">

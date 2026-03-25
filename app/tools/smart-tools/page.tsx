@@ -17,6 +17,7 @@ export default function SmartToolsPage() {
   const [isPumpLoading, setIsPumpLoading] = useState(false);
   const [pumpStatus, setPumpStatus] = useState<{ success?: boolean; message?: string } | null>(null);
   const [visionAnalysis, setVisionAnalysis] = useState<any>(null);
+  const [satelliteData, setSatelliteData] = useState<any>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -31,6 +32,26 @@ export default function SmartToolsPage() {
 
       if (data) {
         setFarmProfile(data);
+        
+        // Fetch Satellite Data
+        try {
+          const satResponse = await fetch('/api/satellite/ndvi', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              farmId: data.id,
+              polygonId: data.agro_monitoring_id,
+              coords: data.polygon_coords,
+              name: data.farm_name || 'My Field'
+            }),
+          });
+          if (satResponse.ok) {
+            const sat = await satResponse.json();
+            setSatelliteData(sat);
+          }
+        } catch (e) {
+          console.warn('Satellite fetch failed in Smart Tools');
+        }
       }
       setIsLoading(false);
     };
@@ -110,6 +131,7 @@ export default function SmartToolsPage() {
             visionAnalysis={visionAnalysis}
             setVisionAnalysis={setVisionAnalysis}
             onStartPump={handleStartPump}
+            satelliteData={satelliteData}
         />
       </div>
     </div>

@@ -18,16 +18,28 @@ export interface SatData {
   stats: NDVIStats;
 }
 
+export interface SoilData {
+  dt: number;
+  t10: number; // Temp at 10cm depth
+  moisture: number; // m3/m3
+  t0: number; // Surface temp
+}
+
+export interface AccumulatedData {
+  gdd: number; // Growing Degree Days
+  precipitation: number; // Total rainfall in period
+}
+
 /**
  * Satellite Service for AgroMonitoring Integration
- * Handles polygon registration and NDVI data retrieval
+ * Handles polygon registration and agricultural data retrieval
  */
 export const satelliteService = {
   /**
    * Register a farm polygon with AgroMonitoring
    */
   async registerPolygon(farmId: string, name: string, coords: [number, number][]) {
-    if (!AGRO_API_KEY) return { mockId: `mock_poly_${farmId}` };
+    if (!AGRO_API_KEY) return { mockId: `mock_poly_${farmId}`, id: `mock_poly_${farmId}` };
 
     try {
       const response = await fetch(`${BASE_URL}/polygons?appid=${AGRO_API_KEY}`, {
@@ -67,37 +79,64 @@ export const satelliteService = {
    */
   async getLatestNDVI(polygonId: string): Promise<SatData | null> {
     if (!AGRO_API_KEY || polygonId.startsWith('mock_')) {
-      // Return mock data for demonstration
       return {
         dt: Date.now() / 1000,
         type: 'ndvi',
         dc: 0.85,
         cl: 5,
-        stats: {
-          max: 0.82,
-          mean: 0.65,
-          min: 0.45,
-          std: 0.05,
-        },
+        stats: { max: 0.82, mean: 0.65, min: 0.45, std: 0.05 },
       };
     }
 
     try {
-      // Get the latest 5 imagery stats
       const end = Math.floor(Date.now() / 1000);
-      const start = end - 30 * 24 * 60 * 60; // Last 30 days
-      
-      const response = await fetch(
-        `${BASE_URL}/ndvi/history?polyid=${polygonId}&start=${start}&end=${end}&appid=${AGRO_API_KEY}`
-      );
-
+      const start = end - 30 * 24 * 60 * 60;
+      const response = await fetch(`${BASE_URL}/ndvi/history?polyid=${polygonId}&start=${start}&end=${end}&appid=${AGRO_API_KEY}`);
       if (!response.ok) return null;
       const data = await response.json();
-      
-      // Return the most recent entry
       return data.length > 0 ? data[data.length - 1] : null;
     } catch (error) {
-      console.error('Satellite NDVI Error:', error);
+      console.error('NDVI Error:', error);
+      return null;
+    }
+  },
+
+  /**
+   * Fetch Soil Data (Virtual Sensing)
+   */
+  async getSoilData(polygonId: string): Promise<SoilData | null> {
+    if (!AGRO_API_KEY || polygonId.startsWith('mock_')) {
+      return { dt: Date.now() / 1000, t10: 24.5, moisture: 0.32, t0: 28.2 };
+    }
+
+    try {
+      const response = await fetch(`${BASE_URL}/soil?polyid=${polygonId}&appid=${AGRO_API_KEY}`);
+      if (!response.ok) return null;
+      return await response.json();
+    } catch (error) {
+      console.error('Soil Data Error:', error);
+      return null;
+    }
+  },
+
+  /**
+   * Fetch Accumulated Temperature (GDD) and Precipitation
+   */
+  async getAccumulatedWeather(polygonId: string, start: number, end: number): Promise<AccumulatedData | null> {
+    if (!AGRO_API_KEY || polygonId.startsWith('mock_')) {
+      return { gdd: 1250, precipitation: 45.5 };
+    }
+
+    try {
+      const response = await fetch(`${BASE_URL}/weather/history/accumulated?polyid=${polygonId}&start=${start}&end=${end}&appid=${AGRO_API_KEY}`);
+      if (!response.ok) return null;
+      const data = await response.json();
+      return {
+        gdd: data.temp_accumulated || 0,
+        precipitation: data.precip_accumulated || 0
+      };
+    } catch (error) {
+      console.error('Accumulated Weather Error:', error);
       return null;
     }
   },
