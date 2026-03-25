@@ -346,7 +346,7 @@ export default function ChatWidget({ locale: propLocale, location }: ChatWidgetP
             exit={{ scale: 0 }}
             onClick={() => setIsOpen(true)}
             aria-label="Open chat"
-            className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary-600 text-white shadow-lg transition-colors hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+            className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary-600 text-white shadow-lg transition-colors hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
           >
             <FiMessageCircle className="h-6 w-6" />
           </motion.button>
@@ -365,9 +365,9 @@ export default function ChatWidget({ locale: propLocale, location }: ChatWidgetP
               aria-labelledby="chat-title"
               aria-describedby="chat-description"
               aria-modal="true"
-              className="fixed bottom-6 right-6 z-40 flex h-[600px] w-[400px] flex-col rounded-lg border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-800"
+              className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 flex h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] sm:h-[600px] sm:w-[400px] flex-col rounded-xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-800"
             >
-              <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50 rounded-t-lg">
+              <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50 rounded-t-xl">
                 <div>
                   <h2 id="chat-title" className="text-lg font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
                     <span className="text-2xl">🌾</span> {t('chat.title')}
@@ -426,7 +426,7 @@ export default function ChatWidget({ locale: propLocale, location }: ChatWidgetP
                 </div>
               </div>
 
-              <div className="border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 rounded-b-lg">
+              <div className="border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 rounded-b-xl">
                 {error && (
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
